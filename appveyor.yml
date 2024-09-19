@@ -1,18 +1,26 @@
-version: # TODO:  1.0.{build}
+################################################################
+# Auto-generated 2024-09-19 22:24:03.939                       #
+# ANY CHANGES TO THIS DOCUMENT WILL BE LOST UPON RE-GENERATION #
+################################################################
+#
+# git commit: e363ba39073b2ddf0d8f06bdefd8af6746c6cfe3
+version: 1.0.13.8807
 image: Visual Studio 2022
 configuration: Release
 install:
     - ps: Invoke-WebRequest "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1" -OutFile ".\lib\install-dotnet.ps1"
     - ps: $env:DOTNET_INSTALL_DIR = "$pwd\.dotnetcli"
-    - ps: '.\lib\install-dotnet.ps1 -Channel Preview -Version "9.0.100-preview.2.24157.14" -InstallDir "$env:DOTNET_INSTALL_DIR" -NoPath'
+    - ps: '.\lib\install-dotnet.ps1 -Channel Preview -Version "9.0.100-rc.1.24452.12" -InstallDir "$env:DOTNET_INSTALL_DIR" -NoPath'
     - ps: $env:Path += ";$env:DOTNET_INSTALL_DIR"
 before_build:
+    #- cmd: nuget restore "Unknown6656.Console.sln"
     - cmd: dotnet --info
     - cmd: echo %PATH%
     - cmd: dotnet clean
     - cmd: dotnet restore
+    #- cmd: dotnet build --configuration Release
 build:
-    project: # TODO:  Unknown6656.xxxxxxx.sln
+    project: "Unknown6656.Console.sln"
     verbosity: minimal
 notifications:
     - provider: GitHubPullRequest
