@@ -1,9 +1,7 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using System;
 
 namespace Unknown6656.Console;
-
-using Console = System.Console;
 
 
 public delegate void ConsoleSizeChangedEventHandler(int oldWidth, int oldHeight, int newWidth, int newHeight);
@@ -30,8 +28,8 @@ public sealed class ConsoleResizeListener
 
     public ConsoleResizeListener() => _listener = Task.Factory.StartNew(async delegate
     {
-        int width = Console.WindowWidth;
-        int height = Console.WindowHeight;
+        int width = sysconsole.WindowWidth;
+        int height = sysconsole.WindowHeight;
         uint timeout = MinimumTimeoutMs;
 
         while (!IsDisposed)
@@ -40,7 +38,7 @@ public sealed class ConsoleResizeListener
 
             if (IsListening)
             {
-                (int nw, int nh, int ow, int oh) = (Console.WindowWidth, Console.WindowHeight, width, height);
+                (int nw, int nh, int ow, int oh) = (sysconsole.WindowWidth, sysconsole.WindowHeight, width, height);
 
                 if (nw != ow || nh != oh)
                 {
