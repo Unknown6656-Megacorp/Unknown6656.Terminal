@@ -60,9 +60,10 @@
         <PackageReference Include="Unknown6656.DontUseVar" Version="*" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Unknown6656.DiscriminatedUnions" Version="1.1.1" />
-        <PackageReference Include="Unknown6656.Generics" Version="1.0.13" />
         <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
+        <PackageReference Include="Unknown6656.DiscriminatedUnions" Version="1.1.1" />
+        <PackageReference Include="Unknown6656.Generics" Version="1.0.15" />
+        <PackageReference Include="Unknown6656.Runtime" Version="1.1.0" />
     </ItemGroup>
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
         <Exec Command="dotnet &quot;$(SolutionDir)bin/incr.dll&quot; &quot;$(ProjectPath)&quot;" />
