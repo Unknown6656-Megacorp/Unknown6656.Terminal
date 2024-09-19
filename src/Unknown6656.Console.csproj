@@ -1,0 +1,67 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+
+        <LangVersion>preview</LangVersion>
+        <EnablePreviewFeatures>True</EnablePreviewFeatures>
+        <!-- <GenerateRequiresPreviewFeaturesAttribute>False</GenerateRequiresPreviewFeaturesAttribute> -->
+        <Nullable>enable</Nullable>
+        <NullableContextOptions>enable</NullableContextOptions>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+        <OutputType>Library</OutputType>
+        <OutputPath>$(SolutionDir)bin</OutputPath>
+
+        <Deterministic>true</Deterministic>
+        <IsPackable>true</IsPackable>
+        <!-- <TrimMode>Link</TrimMode> -->
+        <!-- <PublishTrimmed>true</PublishTrimmed> -->
+        <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+        <DisableWinExeOutputInference>true</DisableWinExeOutputInference>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+        <Authors>Unknown6656</Authors>
+        <Company>Unknown6656</Company>
+        <Product>Unknown6656.Console by Unknown6656</Product>
+        <Description>A drop-in replacement for the default .NET "System.Console" class which includes many useful functionalities.</Description>
+        <Copyright>Copyright © 2022-$([System.DateTime]::Today.ToString(yyyy)), unknown6656</Copyright>
+        <PackageProjectUrl>https://github.com/Unknown6656-Megacorp/Unknown6656.Console</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Unknown6656-Megacorp/Unknown6656.Console</RepositoryUrl>
+        <PackageIcon>unknown6656-logo-1024.png</PackageIcon>
+        <PackageTags>unknown6656;core;console;vt100;ansi;color;ascii;cli;terminal;cmd;sh;bash;art;library;runtime;os;internal;native</PackageTags>
+
+        <PackageId>Unknown6656.Console</PackageId>
+        <IncludeSymbols>true</IncludeSymbols>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <RepositoryType>Git</RepositoryType>
+        <Version>$([System.IO.File]::ReadAllText("$(SolutionDir)version.txt"))</Version>
+        <PackageVersion>$([System.IO.File]::ReadAllText("$(SolutionDir)version.txt"))</PackageVersion>
+        <AssemblyVersion>$([System.IO.File]::ReadAllText("$(SolutionDir)version.txt"))</AssemblyVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="$(ProjectDir)unknown6656-logo-1024.png">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="old\**" />
+        <EmbeddedResource Remove="old\**" />
+        <None Remove="old\**" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+        <PackageReference Include="Unknown6656.DontUseVar" Version="*" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Unknown6656.DiscriminatedUnions" Version="1.1.1" />
+        <PackageReference Include="Unknown6656.Generics" Version="1.0.13" />
+        <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+        <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
+    </ItemGroup>
+</Project>
