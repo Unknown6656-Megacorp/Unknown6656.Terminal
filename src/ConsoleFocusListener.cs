@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Unknown6656.Runtime.Console;
+namespace Unknown6656.Console;
 
 
 // TODO : implement

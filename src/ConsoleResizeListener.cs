@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System;
 
-namespace Unknown6656.Runtime.Console;
+namespace Unknown6656.Console;
 
 using Console = System.Console;
 

@@ -12,7 +12,7 @@ using Unknown6656.Common;
 
 using sysconsole = System.Console;
 
-namespace Unknown6656.Runtime.Console;
+namespace Unknown6656.Console;
 
 
 public enum TextIntensityMode

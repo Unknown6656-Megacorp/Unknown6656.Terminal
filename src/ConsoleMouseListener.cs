@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using System.Linq;
@@ -6,7 +6,7 @@ using System;
 
 using Unknown6656.Generics;
 
-namespace Unknown6656.Runtime.Console;
+namespace Unknown6656.Console;
 
 
 public delegate void ConsoleMouseEventHandler(int x, int y, MouseButtons buttons, ModifierKeysState modifiers);
