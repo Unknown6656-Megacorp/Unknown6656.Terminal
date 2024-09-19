@@ -10,40 +10,89 @@ using System;
 using Unknown6656.Generics;
 using Unknown6656.Common;
 
-using sysconsole = System.Console;
-
 namespace Unknown6656.Console;
 
 
+/// <summary>
+/// Specifies the visual intensity of the text (regular, bold, dim).
+/// </summary>
 public enum TextIntensityMode
     : byte
 {
+    /// <summary>
+    /// Regular intensity.
+    /// </summary>
     Regular = 22,
+    /// <summary>
+    /// Bold intensity.
+    /// </summary>
     Bold = 1,
+    /// <summary>
+    /// Dim intensity.
+    /// </summary>
     Dim = 2,
 }
 
+/// <summary>
+/// Specifies the text underline mode.
+/// </summary>
 public enum TextUnderlinedMode
 {
+    /// <summary>
+    /// Text is not underlined.
+    /// </summary>
     NotUnderlined = 24,
+    /// <summary>
+    /// Text is underlined with a single line.
+    /// </summary>
     Single = 4,
+    /// <summary>
+    /// Text is underlined with a double line.
+    /// </summary>
     Double = 21,
 }
 
+/// <summary>
+/// Specifies the text frame mode.
+/// </summary>
 public enum TextFrameMode
 {
+    /// <summary>
+    /// Text is not framed.
+    /// </summary>
     NotFramed = 54,
+    /// <summary>
+    /// Text is framed.
+    /// </summary>
     Framed = 51,
+    /// <summary>
+    /// Text is encircled.
+    /// </summary>
     Encircled = 52,
 }
 
+/// <summary>
+/// Specifies the text transformation mode (sub-/superscript).
+/// </summary>
 public enum TextTransformationMode
 {
+    /// <summary>
+    /// Regular text transformation.
+    /// </summary>
     Regular = 75,
+    /// <summary>
+    /// Text is transformed to superscript.
+    /// </summary>
     Superscript = 73,
+    /// <summary>
+    /// Text is transformed to subscript.
+    /// </summary>
     Subscript = 74,
 }
 
+/// <summary>
+/// Specifies the text blink mode (none, slow, rapid).
+/// </summary>
 public enum TextBlinkMode
     : byte
 {
@@ -52,23 +101,69 @@ public enum TextBlinkMode
     Rapid = 6,
 }
 
+/// <summary>
+/// Specifies the text rendering mode.
+/// </summary>
 public enum LineRenderingMode
 {
+    /// <summary>
+    /// Regular line rendering.
+    /// </summary>
     Regular,
+    /// <summary>
+    /// Line is rendered with double width.
+    /// </summary>
     DoubleWidth,
+    /// <summary>
+    /// Line is rendered with double height.
+    /// </summary>
     DoubleHeight,
+    /// <summary>
+    /// Top half of the line is rendered with double height.
+    /// </summary>
     DoubleHeight_Top,
+    /// <summary>
+    /// Bottom half of the line is rendered with double height.
+    /// </summary>
     DoubleHeight_Bottom,
 }
 
+/// <summary>
+/// Specifies the shape of the console cursor.
+/// </summary>
 public enum ConsoleCursorShape
 {
+    /// <summary>
+    /// Default cursor shape.
+    /// </summary>
     Default = 0,
+    /// <summary>
+    /// Blinking block cursor.
+    /// </summary>
     BlinkingBlock = 1,
+    /// <summary>
+    /// Solid block cursor.
+    /// </summary>
     SolidBlock = 2,
+    /// <summary>
+    /// Blinking underline cursor.
+    /// <para/>
+    /// This is the default in <c>conhost.exe</c>.
+    /// </summary>
     BlinkingUnderline = 3,
+    /// <summary>
+    /// Solid underline cursor.
+    /// </summary>
     SolidUnderline = 4,
+    /// <summary>
+    /// Blinking (vertical) cursor bar.
+    /// <para/>
+    /// This is the default in the Windows Terminal app (<c>wt.exe</c>).
+    /// </summary>
     BlinkingBar = 5,
+    /// <summary>
+    /// Solid (vertical) cursor bar.
+    /// </summary>
     SolidBar = 6,
 }
 
@@ -102,19 +197,80 @@ public enum ConsoleTone
     C7 = 25,
 }
 
+/// <summary>
+/// Represents a rectangular area in the console.
+/// </summary>
+/// <param name="X">The zero-based X-coordinate of the top-left corner of the area (in characters).</param>
+/// <param name="Y">The zero-based Y-coordinate of the top-left corner of the area (in characters).</param>
+/// <param name="Width">The width of the area (in characters).</param>
+/// <param name="Height">The height of the area (in characters).</param>
 public readonly record struct ConsoleArea(int X, int Y, int Width, int Height)
 {
+    /// <summary>
+    /// Returns the <see cref="ConsoleArea"/> that represents an empty area.
+    /// </summary>
+    public static ConsoleArea Empty { get; } = new(0, 0, 0, 0);
+
+    /// <summary>
+    /// Returns the <see cref="ConsoleArea"/> that represents the entire visible <see cref="sysconsole"/> screen.
+    /// </summary>
+    public static ConsoleArea FullWindow => new(0, 0, sysconsole.WindowWidth, sysconsole.WindowHeight);
+
+    /// <summary>
+    /// Returns the <see cref="ConsoleArea"/> that represents the entire <see cref="sysconsole"/> text buffer.
+    /// </summary>
+    public static ConsoleArea FullBuffer => new(0, 0, sysconsole.BufferWidth, sysconsole.BufferHeight);
+
+
+    /// <summary>
+    /// Gets the zero-based X-coordinate of the left edge of the area.
+    /// <para/>
+    /// This value is identical to <see cref="X"/> and is provided for compatibility with <see cref="Rectangle"/>.
+    /// </summary>
     public readonly int Left => X;
+
+    /// <summary>
+    /// Gets the zero-based Y-coordinate of the top edge of the area.
+    /// <para/>
+    /// This value is identical to <see cref="Y"/> and is provided for compatibility with <see cref="Rectangle"/>.
+    /// </summary>
     public readonly int Top => Y;
+
+    /// <summary>
+    /// Gets the zero-based X-coordinate of the right edge of the area.
+    /// </summary>
     public readonly int Right => X + Width;
+
+    /// <summary>
+    /// Gets the zero-based Y-coordinate of the bottom edge of the area.
+    /// </summary>
     public readonly int Bottom => Y + Height;
 
+    /// <summary>
+    /// Indicates whether the current <see cref="ConsoleArea"/> is contained within <see cref="FullWindow"/>.
+    /// </summary>
+    public readonly bool IsInsideWindow => FullWindow.Contains(this);
 
+    /// <summary>
+    /// Indicates whether the current <see cref="ConsoleArea"/> is contained within <see cref="FullBuffer"/>.
+    /// </summary>
+    public readonly bool IsInsideBuffer => FullBuffer.Contains(this);
+
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleArea"/> struct from a <see cref="Rectangle"/>.
+    /// </summary>
+    /// <param name="rectangle">The rectangle to initialize from.</param>
     public ConsoleArea(Rectangle rectangle)
         : this(rectangle.Left, rectangle.Top, rectangle.Width, rectangle.Height)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleArea"/> struct from column and row ranges.
+    /// </summary>
+    /// <param name="columns">The range of columns.</param>
+    /// <param name="rows">The range of rows.</param>
     public ConsoleArea(Range columns, Range rows)
         : this(
             columns.Start.Value,
@@ -125,17 +281,57 @@ public readonly record struct ConsoleArea(int X, int Y, int Width, int Height)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleArea"/> struct from two points.
+    /// </summary>
+    /// <param name="from">The starting point.</param>
+    /// <param name="to">The ending point.</param>
     public ConsoleArea((int X, int Y) from, (int X, int Y) to)
         : this(from.X, from.Y, to.X - from.X, to.Y - from.Y)
     {
     }
 
+    /// <summary>
+    /// Determines whether the specified coordinates are contained within this <see cref="ConsoleArea"/>.
+    /// </summary>
+    /// <param name="x">The zero-based X-coordinate to check.</param>
+    /// <param name="y">The zero-based Y-coordinate to check.</param>
+    /// <returns>
+    /// <see langword="true"/> if the specified (<paramref name="x"/>, <paramref name="y"/>)-coordinates are within this <see cref="ConsoleArea"/>; otherwise, <see langword="false"/>.
+    /// </returns>
+    public readonly bool Contains(int x, int y) => x >= X && x < Right && y >= Y && y < Bottom;
+
+    /// <summary>
+    /// Determines whether the specified <see cref="ConsoleArea"/> is entirely contained within this <see cref="ConsoleArea"/>.
+    /// </summary>
+    /// <param name="area">The <see cref="ConsoleArea"/> to check.</param>
+    /// <returns>
+    /// <see langword="true"/> if the specified <paramref name="area"/> is contained within this <see cref="ConsoleArea"/>; otherwise, <see langword="false"/>.
+    /// </returns>
+    public readonly bool Contains(ConsoleArea area) => area.X >= X && area.Right <= Right && area.Y >= Y && area.Bottom <= Bottom;
+
+    /// <summary>
+    /// Converts a <see cref="Rectangle"/> to a <see cref="ConsoleArea"/>.
+    /// </summary>
+    /// <param name="rectangle">The rectangle to convert.</param>
     public static implicit operator ConsoleArea(Rectangle rectangle) => new(rectangle);
 
+    /// <summary>
+    /// Converts a tuple of column and row ranges to a <see cref="ConsoleArea"/>.
+    /// </summary>
+    /// <param name="area">The tuple of column and row ranges to convert.</param>
     public static implicit operator ConsoleArea((Range columns, Range rows) area) => new(area.columns, area.rows);
 
+    /// <summary>
+    /// Converts a tuple of two points to a <see cref="ConsoleArea"/>.
+    /// </summary>
+    /// <param name="area">The tuple of two points to convert.</param>
     public static implicit operator ConsoleArea(((int X, int Y) from, (int X, int Y) to) area) => new(area.from, area.to);
 
+    /// <summary>
+    /// Converts a tuple of left, top, width, and height to a <see cref="ConsoleArea"/>.
+    /// </summary>
+    /// <param name="area">The tuple of left, top, width, and height to convert.</param>
     public static implicit operator ConsoleArea((int Left, int Top, int Width, int Height) area) => new(area.Left, area.Top, area.Width, area.Height);
 }
 
