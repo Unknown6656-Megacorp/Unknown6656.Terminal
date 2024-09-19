@@ -1,0 +1,21 @@
+version: # TODO:  1.0.{build}
+image: Visual Studio 2022
+configuration: Release
+install:
+    - ps: Invoke-WebRequest "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1" -OutFile ".\lib\install-dotnet.ps1"
+    - ps: $env:DOTNET_INSTALL_DIR = "$pwd\.dotnetcli"
+    - ps: '.\lib\install-dotnet.ps1 -Channel Preview -Version "9.0.100-preview.2.24157.14" -InstallDir "$env:DOTNET_INSTALL_DIR" -NoPath'
+    - ps: $env:Path += ";$env:DOTNET_INSTALL_DIR"
+before_build:
+    - cmd: dotnet --info
+    - cmd: echo %PATH%
+    - cmd: dotnet clean
+    - cmd: dotnet restore
+build:
+    project: # TODO:  Unknown6656.xxxxxxx.sln
+    verbosity: minimal
+notifications:
+    - provider: GitHubPullRequest
+      #auth_token:
+      #   secure: ""
+      template: "{{#passed}}:white_check_mark:{{/passed}}{{#failed}}:x:{{/failed}} [Build {{&projectName}} {{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}} by @{{&commitAuthorUsername}})"

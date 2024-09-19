@@ -1,0 +1,81 @@
+name: Bug report
+description: Report an issue, error, bug, or incorrect behavior.
+title: "[BUG] "
+labels: ["bug"]
+projects: []
+assignees:
+  - Unknown6656
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Bug Report
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: bug-summary
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is. Include a stack trace, console output, debug dump, and/or screenshots.
+      placeholder: What happened?
+  - type: textarea
+    id: reproduce-steps
+    attributes:
+      label: Steps to reproduce the Bug
+      description: A list describing on how to reproduce the behavior.
+      placeholder: |
+        1. Type '...'
+        2. Execute '....'
+        3. Scroll down to '....'
+        4. See error
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: Instead of the behavior written above, what would you have expected the code to do?
+  - type: markdown
+    attributes:
+      value: "## Environment and Version Information"
+  - type: dropdown
+    id: os-type
+    attributes:
+      label: Operating System Type
+      multiple: true
+      options:
+        - Windows
+        - MacOS
+        - Linux
+        - Other POSIX compliant OS
+        - Other non-POSIX compliant OS
+  - type: dropdown
+    id: os-arch
+    attributes:
+      label: Operating System Architecture
+      multiple: true
+      options:
+        - x86
+        - x64
+        - arm
+        - arm64
+        - Other
+  - type: input
+    id: os-name
+    attributes:
+      label: Operating System Descriptor
+      description: Paste the result of executing `ver` (Windows) or `uname -a` (Unix) here.
+      placeholder: "e.g. 'Microsoft Windows [Version 10.0.22631.3296]'"
+    validations:
+      required: true
+  - type: input
+    id: library-version
+    attributes:
+      label: Version / Git Commit
+      description: Paste the version of the library that you noticed the bug in. Alternatively, paste the currently checked out Git commit hash here.
+      placeholder: "e.g. '1.3.10' or 'f670de0d4e4ce90b4d7f0268f2be0ac1c63869d3'"
+    validations:
+      required: true
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Additional information you'd like to provide.
+      placeholder: Did we miss anything?
