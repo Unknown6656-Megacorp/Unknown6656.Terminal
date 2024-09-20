@@ -6,12 +6,38 @@ using System.Text;
 using System;
 
 using Unknown6656.Generics;
+using Unknown6656.Runtime;
 
 namespace Unknown6656.Console;
 
 
 public static unsafe partial class Console
 {
+    /// <summary>
+    /// Indicates whether the current console supports ANSI/VT100/VT520 escape sequences.
+    /// </summary>
+    public static bool SupportsVT520EscapeSequences => !OS.IsWindows || Environment.OSVersion.Version is { Major: >= 10, Build: >= 16257 };
+
+#pragma warning disable CA1416 // Validate platform compatibility
+
+    /// <summary>
+    /// Indicates whether ANSI/VT100/VT520 escape sequences are enabled on the standard input stream.
+    /// </summary>
+    public static bool AreSTDInVT520EscapeSequencesEnabled => !OS.IsWindows || STDINConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
+    /// <summary>
+    /// Indicates whether ANSI/VT100/VT520 escape sequences are enabled on the standard output stream.
+    /// </summary>
+    public static bool AreSTDOutVT520EscapeSequencesEnabled => !OS.IsWindows || STDOUTConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
+    /// <summary>
+    /// Indicates whether ANSI/VT100/VT520 escape sequences are enabled on the standard error stream.
+    /// </summary>
+    public static bool AreSTDErrVT520EscapeSequencesEnabled => !OS.IsWindows || STDERRConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
+#pragma warning restore CA1416
+
+
     public static void SetVT520Bit(int mode, bool bit) => Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
 
     public static string? GetRawVT520Report(string report_sequence, char terminator)

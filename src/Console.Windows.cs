@@ -7,6 +7,7 @@ using Unknown6656.Runtime;
 
 namespace Unknown6656.Console;
 
+
 public static unsafe partial class Console
 {
     private static readonly PlatformNotSupportedException _unsupported_os = new("This operation is not (yet) supported supported on the current operating system.");
@@ -185,28 +186,6 @@ public static unsafe partial class Console
             return new Font(font.FontName, font.FontSize.H, font.FontWeight > 550 ? FontStyle.Bold : FontStyle.Regular);
         }
     }
-
-    /// <summary>
-    /// Indicates whether the current console supports ANSI/VT520 escape sequences.
-    /// </summary>
-    public static bool SupportsVT520EscapeSequences => !OS.IsWindows || Environment.OSVersion.Version is { Major: >= 10, Build: >= 16257 };
-#pragma warning disable CA1416 // Validate platform compatibility
-
-    /// <summary>
-    /// Indicates whether ANSI/VT520 escape sequences are enabled on the standard input stream.
-    /// </summary>
-    public static bool AreSTDInVT520EscapeSequencesEnabled => !OS.IsWindows || STDINConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-
-    /// <summary>
-    /// Indicates whether ANSI/VT520 escape sequences are enabled on the standard output stream.
-    /// </summary>
-    public static bool AreSTDOutVT520EscapeSequencesEnabled => !OS.IsWindows || STDOUTConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-
-    /// <summary>
-    /// Indicates whether ANSI/VT520 escape sequences are enabled on the standard error stream.
-    /// </summary>
-    public static bool AreSTDErrVT520EscapeSequencesEnabled => !OS.IsWindows || STDERRConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-#pragma warning restore CA1416
 
 
     [SupportedOSPlatform(OS.WIN)]
