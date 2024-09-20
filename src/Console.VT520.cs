@@ -50,21 +50,31 @@ public static unsafe partial class Console
         Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
 
     public static string[]? GetRawVT520GraphicRenditions() => GetRawVT520SettingsReport("m")?.Split(';');
-
-
-
-
 }
 
+/// <summary>
+/// Provides methods for working with VT100/VT520/ANSI escape sequences.
+/// </summary>
 public static partial class VT520
 {
+    // TODO : match sequences using the ST-token at the end
+
     [GeneratedRegex(
         @"(\x1b\[|\x9b)([\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]|([^\x40-\x5f]*|[\x30-\x3f\x60-\x7e]+[\x30-\x3f]+)[\x40-\x5f])|\x1b([\x20-\x7e]|[\x20-\x2f]{2,}[\x40-\x7e]|[\x20-\x2f]+[\x30-\x7e])",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
     )]
     private static partial Regex GenerateVT520Regex();
 
 
+    /// <summary>
+    /// Splits the given string into lines and wraps them at the given maximum width.
+    /// This function is VT520-aware and will not split sequences nor include them in the line length.
+    /// Furthermore, the function respects non-printable characters and will not count them towards the line length.
+    /// </summary>
+    /// <param name="lines">The input text lines (which may contain VT520 escape sequences).</param>
+    /// <param name="max_width">The maximum line length.</param>
+    /// <param name="wrap_overflow">Indicates whether wrapping overflow is enabled. If this value is set to <see langword="false"/>, the line will be cut at a maximum length of <paramref name="max_width"/> printable characters.</param>
+    /// <returns>The list of split/wrapped/broken lines.</returns>
     public static List<string> SplitLinesWithVT520(List<string> lines, int max_width, bool wrap_overflow = true)
     {
         return [..from line in lines
@@ -119,13 +129,39 @@ public static partial class VT520
         }
     }
 
-    public static string StripVT520Sequences(this string raw_string) => GenerateVT520Regex().Replace(raw_string, "");
+    /// <summary>
+    /// Strips all (recognized) VT520 escape sequences from the given string.
+    /// </summary>
+    /// <param name="input">The raw input string</param>
+    /// <returns>Returns the string with all VT520 escape sequences removed.</returns>
+    public static string StripVT520Sequences(this string input) => GenerateVT520Regex().Replace(input, "");
 
-    public static MatchCollection MatchVT520Sequences(this string raw_string) => GenerateVT520Regex().Matches(raw_string);
+    /// <summary>
+    /// Matches all VT520 escape sequences in the given input string.
+    /// </summary>
+    /// <param name="input">The input string to search for VT520 escape sequences.</param>
+    /// <returns>A collection of matches where each match represents a VT520 escape sequence.</returns>
+    public static MatchCollection MatchVT520Sequences(this string input) => GenerateVT520Regex().Matches(input);
 
-    public static int CountVT520Sequences(this string raw_string) => GenerateVT520Regex().Count(raw_string);
+    /// <summary>
+    /// Counts the number of VT520 escape sequences in the given input string.
+    /// </summary>
+    /// <param name="input">The input string to search for VT520 escape sequences.</param>
+    /// <returns>The number of VT520 escape sequences found in the input string.</returns>
+    public static int CountVT520Sequences(this string input) => GenerateVT520Regex().Count(input);
 
-    public static bool ContainsVT520Sequences(this string raw_string) => GenerateVT520Regex().IsMatch(raw_string);
+    /// <summary>
+    /// Determines whether the given input string contains any VT520 escape sequences.
+    /// </summary>
+    /// <param name="input">The input string to search for VT520 escape sequences.</param>
+    /// <returns><see langword="true"/> if the input string contains any VT520 escape sequences; otherwise, <see langword="false"/>.</returns>
+    public static bool ContainsVT520Sequences(this string input) => GenerateVT520Regex().IsMatch(input);
 
-    public static int LengthWithoutVT520Sequences(this string raw_string) => raw_string.Length - MatchVT520Sequences(raw_string).Sum(m => m.Length);
+    /// <summary>
+    /// Calculates the length of the input string excluding any VT520 escape sequences.
+    /// Please do note that any non-printable characters are still counted towards the string length.
+    /// </summary>
+    /// <param name="input">The input string to measure.</param>
+    /// <returns>The length of the input string excluding VT520 escape sequences.</returns>
+    public static int LengthWithoutVT520Sequences(this string input) => input.Length - MatchVT520Sequences(input).Sum(m => m.Length);
 }
