@@ -13,12 +13,6 @@ namespace Unknown6656.Console;
 
 public static unsafe partial class Console
 {
-    // TODO : optimize this regex expression to be more efficient
-    [GeneratedRegex(@"(\x1b\[|\x9b)([0-\?]*[\x20-\/]*[@-~]|[^@-_]*[@-_]|[\da-z]{1,2};\d{1,2}H)|\x1b([@-_0-\?\x60-~]|[\x20-\/]|[\x20-\/]{2,}[@-~]|[\x30-\x3f]|[\x20-\x2f]+[\x30-\x7e]|\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e])", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
-    private static partial Regex GenerateVT520Regex();
-
-
-
     public static void SetVT520Bit(int mode, bool bit) => Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
 
     public static string? GetRawVT520Report(string report_sequence, char terminator)
@@ -56,6 +50,19 @@ public static unsafe partial class Console
         Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
 
     public static string[]? GetRawVT520GraphicRenditions() => GetRawVT520SettingsReport("m")?.Split(';');
+
+
+
+
+}
+
+public static partial class VT520
+{
+    [GeneratedRegex(
+        @"(\x1b\[|\x9b)([\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]|([^\x40-\x5f]*|[\x30-\x3f\x60-\x7e]+[\x30-\x3f]+)[\x40-\x5f])|\x1b([\x20-\x7e]|[\x20-\x2f]{2,}[\x40-\x7e]|[\x20-\x2f]+[\x30-\x7e])",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace
+    )]
+    private static partial Regex GenerateVT520Regex();
 
 
     public static List<string> SplitLinesWithVT520(List<string> lines, int max_width, bool wrap_overflow = true)
@@ -121,6 +128,4 @@ public static unsafe partial class Console
     public static bool ContainsVT520Sequences(this string raw_string) => GenerateVT520Regex().IsMatch(raw_string);
 
     public static int LengthWithoutVT520Sequences(this string raw_string) => raw_string.Length - MatchVT520Sequences(raw_string).Sum(m => m.Length);
-
-
 }
