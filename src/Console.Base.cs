@@ -142,6 +142,14 @@ public static unsafe partial class Console
         }
     }
 
+    /// <inheritdoc cref="sysconsole.CursorSize"/>
+    [SupportedOSPlatform(OS.WIN)]
+    public static int CursorSize
+    {
+        get => sysconsole.CursorSize;
+        set => sysconsole.CursorSize = value;
+    }
+
     #endregion
     #region PROPERTIES: KEYBOARD
 
@@ -161,10 +169,48 @@ public static unsafe partial class Console
         set => SetVT520Bit(109, value);
     }
 
-    [SupportedOSPlatform(OS.WIN)]
-    public static bool NumberLock { get; }
 
-    public static bool KeyAvailable { get; }
+
+
+    #endregion
+    #region METHOS: BUFFER/WINDOW/CURSOR SIZE AND POSITION
+
+    /// <inheritdoc cref="GetCursorPosition"/>
+    public static (int Left, int Top) GetCursorPosition()
+    {
+        if (OS.IsUnix || OS.IsWindows)
+            return sysconsole.GetCursorPosition();
+        else if (GetExtendedCursorPosition() is (int left, int top, _))
+            return (left - 1, top - 1);
+        else
+            throw new InvalidOperationException("Failed to get cursor position.");
+    }
+
+    /// <inheritdoc cref="SetWindowPosition"/>
+    public static void SetWindowPosition(int left, int top)
+    {
+        if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+            sysconsole.SetWindowPosition(left, top);
+#pragma warning restore CA1416
+        else
+            Write($"\e[3;{left};{top}t");
+    }
+
+    /// <inheritdoc cref="SetWindowSize(int, int)"/>
+    public static void SetWindowSize(int width, int height)
+    {
+        if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+            SetWindowSize(width, height);
+#pragma warning restore CA1416
+        else
+            Write($"\e[8;{height};{width}t");
+    }
+
+    /// <inheritdoc cref="SetBufferSize(int, int)"/>
+    [SupportedOSPlatform(OS.WIN)]
+    public static void SetBufferSize(int width, int height) => sysconsole.SetBufferSize(width, height);
 
     #endregion
 
