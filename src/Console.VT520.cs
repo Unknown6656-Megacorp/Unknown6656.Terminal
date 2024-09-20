@@ -40,6 +40,20 @@ public static unsafe partial class Console
 
     public static void SetVT520Bit(int mode, bool bit) => Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
 
+    public static bool? GetVT520PrivateDECMode(int mode)
+    {
+        if (GetRawVT520Report($"?{mode.ToString(CultureInfo.InvariantCulture)}$p", 'y') is ['\e', '[', '?', .. string response, '$']
+                && response.Split(';') is [_, string value, ..])
+            return value switch
+            {
+                "1" or "3" => true,
+                "2" or "4" => false,
+                _ => null
+            };
+
+        return null;
+    }
+
     public static string? GetRawVT520Report(string report_sequence, char terminator)
     {
         Write($"\e{report_sequence}");

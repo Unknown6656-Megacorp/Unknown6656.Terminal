@@ -107,6 +107,12 @@ public static unsafe partial class Console
         set => SetVT520Bit(98, value);
     }
 
+    public static bool IsWindowFramed
+    {
+        // get maybe via private DEC mode?
+        set => SetVT520Bit(111, value);
+    }
+
 
 #warning TODO : verify if this is correct
 
@@ -236,7 +242,6 @@ public static unsafe partial class Console
 
 
     // TODO : ^[[5n     ???
-    // TODO : ^[[6n     cursor position report
     // TODO : -> ^[[c
     //        <- ^[[?61;6;7;21;22;23;24;28;32;42c
 
