@@ -120,6 +120,20 @@ public static unsafe partial class Console
         }
     }
 
+    /// <inheritdoc cref="sysconsole.LargestWindowHeight"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    [UnsupportedOSPlatform(OS.IOS)]
+    [UnsupportedOSPlatform(OS.TVOS)]
+    public static int LargestWindowHeight => sysconsole.LargestWindowHeight;
+
+    /// <inheritdoc cref="sysconsole.LargestWindowWidth"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    [UnsupportedOSPlatform(OS.IOS)]
+    [UnsupportedOSPlatform(OS.TVOS)]
+    public static int LargestWindowWidth => sysconsole.LargestWindowWidth;
+
     /// <inheritdoc cref="sysconsole.WindowLeft"/>
     public static int WindowLeft
     {
@@ -377,44 +391,121 @@ public static unsafe partial class Console
     #endregion
     #region METHODS: WRITING
 
-    /// <inheritdoc cref="sysconsole.Write(ulong)"/>
-    public static void Write(ulong value) => sysconsole.Write(value);
-
     /// <inheritdoc cref="sysconsole.Write(bool)"/>
     public static void Write(bool value) => sysconsole.Write(value);
 
     /// <inheritdoc cref="sysconsole.Write(char)"/>
     public static void Write(char value) => sysconsole.Write(value);
 
-    /// <inheritdoc cref="sysconsole.Write(char[])"/>
-    public static void Write(char[]? buffer) => sysconsole.Write(buffer);
-
     /// <inheritdoc cref="sysconsole.Write(int)"/>
     public static void Write(int value) => sysconsole.Write(value);
-
-    /// <inheritdoc cref="sysconsole.Write(long)"/>
-    public static void Write(long value) => sysconsole.Write(value);
-
-    /// <inheritdoc cref="sysconsole.Write(decimal)"/>
-    public static void Write(decimal value) => sysconsole.Write(value);
-
-    /// <inheritdoc cref="sysconsole.Write(object)"/>
-    public static void Write(object? value) => sysconsole.Write(value);
-
-    /// <inheritdoc cref="sysconsole.Write(float)"/>
-    public static void Write(float value) => sysconsole.Write(value);
-
-    /// <inheritdoc cref="sysconsole.Write(string)"/>
-    public static void Write(string? value) => sysconsole.Write(value);
-
-    /// <inheritdoc cref="sysconsole.Write(double)"/>
-    public static void Write(double value) => sysconsole.Write(value);
 
     /// <inheritdoc cref="sysconsole.Write(uint)"/>
     public static void Write(uint value) => sysconsole.Write(value);
 
+    /// <inheritdoc cref="sysconsole.Write(long)"/>
+    public static void Write(long value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(ulong)"/>
+    public static void Write(ulong value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(float)"/>
+    public static void Write(float value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(double)"/>
+    public static void Write(double value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(decimal)"/>
+    public static void Write(decimal value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(string)"/>
+    public static void Write(string? value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(object)"/>
+    public static void Write(object? value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(char[])"/>
+    public static void Write(char[]? buffer) => sysconsole.Write(buffer);
+
     /// <inheritdoc cref="sysconsole.Write(char[], int, int)"/>
     public static void Write(char[] buffer, int index, int count) => sysconsole.Write(buffer, index, count);
+
+    /// <inheritdoc cref="sysconsole.Write(string, object)"/>
+    public static void Write([StringSyntax("CompositeFormat")] string format, object? arg0) => sysconsole.Write(format, arg0);
+
+    /// <inheritdoc cref="sysconsole.Write(string, object, object)"/>
+    public static void Write([StringSyntax("CompositeFormat")] string format, object? arg0, object? arg1) => sysconsole.Write(format, arg0, arg1);
+
+    /// <inheritdoc cref="sysconsole.Write(string, object, object, object)"/>
+    public static void Write([StringSyntax("CompositeFormat")] string format, object? arg0, object? arg1, object? arg2) =>
+        sysconsole.Write(format, arg0, arg1, arg2);
+
+    /// <inheritdoc cref="sysconsole.Write(string, object[])"/>
+    public static void Write([StringSyntax("CompositeFormat")] string format, params object?[]? arg) => sysconsole.Write(format, arg);
+
+    /// <inheritdoc cref="sysconsole.Write(string, ReadOnlySpan{object})"/>
+    public static void Write([StringSyntax("CompositeFormat")] string format, params ReadOnlySpan<object?> arg) => sysconsole.Write(format, arg);
+
+    /// <inheritdoc cref="sysconsole.WriteLine()"/>
+    public static void WriteLine() => sysconsole.WriteLine();
+
+    /// <inheritdoc cref="sysconsole.WriteLine(bool)"/>
+    public static void WriteLine(bool value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(char)"/>
+    public static void WriteLine(char value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(long)"/>
+    public static void WriteLine(long value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(ulong)"/>
+    public static void WriteLine(ulong value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(int)"/>
+    public static void WriteLine(int value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(uint)"/>
+    public static void WriteLine(uint value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(float)"/>
+    public static void WriteLine(float value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(double)"/>
+    public static void WriteLine(double value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(decimal)"/>
+    public static void WriteLine(decimal value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(string)"/>
+    public static void WriteLine(string? value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(char[])"/>
+    public static void WriteLine(char[]? buffer) => sysconsole.WriteLine(buffer);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(char[], int, int)"/>
+    public static void WriteLine(char[] buffer, int index, int count) => sysconsole.WriteLine(buffer, index, count);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(object)"/>
+    public static void WriteLine(object? value) => sysconsole.WriteLine(value);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(string, object)"/>
+    public static void WriteLine([StringSyntax("CompositeFormat")] string format, object? arg0) => sysconsole.WriteLine(format, arg0);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(string, object, object)"/>
+    public static void WriteLine([StringSyntax("CompositeFormat")] string format, object? arg0, object? arg1) => sysconsole.WriteLine(format, arg0, arg1);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(string, object, object, object)"/>
+    public static void WriteLine([StringSyntax("CompositeFormat")] string format, object? arg0, object? arg1, object? arg2) =>
+        sysconsole.WriteLine(format, arg0, arg1, arg2);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(string, object[])"/>
+    public static void WriteLine([StringSyntax("CompositeFormat")] string format, params object?[]? arg) => sysconsole.WriteLine(format, arg);
+
+    /// <inheritdoc cref="sysconsole.WriteLine(string, ReadOnlySpan{object})"/>
+    public static void WriteLine([StringSyntax("CompositeFormat")] string format, params ReadOnlySpan<object?> arg) => sysconsole.WriteLine(format, arg);
+
+    #endregion
+
 
 
 }
