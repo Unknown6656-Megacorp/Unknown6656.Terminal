@@ -249,6 +249,54 @@ public static unsafe partial class Console
         set => sysconsole.CursorSize = value;
     }
 
+    /// <inheritdoc cref="sysconsole.ForegroundColor"/>
+    public static ConsoleColor ForegroundColor
+    {
+        [UnsupportedOSPlatform(OS.ANDR)]
+        [UnsupportedOSPlatform(OS.BROW)]
+        [UnsupportedOSPlatform(OS.IOS)]
+        [UnsupportedOSPlatform(OS.TVOS)]
+        get
+        {
+            if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
+#warning TODO : implement this
+                throw _unsupported_os;
+            else
+                return sysconsole.ForegroundColor;
+        }
+        set
+        {
+            if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
+                Write(GenerateVT520ColorString(value, true));
+            else
+                sysconsole.BackgroundColor = value;
+        }
+    }
+
+    /// <inheritdoc cref="sysconsole.BackgroundColor"/>
+    public static ConsoleColor BackgroundColor
+    {
+        [UnsupportedOSPlatform(OS.ANDR)]
+        [UnsupportedOSPlatform(OS.BROW)]
+        [UnsupportedOSPlatform(OS.IOS)]
+        [UnsupportedOSPlatform(OS.TVOS)]
+        get
+        {
+            if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
+#warning TODO : implement this
+                throw _unsupported_os;
+            else
+                return sysconsole.BackgroundColor;
+        }
+        set
+        {
+            if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
+                Write(GenerateVT520ColorString(value, false));
+            else
+                sysconsole.BackgroundColor = value;
+        }
+    }
+
     #endregion
     #region PROPERTIES: KEYBOARD
 
