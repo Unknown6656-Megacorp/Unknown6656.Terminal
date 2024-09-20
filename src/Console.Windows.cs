@@ -187,25 +187,25 @@ public static unsafe partial class Console
     }
 
     /// <summary>
-    /// Indicates whether the current console supports ANSI/VT100 escape sequences.
+    /// Indicates whether the current console supports ANSI/VT520 escape sequences.
     /// </summary>
-    public static bool SupportsVT100EscapeSequences => !OS.IsWindows || Environment.OSVersion.Version is { Major: >= 10, Build: >= 16257 };
+    public static bool SupportsVT520EscapeSequences => !OS.IsWindows || Environment.OSVersion.Version is { Major: >= 10, Build: >= 16257 };
 #pragma warning disable CA1416 // Validate platform compatibility
 
     /// <summary>
-    /// Indicates whether ANSI/VT100 escape sequences are enabled on the standard input stream.
+    /// Indicates whether ANSI/VT520 escape sequences are enabled on the standard input stream.
     /// </summary>
-    public static bool AreSTDInVT100EscapeSequencesEnabled => !OS.IsWindows || STDINConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    public static bool AreSTDInVT520EscapeSequencesEnabled => !OS.IsWindows || STDINConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 
     /// <summary>
-    /// Indicates whether ANSI/VT100 escape sequences are enabled on the standard output stream.
+    /// Indicates whether ANSI/VT520 escape sequences are enabled on the standard output stream.
     /// </summary>
-    public static bool AreSTDOutVT100EscapeSequencesEnabled => !OS.IsWindows || STDOUTConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    public static bool AreSTDOutVT520EscapeSequencesEnabled => !OS.IsWindows || STDOUTConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 
     /// <summary>
-    /// Indicates whether ANSI/VT100 escape sequences are enabled on the standard error stream.
+    /// Indicates whether ANSI/VT520 escape sequences are enabled on the standard error stream.
     /// </summary>
-    public static bool AreSTDErrVT100EscapeSequencesEnabled => !OS.IsWindows || STDERRConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    public static bool AreSTDErrVT520EscapeSequencesEnabled => !OS.IsWindows || STDERRConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 #pragma warning restore CA1416
 
 

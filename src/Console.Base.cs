@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text;
@@ -13,6 +13,7 @@ namespace Unknown6656.Console;
 
 
 // This file only forwards the members of the System.Console class to the Unknown6656.Console.Console class.
+
 
 public static unsafe partial class Console
 {
@@ -62,9 +63,10 @@ public static unsafe partial class Console
                 return sysconsole.CapsLock;
 #pragma warning restore CA1416
             else
-                throw _unsupported_os; // TODO
+#warning TODO : implement capslock functionality on non-Windows systems
+                throw _unsupported_os;
         }
-        set => SetVT100Bit(109, value);
+        set => SetVT520Bit(109, value);
     }
 
     /// <inheritdoc cref="sysconsole.CursorVisible"/>
@@ -84,7 +86,7 @@ public static unsafe partial class Console
             if (OS.IsWindows)
                 sysconsole.CursorVisible = value;
             else
-                SetVT100Bit(25, value);
+                SetVT520Bit(25, value);
         }
     }
 
@@ -95,7 +97,7 @@ public static unsafe partial class Console
         {
             if (OS.IsUnix || OS.IsWindows)
                 return sysconsole.CursorLeft;
-            else if (GetVT100CursorPosition() is (int left, _, _))
+            else if (GetExtendedCursorPosition() is (int left, _, _))
                 return left - 1;
             else
                 throw new InvalidOperationException("Failed to get cursor position.");
@@ -116,7 +118,7 @@ public static unsafe partial class Console
         {
             if (OS.IsUnix || OS.IsWindows)
                 return sysconsole.CursorTop;
-            else if (GetVT100CursorPosition() is (_, int top, _))
+            else if (GetExtendedCursorPosition() is (_, int top, _))
                 return top - 1;
             else
                 throw new InvalidOperationException("Failed to get cursor position.");

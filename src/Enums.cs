@@ -444,8 +444,8 @@ public readonly record struct ConsoleArea(int X, int Y, int Width, int Height)
 /// <summary>
 /// Represents a console graphic rendition, which includes various text attributes such as intensity, blink, underline, and colors.
 /// </summary>
-/// <param name="RawVT100SGRs">The raw VT100 SGR (Select Graphic Rendition) sequences.</param>
-public record ConsoleGraphicRendition(string[] RawVT100SGRs)
+/// <param name="RawVT520SGRs">The raw VT520 SGR (Select Graphic Rendition) sequences.</param>
+public record ConsoleGraphicRendition(string[] RawVT520SGRs)
 {
     /// <summary>
     /// Gets the default console graphic rendition (<c>^[0m</c>).
@@ -540,13 +540,13 @@ public record ConsoleGraphicRendition(string[] RawVT100SGRs)
 
 
     /// <summary>
-    /// Returns the full VT100 SGR (Select Graphic Rendition) sequences for this console graphic rendition.
+    /// Returns the full VT520 SGR (Select Graphic Rendition) sequences for this console graphic rendition.
     /// </summary>
-    /// <returns>An array of VT100 SGR sequences.</returns>
-    public string[] FullVT100SGR()
+    /// <returns>An array of VT520 SGR sequences.</returns>
+    public string[] FullVT520SGR()
     {
         IEnumerable<string> modes = [
-            .. RawVT100SGRs,
+            .. RawVT520SGRs,
             ((int)Intensity).ToString(),
             ((int)Blink).ToString(),
             ((int)Underlined).ToString(),
@@ -621,9 +621,9 @@ public record ConsoleGraphicRendition(string[] RawVT100SGRs)
     }
 
     /// <summary>
-    /// Parses the specified VT100 SGR (Select Graphic Rendition) sequences and returns the corresponding console graphic rendition.
+    /// Parses the specified VT520 SGR (Select Graphic Rendition) sequences and returns the corresponding console graphic rendition.
     /// </summary>
-    /// <param name="SGRs">Sequence of VT100 SGRs.</param>
+    /// <param name="SGRs">Sequence of VT520 SGRs.</param>
     /// <returns>Parsed <see cref="ConsoleGraphicRendition"/>.</returns>
     public static ConsoleGraphicRendition TryParse(string[] SGRs)
     {
@@ -631,7 +631,7 @@ public record ConsoleGraphicRendition(string[] RawVT100SGRs)
 
         foreach (string sgr in SGRs)
             if (sgr is "0")
-                rendition = Default with { RawVT100SGRs = SGRs };
+                rendition = Default with { RawVT520SGRs = SGRs };
             else if (sgr is "1")
                 rendition = rendition with { Intensity = TextIntensityMode.Bold };
             else if (sgr is "2")
@@ -713,7 +713,7 @@ public record ConsoleGraphicRendition(string[] RawVT100SGRs)
 
         return rendition;
 
-        Color parse_color(string vt100)
+        Color parse_color(string VT520)
         {
             // TODO :  "2:..." or "5:..."
 

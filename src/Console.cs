@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Collections.Generic;
@@ -37,10 +37,10 @@ public static unsafe partial class Console
     /// </summary>
     public static ConsoleGraphicRendition? CurrentGraphicRendition
     {
-        get => GetRawVT100GraphicRenditions() is { } sgr ? new(sgr) : null;
+        get => GetRawVT520GraphicRenditions() is { } sgr ? new(sgr) : null;
         set
         {
-            if (value?.FullVT100SGR() is { } sgr)
+            if (value?.FullVT520SGR() is { } sgr)
                 Write($"\e[{string.Join(';', sgr)}m");
         }
     }
@@ -110,17 +110,17 @@ public static unsafe partial class Console
 
     public static bool AlternateScreenEnabled
     {
-        set => SetVT100Bit(1049, value);
+        set => SetVT520Bit(1049, value);
     }
 
     public static bool BracketedPasteModeEnabled
     {
-        set => SetVT100Bit(2004, value);
+        set => SetVT520Bit(2004, value);
     }
 
     public static bool WindowAutoResizeModeEnabled
     {
-        set => SetVT100Bit(98, value);
+        set => SetVT520Bit(98, value);
     }
 
 
@@ -128,44 +128,44 @@ public static unsafe partial class Console
 
     public static bool MouseEnabled
     {
-        set => SetVT100Bit(1000, value);
+        set => SetVT520Bit(1000, value);
     }
 
     public static bool MouseDraggingEnabled
     {
-        set => SetVT100Bit(1002, value);
+        set => SetVT520Bit(1002, value);
     }
 
     public static bool MouseAnyEventEnabled
     {
-        set => SetVT100Bit(1003, value);
+        set => SetVT520Bit(1003, value);
     }
 
     public static bool MouseFocusReportingEnabled
     {
-        set => SetVT100Bit(1004, value);
+        set => SetVT520Bit(1004, value);
     }
 
     public static bool MouseFocusEnabled
     {
-        set => SetVT100Bit(1005, value);
+        set => SetVT520Bit(1005, value);
     }
 
     public static bool MouseHighlightingEnabled
     {
-        set => SetVT100Bit(1006, value);
+        set => SetVT520Bit(1006, value);
     }
 
 
 
     public static bool DarkMode
     {
-        set => SetVT100Bit(5, !value);
+        set => SetVT520Bit(5, !value);
     }
 
     public static bool RightToLeft
     {
-        set => SetVT100Bit(34, value);
+        set => SetVT520Bit(34, value);
     }
 
     public static (ConsoleColor Foreground, ConsoleColor Background) WindowFrameColors
@@ -270,9 +270,9 @@ public static unsafe partial class Console
         }
     }
 
-    public static void SetVT100Bit(int mode, bool bit) => Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
+    public static void SetVT520Bit(int mode, bool bit) => Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
 
-    public static string? GetRawVT100Report(string report_sequence, char terminator)
+    public static string? GetRawVT520Report(string report_sequence, char terminator)
     {
         Write($"\e{report_sequence}");
 
@@ -292,9 +292,9 @@ public static unsafe partial class Console
         return null;
     }
 
-    public static string? GetRawVT100SettingsReport(string report_sequence, char? response_introducer = 'r')
+    public static string? GetRawVT520SettingsReport(string report_sequence, char? response_introducer = 'r')
     {
-        if (GetRawVT100Report($"\eP$q{report_sequence}\e\\", '\\') is ['\e', 'P', _, '$', char ri, ..string response, '\e', '\\'] &&
+        if (GetRawVT520Report($"\eP$q{report_sequence}\e\\", '\\') is ['\e', 'P', _, '$', char ri, ..string response, '\e', '\\'] &&
             (response_introducer is null || ri == response_introducer))
             return response.TrimEnd(report_sequence);
 
@@ -303,7 +303,7 @@ public static unsafe partial class Console
 
     public static (int Mode, int[] Attributes)? GetDeviceAttributes()
     {
-        if (GetRawVT100Report("[c", 'c') is string response)
+        if (GetRawVT520Report("[c", 'c') is string response)
             try
             {
                 response = response.TrimStart("\e[?");
@@ -398,14 +398,14 @@ public static unsafe partial class Console
     public static void DuplicateArea(ConsoleArea source, int source_page, (int X, int Y, int Page) destination) =>
         Write($"\e[{source.Top};{source.Left};{source.Bottom};{source.Right};{source_page};{destination.X};{destination.Y};{destination.Page}$v");
 
-    public static void ChangeVT100ForArea(ConsoleArea area, IEnumerable<int> modes) => ChangeVT100ForArea(area, modes.StringJoin(";"));
+    public static void ChangeVT520ForArea(ConsoleArea area, IEnumerable<int> modes) => ChangeVT520ForArea(area, modes.StringJoin(";"));
 
-    public static void ChangeVT100ForArea(ConsoleArea area, string modes) =>
+    public static void ChangeVT520ForArea(ConsoleArea area, string modes) =>
         Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
 
     public static void GetCursorInformation()
     {
-        if (GetRawVT100Report("[1$w", '\\') is ['\e', 'P', _, '$', 'u', .. string response, '\e', '\\'])
+        if (GetRawVT520Report("[1$w", '\\') is ['\e', 'P', _, '$', 'u', .. string response, '\e', '\\'])
         {
             // TODO
         }
@@ -413,7 +413,7 @@ public static unsafe partial class Console
 
     public static void GetTabStopInformation()
     {
-        if (GetRawVT100Report("[2$w", '\\') is ['\e', 'P', _, '$', 'u', .. string response, '\e', '\\'])
+        if (GetRawVT520Report("[2$w", '\\') is ['\e', 'P', _, '$', 'u', .. string response, '\e', '\\'])
         {
             // TODO
         }
@@ -421,11 +421,11 @@ public static unsafe partial class Console
 
     // TODO : page 151 of https://web.mit.edu/dosathena/doc/www/ek-vt520-rm.pdf
 
-    public static string[]? GetRawVT100GraphicRenditions() => GetRawVT100SettingsReport("m")?.Split(';');
+    public static string[]? GetRawVT520GraphicRenditions() => GetRawVT520SettingsReport("m")?.Split(';');
 
     public static void GetCursorType()
     {
-        if (GetRawVT100SettingsReport(" q") is string response)
+        if (GetRawVT520SettingsReport(" q") is string response)
         {
             // TODO
         }
@@ -433,8 +433,8 @@ public static unsafe partial class Console
 
     public static void GetMargins()
     {
-        if (GetRawVT100SettingsReport("s") is string left_right &&
-            GetRawVT100SettingsReport("t") is string top_bottom)
+        if (GetRawVT520SettingsReport("s") is string left_right &&
+            GetRawVT520SettingsReport("t") is string top_bottom)
         {
             // TODO
         }
@@ -442,7 +442,7 @@ public static unsafe partial class Console
 
     public static void GetColor()
     {
-        if (GetRawVT100SettingsReport(",|") is string response)
+        if (GetRawVT520SettingsReport(",|") is string response)
         {
             // TODO
         }
@@ -547,7 +547,7 @@ public static unsafe partial class Console
 
     public static (int max_line_length, int line_count) WriteBlock(IEnumerable<string> lines, (int left, int top) starting_pos, (int width, int height) max_size, bool wrap_overflow = true)
     {
-        List<string> cropped_lines = SplitLinesWithVT100(lines.ToList(), max_size.width, wrap_overflow);
+        List<string> cropped_lines = SplitLinesWithVT520(lines.ToList(), max_size.width, wrap_overflow);
         int line_no = 0;
         int max_width = 0;
 
@@ -645,7 +645,7 @@ public static unsafe partial class Console
         }
     }
 
-    public static List<string> SplitLinesWithVT100(List<string> lines, int max_width, bool wrap_overflow = true)
+    public static List<string> SplitLinesWithVT520(List<string> lines, int max_width, bool wrap_overflow = true)
     {
         return [..from line in lines
                   from processed in process(line, max_width)
@@ -661,7 +661,7 @@ public static unsafe partial class Console
             {
                 char c = line[i];
 
-                if (c is '\e' or '\x9b' && GenerateVT100Regex().Match(line, i) is { Success: true } match)
+                if (c is '\e' or '\x9b' && GenerateVT520Regex().Match(line, i) is { Success: true } match)
                 {
                     curr.Append(line.AsSpan(i, match.Length));
                     i += match.Length - 1;
@@ -699,20 +699,20 @@ public static unsafe partial class Console
         }
     }
 
-    public static string StripVT100Sequences(this string raw_string) => GenerateVT100Regex().Replace(raw_string, "");
+    public static string StripVT520Sequences(this string raw_string) => GenerateVT520Regex().Replace(raw_string, "");
 
-    public static MatchCollection MatchVT100Sequences(this string raw_string) => GenerateVT100Regex().Matches(raw_string);
+    public static MatchCollection MatchVT520Sequences(this string raw_string) => GenerateVT520Regex().Matches(raw_string);
 
-    public static int CountVT100Sequences(this string raw_string) => GenerateVT100Regex().Count(raw_string);
+    public static int CountVT520Sequences(this string raw_string) => GenerateVT520Regex().Count(raw_string);
 
-    public static bool ContainsVT100Sequences(this string raw_string) => GenerateVT100Regex().IsMatch(raw_string);
+    public static bool ContainsVT520Sequences(this string raw_string) => GenerateVT520Regex().IsMatch(raw_string);
 
-    public static int LengthWithoutVT100Sequences(this string raw_string) => raw_string.Length - MatchVT100Sequences(raw_string).Sum(m => m.Length);
+    public static int LengthWithoutVT520Sequences(this string raw_string) => raw_string.Length - MatchVT520Sequences(raw_string).Sum(m => m.Length);
 
 
     // TODO : optimize this regex expression to be more efficient
     [GeneratedRegex(@"(\x1b\[|\x9b)([0-\?]*[\x20-\/]*[@-~]|[^@-_]*[@-_]|[\da-z]{1,2};\d{1,2}H)|\x1b([@-_0-\?\x60-~]|[\x20-\/]|[\x20-\/]{2,}[@-~]|[\x30-\x3f]|[\x20-\x2f]+[\x30-\x7e]|\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e])", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
-    private static partial Regex GenerateVT100Regex();
+    private static partial Regex GenerateVT520Regex();
 }
 
 

@@ -34,7 +34,7 @@
         <PackageProjectUrl>https://github.com/Unknown6656-Megacorp/Unknown6656.Console</PackageProjectUrl>
         <RepositoryUrl>https://github.com/Unknown6656-Megacorp/Unknown6656.Console</RepositoryUrl>
         <PackageIcon>unknown6656-logo-1024.png</PackageIcon>
-        <PackageTags>unknown6656;core;console;vt100;ansi;color;ascii;cli;terminal;cmd;sh;bash;art;library;runtime;os;internal;native</PackageTags>
+        <PackageTags>unknown6656;core;console;VT520;VT100;VT420;ansi;color;ascii;cli;terminal;cmd;sh;bash;art;library;runtime;os;internal;native</PackageTags>
 
         <PackageId>Unknown6656.Console</PackageId>
         <IncludeSymbols>true</IncludeSymbols>
