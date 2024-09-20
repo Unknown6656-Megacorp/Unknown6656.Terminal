@@ -17,7 +17,7 @@ namespace Unknown6656.Console;
 
 public static unsafe partial class Console
 {
-    #region I/E/O STREAMS
+    #region PROPERTIES: I/E/O STREAMS
 
     /// <inheritdoc cref="sysconsole.Error"/>
     public static TextWriter Error => sysconsole.Error;
@@ -60,7 +60,7 @@ public static unsafe partial class Console
     public static bool IsErrorRedirected => sysconsole.IsErrorRedirected;
 
     #endregion
-    #region BUFFER/WINDOW SIZE AND POSITION
+    #region PROPERTIES: BUFFER/WINDOW SIZE AND POSITION
 
     /// <inheritdoc cref="sysconsole.BufferHeight"/>
     public static int BufferHeight 
@@ -77,7 +77,7 @@ public static unsafe partial class Console
     }
 
     #endregion
-    #region CURSOR SIZE, POSITION, VISIBILITY
+    #region PROPERTIES: CURSOR SIZE, POSITION, VISIBILITY
 
     /// <inheritdoc cref="sysconsole.CursorVisible"/>
     public static bool CursorVisible
@@ -143,7 +143,7 @@ public static unsafe partial class Console
     }
 
     #endregion
-    #region KEYBOARD
+    #region PROPERTIES: KEYBOARD
 
     /// <inheritdoc cref="sysconsole.CapsLock"/>
     public static bool CapsLock
