@@ -560,64 +560,15 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
             IsMonospace ? "50" : "26",
             ((int)TextFrame).ToString(),
             ((int)TextTransformation).ToString(),
-            generate_color(ForegroundColor, true),
-            generate_color(BackgroundColor, false),
-            generate_color(UnderlineColor, null),
+            Console.GenerateVT520ColorString(ForegroundColor, true),
+            Console.GenerateVT520ColorString(BackgroundColor, false),
+            Console.GenerateVT520ColorString(UnderlineColor, null),
         ];
 
         if (modes.LastIndexOf("0") is int reset and > 0)
             modes = modes.Skip(reset);
 
         return modes.Distinct().ToArray();
-
-        string generate_color(Union<ConsoleColor, Color>? color, bool? foreground)
-        {
-            if (color?.Is(out ConsoleColor cc) ?? false)
-            {
-                (bool bright, ConsoleColor normalized) = cc switch
-                {
-                    ConsoleColor.Black => (false, cc),
-                    ConsoleColor.DarkBlue => (false, cc),
-                    ConsoleColor.DarkGreen => (false, cc),
-                    ConsoleColor.DarkCyan => (false, cc),
-                    ConsoleColor.DarkRed => (false, cc),
-                    ConsoleColor.DarkMagenta => (false, cc),
-                    ConsoleColor.DarkYellow => (false, cc),
-                    ConsoleColor.Gray => (false, cc),
-                    ConsoleColor.DarkGray => (true, ConsoleColor.Black),
-                    ConsoleColor.Blue => (true, ConsoleColor.DarkBlue),
-                    ConsoleColor.Green => (true, ConsoleColor.DarkGreen),
-                    ConsoleColor.Cyan => (true, ConsoleColor.DarkCyan),
-                    ConsoleColor.Red => (true, ConsoleColor.DarkRed),
-                    ConsoleColor.Magenta => (true, ConsoleColor.DarkMagenta),
-                    ConsoleColor.Yellow => (true, ConsoleColor.DarkYellow),
-                    ConsoleColor.White => (true, ConsoleColor.Gray),
-                    _ => (false, cc),
-                };
-
-                return $"{(foreground, bright) switch
-                {
-                    (true, true) => "9",
-                    (true, false) => "3",
-                    (false, true) => "10",
-                    (false, false) => "4",
-                }}{(int)normalized}";
-            }
-            else if (color?.Is(out Color rgb) ?? false)
-                return $"{foreground switch
-                {
-                    true => "38",
-                    false => "48",
-                    _ => "58",
-                }}:2:{rgb.R}:{rgb.G}:{rgb.B}";
-
-            return foreground switch
-            {
-                true => "39",
-                false => "49",
-                _ => "59",
-            };
-        }
     }
 
     /// <summary>

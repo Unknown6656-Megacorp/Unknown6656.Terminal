@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System;
@@ -89,6 +90,55 @@ public static unsafe partial class Console
         Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
 
     public static string[]? GetRawVT520GraphicRenditions() => GetRawVT520SettingsReport("m")?.Split(';');
+
+    public static string GenerateVT520ColorString(Union<ConsoleColor, Color>? color, bool? foreground)
+    {
+        if (color?.Is(out ConsoleColor cc) ?? false)
+        {
+            (bool bright, ConsoleColor normalized) = cc switch
+            {
+                ConsoleColor.Black => (false, cc),
+                ConsoleColor.DarkBlue => (false, cc),
+                ConsoleColor.DarkGreen => (false, cc),
+                ConsoleColor.DarkCyan => (false, cc),
+                ConsoleColor.DarkRed => (false, cc),
+                ConsoleColor.DarkMagenta => (false, cc),
+                ConsoleColor.DarkYellow => (false, cc),
+                ConsoleColor.Gray => (false, cc),
+                ConsoleColor.DarkGray => (true, ConsoleColor.Black),
+                ConsoleColor.Blue => (true, ConsoleColor.DarkBlue),
+                ConsoleColor.Green => (true, ConsoleColor.DarkGreen),
+                ConsoleColor.Cyan => (true, ConsoleColor.DarkCyan),
+                ConsoleColor.Red => (true, ConsoleColor.DarkRed),
+                ConsoleColor.Magenta => (true, ConsoleColor.DarkMagenta),
+                ConsoleColor.Yellow => (true, ConsoleColor.DarkYellow),
+                ConsoleColor.White => (true, ConsoleColor.Gray),
+                _ => (false, cc),
+            };
+
+            return $"{(foreground, bright) switch
+            {
+                (true, true) => "9",
+                (true, false) => "3",
+                (false, true) => "10",
+                (false, false) => "4",
+            }}{(int)normalized}";
+        }
+        else if (color?.Is(out Color rgb) ?? false)
+            return $"{foreground switch
+            {
+                true => "38",
+                false => "48",
+                _ => "58",
+            }}:2:{rgb.R}:{rgb.G}:{rgb.B}";
+
+        return foreground switch
+        {
+            true => "39",
+            false => "49",
+            _ => "59",
+        };
+    }
 }
 
 /// <summary>
