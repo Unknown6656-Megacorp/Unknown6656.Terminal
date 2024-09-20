@@ -20,17 +20,29 @@ public static unsafe partial class Console
     #region PROPERTIES: I/E/O STREAMS
 
     /// <inheritdoc cref="sysconsole.Error"/>
-    public static TextWriter Error => sysconsole.Error;
+    public static TextWriter Error
+    {
+        get => sysconsole.Error;
+        set => SetError(value);
+    }
 
     /// <inheritdoc cref="sysconsole.In"/>
     [UnsupportedOSPlatform(OS.ANDR)]
     [UnsupportedOSPlatform(OS.BROW)]
     [UnsupportedOSPlatform(OS.IOS)]
     [UnsupportedOSPlatform(OS.TVOS)]
-    public static TextReader In => sysconsole.In;
+    public static TextReader In
+    {
+        get => sysconsole.In;
+        set => SetIn(value);
+    }
 
     /// <inheritdoc cref="sysconsole.Out"/>
-    public static TextWriter Out => sysconsole.Out;
+    public static TextWriter Out
+    {
+        get => sysconsole.Out;
+        set => SetOut(value);
+    }
 
     /// <inheritdoc cref="sysconsole.InputEncoding"/>
     [UnsupportedOSPlatform(OS.ANDR)]
@@ -291,17 +303,49 @@ public static unsafe partial class Console
             Write($"\e[8;{height};{width}t");
     }
 
-    /// <inheritdoc cref="SetBufferSize(int, int)"/>
+    /// <inheritdoc cref="sysconsole.SetBufferSize(int, int)"/>
     [SupportedOSPlatform(OS.WIN)]
     public static void SetBufferSize(int width, int height) => sysconsole.SetBufferSize(width, height);
 
     #endregion
+    #region METHODS: STREAMS
 
+    /// <inheritdoc cref="sysconsole.OpenStandardInput()"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    [UnsupportedOSPlatform(OS.IOS)]
+    [UnsupportedOSPlatform(OS.TVOS)]
+    public static Stream OpenStandardInput() => sysconsole.OpenStandardInput();
 
+    /// <inheritdoc cref="sysconsole.OpenStandardInput(int)"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    public static Stream OpenStandardInput(int bufferSize) => sysconsole.OpenStandardInput(bufferSize);
 
+    /// <inheritdoc cref="sysconsole.OpenStandardOutput()"/>
+    public static Stream OpenStandardOutput() => sysconsole.OpenStandardOutput();
 
+    /// <inheritdoc cref="sysconsole.OpenStandardOutput(int)"/>
+    public static Stream OpenStandardOutput(int bufferSize) => sysconsole.OpenStandardOutput(bufferSize);
 
+    /// <inheritdoc cref="sysconsole.OpenStandardError()"/>
+    public static Stream OpenStandardError() => sysconsole.OpenStandardError();
 
+    /// <inheritdoc cref="sysconsole.OpenStandardError(int)"/>
+    public static Stream OpenStandardError(int bufferSize) => sysconsole.OpenStandardError(bufferSize);
 
+    /// <inheritdoc cref="sysconsole.SetError"/>
+    public static void SetError(TextWriter writer) => sysconsole.SetError(writer);
 
+    /// <inheritdoc cref="sysconsole.SetIn"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    [UnsupportedOSPlatform(OS.IOS)]
+    [UnsupportedOSPlatform(OS.TVOS)]
+    public static void SetIn(TextReader writer) => sysconsole.SetIn(writer);
+
+    /// <inheritdoc cref="sysconsole.SetOut"/>
+    public static void SetOut(TextWriter writer) => sysconsole.SetOut(writer);
+
+    #endregion
 }
