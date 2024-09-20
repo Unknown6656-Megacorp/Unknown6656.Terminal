@@ -63,7 +63,7 @@ public static unsafe partial class Console
     #region PROPERTIES: BUFFER/WINDOW SIZE AND POSITION
 
     /// <inheritdoc cref="sysconsole.BufferHeight"/>
-    public static int BufferHeight 
+    public static int BufferHeight
     { 
         get => sysconsole.BufferHeight;
         set => BufferSize = BufferSize with { Height = value };
@@ -74,6 +74,68 @@ public static unsafe partial class Console
     {
         get => sysconsole.BufferWidth;
         set => BufferSize = BufferSize with { Width = value };
+    }
+
+    /// <inheritdoc cref="sysconsole.WindowWidth"/>
+    public static int WindowWidth
+    {
+        get => sysconsole.WindowWidth;
+        set
+        {
+            if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+                sysconsole.WindowWidth = value;
+#pragma warning restore CA1416
+            else
+#warning TODO : implement this on non-Windows systems
+                throw _unsupported_os;
+        }
+    }
+
+    /// <inheritdoc cref="sysconsole.WindowHeight"/>
+    public static int WindowHeight
+    {
+        get => sysconsole.WindowHeight;
+        set
+        {
+            if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+                sysconsole.WindowHeight = value;
+#pragma warning restore CA1416
+            else
+#warning TODO : implement this on non-Windows systems
+                throw _unsupported_os;
+        }
+    }
+
+    /// <inheritdoc cref="sysconsole.WindowLeft"/>
+    public static int WindowLeft
+    {
+        get => sysconsole.WindowLeft;
+        set
+        {
+            if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+                sysconsole.WindowLeft = value;
+#pragma warning restore CA1416
+            else
+                SetWindowPosition(value, WindowTop);
+        }
+    }
+
+    /// <inheritdoc cref="sysconsole.WindowTop"/>
+    public static int WindowTop
+    {
+        get => sysconsole.WindowTop;
+        set
+        {
+            if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+                sysconsole.WindowTop = value;
+#pragma warning restore CA1416
+            else
+                SetWindowPosition(WindowLeft, value);
+        }
     }
 
     #endregion
@@ -103,15 +165,7 @@ public static unsafe partial class Console
     /// <inheritdoc cref="sysconsole.CursorLeft"/>
     public static int CursorLeft
     {
-        get
-        {
-            if (OS.IsUnix || OS.IsWindows)
-                return sysconsole.CursorLeft;
-            else if (GetExtendedCursorPosition() is (int left, _, _))
-                return left - 1;
-            else
-                throw new InvalidOperationException("Failed to get cursor position.");
-        }
+        get => OS.IsUnix || OS.IsWindows ? sysconsole.CursorLeft : GetCursorPosition().Left;
         set
         {
             if (OS.IsUnix || OS.IsWindows)
@@ -124,21 +178,13 @@ public static unsafe partial class Console
     /// <inheritdoc cref="sysconsole.CursorTop"/>
     public static int CursorTop
     {
-        get
-        {
-            if (OS.IsUnix || OS.IsWindows)
-                return sysconsole.CursorTop;
-            else if (GetExtendedCursorPosition() is (_, int top, _))
-                return top - 1;
-            else
-                throw new InvalidOperationException("Failed to get cursor position.");
-        }
+        get => OS.IsUnix || OS.IsWindows ? sysconsole.CursorTop : GetCursorPosition().Top;
         set
         {
             if (OS.IsUnix || OS.IsWindows)
                 sysconsole.CursorTop = value;
             else
-                sysconsole.Write($"\e[{value + 1};{CursorLeft}H");
+                SetCursorPosition(CursorLeft, value);
         }
     }
 
@@ -169,11 +215,39 @@ public static unsafe partial class Console
         set => SetVT520Bit(109, value);
     }
 
+    /// <inheritdoc cref="sysconsole.NumberLock"/>
+    public static bool NumberLock
+    {
+        get
+        {
+            if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+                return sysconsole.NumberLock;
+#pragma warning restore CA1416
+            else
+#warning TODO : implement this functionality on non-Windows systems
+                throw _unsupported_os;
+        }
+        set => SetVT520Bit(108, value);
+    }
 
+    /// <inheritdoc cref="sysconsole.KeyAvailable"/>
+    public static bool KeyAvailable => sysconsole.KeyAvailable;
 
+    /// <inheritdoc cref="sysconsole.TreatControlCAsInput"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    [UnsupportedOSPlatform(OS.IOS)]
+    [UnsupportedOSPlatform(OS.TVOS)]
+#warning TODO : implement this on non-Windows systems
+    public static bool TreatControlCAsInput
+    {
+        get => sysconsole.TreatControlCAsInput;
+        set => sysconsole.TreatControlCAsInput = value;
+    }
 
     #endregion
-    #region METHOS: BUFFER/WINDOW/CURSOR SIZE AND POSITION
+    #region METHODS: BUFFER/WINDOW/CURSOR SIZE AND POSITION
 
     /// <inheritdoc cref="GetCursorPosition"/>
     public static (int Left, int Top) GetCursorPosition()
@@ -184,6 +258,15 @@ public static unsafe partial class Console
             return (left - 1, top - 1);
         else
             throw new InvalidOperationException("Failed to get cursor position.");
+    }
+
+    /// <inheritdoc cref="SetCursorPosition"/>
+    public static void SetCursorPosition(int left, int top)
+    {
+        if (OS.IsUnix || OS.IsWindows)
+            sysconsole.SetCursorPosition(left, top);
+        else
+            sysconsole.Write($"\e[{top + 1};{left + 1}H");
     }
 
     /// <inheritdoc cref="SetWindowPosition"/>
@@ -218,7 +301,7 @@ public static unsafe partial class Console
 
 
 
-    //public static int CursorSize { get; set; }
+
 
 
 }
