@@ -41,7 +41,7 @@ public static unsafe partial class Console
         set
         {
             if (value?.FullVT100SGR() is { } sgr)
-                sysconsole.Write($"\e[{string.Join(';', sgr)}m");
+                Write($"\e[{string.Join(';', sgr)}m");
         }
     }
 
@@ -50,8 +50,8 @@ public static unsafe partial class Console
     /// </summary>
     public static Point CursorPosition
     {
-        get => new(sysconsole.CursorLeft, sysconsole.CursorTop);
-        set => sysconsole.SetCursorPosition(value.X, value.Y);
+        get => new(CursorLeft, CursorTop);
+        set => SetCursorPosition(value.X, value.Y);
     }
 
     /// <summary>
@@ -59,15 +59,15 @@ public static unsafe partial class Console
     /// </summary>
     public static Point WindowPosition
     {
-        get => new(sysconsole.WindowLeft, sysconsole.WindowTop);
+        get => new(WindowLeft, WindowTop);
         set
         {
             if (OS.IsWindows)
 #pragma warning disable CA1416 // Validate platform compatibility
-                sysconsole.SetWindowPosition(value.X, value.Y);
+                SetWindowPosition(value.X, value.Y);
 #pragma warning restore CA1416
             else
-                sysconsole.Write($"\e[3;{value.X};{value.Y}t");
+                Write($"\e[3;{value.X};{value.Y}t");
         }
     }
 
@@ -77,15 +77,15 @@ public static unsafe partial class Console
     /// </summary>
     public static Size WindowSize
     {
-        get => new(sysconsole.WindowWidth, sysconsole.WindowHeight);
+        get => new(WindowWidth, WindowHeight);
         set
         {
             if (OS.IsWindows)
 #pragma warning disable CA1416 // Validate platform compatibility
-                sysconsole.SetWindowSize(value.Width, value.Height);
+                SetWindowSize(value.Width, value.Height);
 #pragma warning restore CA1416
             else
-                sysconsole.Write($"\e[8;{value.Height};{value.Width}t");
+                Write($"\e[8;{value.Height};{value.Width}t");
         }
     }
 
@@ -95,9 +95,9 @@ public static unsafe partial class Console
     /// </summary>
     public static Size BufferSize
     {
-        get => new(sysconsole.BufferWidth, sysconsole.BufferHeight);
+        get => new(BufferWidth, BufferHeight);
 #pragma warning disable CA1416 // Validate platform compatibility
-        set => sysconsole.SetBufferSize(value.Width, value.Height);
+        set => SetBufferSize(value.Width, value.Height);
 #pragma warning restore CA1416
     }
 
@@ -105,7 +105,7 @@ public static unsafe partial class Console
 
     public static ConsoleCursorShape CursorShape
     {
-        set => sysconsole.Write($"\e[{(int)value} q");
+        set => Write($"\e[{(int)value} q");
     }
 
     public static bool CursorVisible
@@ -113,14 +113,14 @@ public static unsafe partial class Console
         get
         {
             if (OS.IsWindows)
-                return sysconsole.CursorVisible;
+                return CursorVisible;
             else
                 throw new NotImplementedException(); // TODO
         }
         set
         {
             if (OS.IsWindows)
-                sysconsole.CursorVisible = value;
+                CursorVisible = value;
             else
                 SetVT100Bit(25, value);
         }
@@ -189,13 +189,13 @@ public static unsafe partial class Console
     public static (ConsoleColor Foreground, ConsoleColor Background) WindowFrameColors
     {
         get => throw new NotImplementedException();
-        set => sysconsole.Write($"\e[2;{(int)value.Foreground};{(int)value.Background},|");
+        set => Write($"\e[2;{(int)value.Foreground};{(int)value.Background},|");
     }
 
     public static TextIntensityMode TextIntensity
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Intensity;
-        set => sysconsole.Write(value switch {
+        set => Write(value switch {
             TextIntensityMode.Bold => "\e[1m",
             TextIntensityMode.Dim => "\e[2m",
             _ => "\e[22m"
@@ -205,7 +205,7 @@ public static unsafe partial class Console
     public static TextBlinkMode TextBlink
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Blink;
-        set => sysconsole.Write(value switch
+        set => Write(value switch
         {
             TextBlinkMode.Slow => "\e[5m",
             TextBlinkMode.Rapid => "\e[6m",
@@ -216,55 +216,55 @@ public static unsafe partial class Console
     public static bool InvertedColors
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).AreColorsInverted;
-        set => sysconsole.Write(value ? "\e[7m" : "\e[27m");
+        set => Write(value ? "\e[7m" : "\e[27m");
     }
 
     public static TextUnderlinedMode TextUnderline
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Underlined;
-        set => sysconsole.Write($"\e[{(int)value}m");
+        set => Write($"\e[{(int)value}m");
     }
 
     public static bool CrossedOutText
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsCrossedOut;
-        set => sysconsole.Write(value ? "\e[9m" : "\e[29m");
+        set => Write(value ? "\e[9m" : "\e[29m");
     }
 
     public static bool OverlinedText
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsOverlined;
-        set => sysconsole.Write(value ? "\e[53m" : "\e[55m");
+        set => Write(value ? "\e[53m" : "\e[55m");
     }
 
     public static TextFrameMode TextFrame
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).TextFrame;
-        set => sysconsole.Write($"\e[{(int)value}m");
+        set => Write($"\e[{(int)value}m");
     }
 
     public static bool ConcealedText
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsTextConcealed;
-        set => sysconsole.Write(value ? "\e[8m" : "\e[28m");
+        set => Write(value ? "\e[8m" : "\e[28m");
     }
 
     public static bool ItalicText
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsItalic;
-        set => sysconsole.Write(value ? "\e[3m" : "\e[23m");
+        set => Write(value ? "\e[3m" : "\e[23m");
     }
 
     public static bool GothicText
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsGothic;
-        set => sysconsole.Write(value ? "\e[20m" : "\e[23m");
+        set => Write(value ? "\e[20m" : "\e[23m");
     }
 
     public static TextTransformationMode TextTransformation
     {
         get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).TextTransformation;
-        set => sysconsole.Write($"\e[{(int)value}m");
+        set => Write($"\e[{(int)value}m");
     }
 
 
@@ -288,17 +288,17 @@ public static unsafe partial class Console
         }
     }
 
-    public static void SetVT100Bit(int mode, bool bit) => sysconsole.Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
+    public static void SetVT100Bit(int mode, bool bit) => Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
 
     public static string? GetRawVT100Report(string report_sequence, char terminator)
     {
-        sysconsole.Write($"\e{report_sequence}");
+        Write($"\e{report_sequence}");
 
         try
         {
             string response = "";
 
-            while (sysconsole.KeyAvailable && sysconsole.ReadKey(true).KeyChar is char c && c != terminator)
+            while (KeyAvailable && ReadKey(true).KeyChar is char c && c != terminator)
                 response += c;
 
             return response;
@@ -342,7 +342,7 @@ public static unsafe partial class Console
 
         if (OS.IsWindows && volume == 1)
 #pragma warning disable CA1416 // Validate platform compatibility
-            sysconsole.Beep(tone switch
+            Beep(tone switch
             {
                 ConsoleTone.C5 => 523,
                 ConsoleTone.CSharp5 => 554,
@@ -373,25 +373,25 @@ public static unsafe partial class Console
             }, duration);
 #pragma warning restore CA1416
         else
-            sysconsole.Write($"\e[{(int)Math.Round(volume * 7)};{(int)tone};{(int)Math.Round(duration * .032)}\a");
+            Write($"\e[{(int)Math.Round(volume * 7)};{(int)tone};{(int)Math.Round(duration * .032)}\a");
     }
 
-    public static void SoftReset() => sysconsole.Write("\e[!p");
+    public static void SoftReset() => Write("\e[!p");
 
-    public static void ClearAndResetAll() => sysconsole.Write("\e[3J\ec\e[m");
+    public static void ClearAndResetAll() => Write("\e[3J\ec\e[m");
 
-    public static void ResetAllAttributes() => sysconsole.Write("\e[m");
+    public static void ResetAllAttributes() => Write("\e[m");
 
-    public static void ResetForegroundColor() => sysconsole.Write("\e[39m");
+    public static void ResetForegroundColor() => Write("\e[39m");
 
-    public static void ResetBackgroundColor() => sysconsole.Write("\e[49m");
+    public static void ResetBackgroundColor() => Write("\e[49m");
 
     public static void ScrollUp(int lines)
     {
         if (lines < 0)
             ScrollDown(-lines);
         else if (lines > 0)
-            sysconsole.Write($"\e[{lines}S");
+            Write($"\e[{lines}S");
     }
 
     public static void ScrollDown(int lines)
@@ -399,14 +399,14 @@ public static unsafe partial class Console
         if (lines < 0)
             ScrollUp(-lines);
         else if (lines > 0)
-            sysconsole.Write($"\e[{lines}T");
+            Write($"\e[{lines}T");
     }
 
     public static void ClearArea(ConsoleArea area, bool selective = false) =>
-        sysconsole.Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right}${(selective ? 'z' : '{')}");
+        Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right}${(selective ? 'z' : '{')}");
 
     public static void FillArea(ConsoleArea area, char @char) =>
-        sysconsole.Write($"\e[{(int)@char};{area.Top};{area.Left};{area.Bottom};{area.Right}$z");
+        Write($"\e[{(int)@char};{area.Top};{area.Left};{area.Bottom};{area.Right}$z");
 
     public static void DuplicateArea(ConsoleArea source, (int X, int Y) destination) => DuplicateArea(source, 0, destination);
 
@@ -414,12 +414,12 @@ public static unsafe partial class Console
         DuplicateArea(source, source_page, (destination.X, destination.Y, source_page));
 
     public static void DuplicateArea(ConsoleArea source, int source_page, (int X, int Y, int Page) destination) =>
-        sysconsole.Write($"\e[{source.Top};{source.Left};{source.Bottom};{source.Right};{source_page};{destination.X};{destination.Y};{destination.Page}$v");
+        Write($"\e[{source.Top};{source.Left};{source.Bottom};{source.Right};{source_page};{destination.X};{destination.Y};{destination.Page}$v");
 
     public static void ChangeVT100ForArea(ConsoleArea area, IEnumerable<int> modes) => ChangeVT100ForArea(area, modes.StringJoin(";"));
 
     public static void ChangeVT100ForArea(ConsoleArea area, string modes) =>
-        sysconsole.Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
+        Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
 
     public static void GetCursorInformation()
     {
@@ -471,23 +471,23 @@ public static unsafe partial class Console
 
 
 
-    public static void WriteReverseIndex() => sysconsole.Write("\eM");
+    public static void WriteReverseIndex() => Write("\eM");
 
     public static void Write(object? value, int left, int top) => Write(value, (left, top));
 
     public static void Write(object? value, (int left, int top) starting_pos)
     {
-        sysconsole.SetCursorPosition(starting_pos.left, starting_pos.top);
-        sysconsole.Write(value);
+        SetCursorPosition(starting_pos.left, starting_pos.top);
+        Write(value);
     }
 
-    public static void InsertLine(int count = 1) => sysconsole.Write($"\e[{count}L");
+    public static void InsertLine(int count = 1) => Write($"\e[{count}L");
 
-    public static void DeleteLine(int count = 1) => sysconsole.Write($"\e[{count}M");
+    public static void DeleteLine(int count = 1) => Write($"\e[{count}M");
 
-    public static void InsertSpaceCharacter(int count = 1) => sysconsole.Write($"\e[{count}@");
+    public static void InsertSpaceCharacter(int count = 1) => Write($"\e[{count}@");
 
-    public static void DeleteCharacter(int count = 1) => sysconsole.Write($"\e[{count}P");
+    public static void DeleteCharacter(int count = 1) => Write($"\e[{count}P");
 
     public static void ChangeLineRendering(int line, LineRenderingMode mode)
     {
@@ -498,8 +498,8 @@ public static unsafe partial class Console
         }
         else
         {
-            sysconsole.CursorTop = line;
-            sysconsole.Write($"\e#{mode switch
+            CursorTop = line;
+            Write($"\e#{mode switch
             {
                 LineRenderingMode.DoubleWidth => 6,
                 LineRenderingMode.DoubleHeight_Top => 3,
@@ -509,38 +509,38 @@ public static unsafe partial class Console
         }
     }
 
-    public static void WriteDoubleWidthLine(object? value) => WriteDoubleWidthLine(value, (sysconsole.CursorLeft, sysconsole.CursorTop));
+    public static void WriteDoubleWidthLine(object? value) => WriteDoubleWidthLine(value, (CursorLeft, CursorTop));
 
     public static void WriteDoubleWidthLine(object? value, int left, int top) => WriteDoubleWidthLine(value, (left, top));
 
     public static void WriteDoubleWidthLine(object? value, (int left, int top)? starting_pos)
     {
         if (starting_pos is (int x, int y))
-            sysconsole.SetCursorPosition(x, y);
+            SetCursorPosition(x, y);
 
-        sysconsole.WriteLine($"\e#5{value}");
+        WriteLine($"\e#5{value}");
     }
 
-    public static void WriteDoubleSizeLine(object? value) => WriteDoubleSizeLine(value, (sysconsole.CursorLeft, sysconsole.CursorTop));
+    public static void WriteDoubleSizeLine(object? value) => WriteDoubleSizeLine(value, (CursorLeft, CursorTop));
 
     public static void WriteDoubleSizeLine(object? value, int left, int top) => WriteDoubleSizeLine(value, (left, top));
 
     public static void WriteDoubleSizeLine(object? value, (int left, int top)? starting_pos)
     {
-        int x = starting_pos?.left ?? sysconsole.CursorLeft;
-        int y = starting_pos?.top ?? sysconsole.CursorTop;
+        int x = starting_pos?.left ?? CursorLeft;
+        int y = starting_pos?.top ?? CursorTop;
         string text = value?.ToString() ?? "";
 
-        sysconsole.SetCursorPosition(x, y);
-        sysconsole.Write($"\e#3{text}");
-        sysconsole.SetCursorPosition(x, y + 1);
-        sysconsole.WriteLine($"\e#4{text}");
+        SetCursorPosition(x, y);
+        Write($"\e#3{text}");
+        SetCursorPosition(x, y + 1);
+        WriteLine($"\e#4{text}");
     }
 
     public static void FullClear()
     {
-        sysconsole.Clear();
-        sysconsole.Write("\e[3J");
+        Clear();
+        Write("\e[3J");
     }
 
     public static (int max_line_length, int line_count) WriteBlock(string value, int left, int top) =>
@@ -571,17 +571,17 @@ public static unsafe partial class Console
 
         foreach (string line in cropped_lines.Take(max_size.height))
         {
-            sysconsole.SetCursorPosition(starting_pos.left, starting_pos.top + line_no);
-            sysconsole.Write(line);
+            SetCursorPosition(starting_pos.left, starting_pos.top + line_no);
+            Write(line);
 
             ++line_no;
-            max_width = Math.Max(max_width, sysconsole.CursorLeft - starting_pos.left);
+            max_width = Math.Max(max_width, CursorLeft - starting_pos.left);
         }
 
         return (max_width, line_no);
     }
 
-    public static void WriteVertical(object? value) => WriteVertical(value, sysconsole.CursorLeft, sysconsole.CursorTop);
+    public static void WriteVertical(object? value) => WriteVertical(value, CursorLeft, CursorTop);
 
     public static void WriteVertical(object? value, int left, int top) => WriteVertical(value, (left, top));
 
@@ -591,15 +591,15 @@ public static unsafe partial class Console
 
         for (int i = 0; i < s.Length; i++)
         {
-            sysconsole.CursorTop = starting_pos.top + i;
-            sysconsole.CursorLeft = starting_pos.left;
-            sysconsole.Write(s[i]);
+            CursorTop = starting_pos.top + i;
+            CursorLeft = starting_pos.left;
+            Write(s[i]);
         }
     }
 
-    public static void WriteUnderlined(object? value) => sysconsole.Write($"\e[4m{value}\e[24m");
+    public static void WriteUnderlined(object? value) => Write($"\e[4m{value}\e[24m");
 
-    public static void WriteInverted(object? value) => sysconsole.Write($"\e[7m{value}\e[27m");
+    public static void WriteInverted(object? value) => Write($"\e[7m{value}\e[27m");
 
     [SupportedOSPlatform(OS.WIN)]
     public static (ConsoleFontInfo before, ConsoleFontInfo after) SetCurrentFont(Font font)
@@ -632,7 +632,7 @@ public static unsafe partial class Console
         if (OS.IsWindows)
         {
 #pragma warning disable CA1416 // Validate platform compatibility
-            cursor_size = sysconsole.CursorSize;
+            cursor_size = CursorSize;
             stdinmode = STDINConsoleMode;
             stderrmode = STDERRConsoleMode;
             stdoutmode = STDOUTConsoleMode;
@@ -641,8 +641,8 @@ public static unsafe partial class Console
 
         return new()
         {
-            InputEncoding = sysconsole.InputEncoding,
-            OutputEncoding = sysconsole.OutputEncoding,
+            InputEncoding = InputEncoding,
+            OutputEncoding = OutputEncoding,
             CursorSize = cursor_size,
             STDINMode = stdinmode,
             STDOUTMode = stdoutmode,
@@ -659,8 +659,8 @@ public static unsafe partial class Console
     { 
         if (state is { })
         {
-            sysconsole.InputEncoding = state.InputEncoding ?? Encoding.Default;
-            sysconsole.OutputEncoding = state.OutputEncoding ?? Encoding.Default;
+            InputEncoding = state.InputEncoding ?? Encoding.Default;
+            OutputEncoding = state.OutputEncoding ?? Encoding.Default;
 
             if (OS.IsWindows)
             {
@@ -670,7 +670,7 @@ public static unsafe partial class Console
                 STDERRConsoleMode = state.STDERRMode;
 
                 if (state.CursorSize is int sz)
-                    LINQ.TryDo(() => sysconsole.CursorSize = sz);
+                    LINQ.TryDo(() => CursorSize = sz);
 #pragma warning restore CA1416
             }
 
