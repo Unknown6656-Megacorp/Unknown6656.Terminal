@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text;
@@ -17,6 +17,33 @@ namespace Unknown6656.Console;
 
 public static unsafe partial class Console
 {
+    /// <inheritdoc cref="sysconsole.CancelKeyPress"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    [UnsupportedOSPlatform(OS.IOS)]
+    [UnsupportedOSPlatform(OS.TVOS)]
+    public static event ConsoleCancelEventHandler? CancelKeyPress
+    {
+        add => sysconsole.CancelKeyPress += value;
+        remove => sysconsole.CancelKeyPress -= value;
+    }
+
+
+    /// <inheritdoc cref="sysconsole.Title"/>
+    public static string Title
+    {
+        get
+        {
+            if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+                return sysconsole.Title;
+#pragma warning restore CA1416
+            else
+                return GetRawVT520Report("21t", '\x07') ?? throw new InvalidOperationException("Failed to get console title.");
+        }
+        set => sysconsole.Title = value;
+    }
+
     #region PROPERTIES: I/E/O STREAMS
 
     /// <inheritdoc cref="sysconsole.Error"/>
