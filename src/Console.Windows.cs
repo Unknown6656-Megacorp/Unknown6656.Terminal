@@ -207,4 +207,24 @@ public static unsafe partial class Console
     /// </summary>
     public static bool AreSTDErrVT100EscapeSequencesEnabled => !OS.IsWindows || STDERRConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 #pragma warning restore CA1416
+
+
+    [SupportedOSPlatform(OS.WIN)]
+    public static (ConsoleFontInfo before, ConsoleFontInfo after) SetCurrentFont(Font font)
+    {
+        ConsoleFontInfo before = FontInfo;
+        ConsoleFontInfo set = new()
+        {
+            cbSize = Marshal.SizeOf<ConsoleFontInfo>(),
+            FontIndex = 0,
+            FontFamily = ConsoleFontInfo.FIXED_WIDTH_TRUETYPE,
+            FontName = font.Name,
+            FontWeight = font.Bold ? 700 : 400,
+            FontSize = font.Size > 0 ? (default, (short)font.Size) : before.FontSize,
+        };
+
+        FontInfo = set;
+
+        return (before, FontInfo);
+    }
 }

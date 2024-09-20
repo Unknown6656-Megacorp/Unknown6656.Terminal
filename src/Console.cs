@@ -108,24 +108,6 @@ public static unsafe partial class Console
         set => Write($"\e[{(int)value} q");
     }
 
-    public static bool CursorVisible
-    {
-        get
-        {
-            if (OS.IsWindows)
-                return CursorVisible;
-            else
-                throw new NotImplementedException(); // TODO
-        }
-        set
-        {
-            if (OS.IsWindows)
-                CursorVisible = value;
-            else
-                SetVT100Bit(25, value);
-        }
-    }
-
     public static bool AlternateScreenEnabled
     {
         set => SetVT100Bit(1049, value);
@@ -600,25 +582,6 @@ public static unsafe partial class Console
     public static void WriteUnderlined(object? value) => Write($"\e[4m{value}\e[24m");
 
     public static void WriteInverted(object? value) => Write($"\e[7m{value}\e[27m");
-
-    [SupportedOSPlatform(OS.WIN)]
-    public static (ConsoleFontInfo before, ConsoleFontInfo after) SetCurrentFont(Font font)
-    {
-        ConsoleFontInfo before = FontInfo;
-        ConsoleFontInfo set = new()
-        {
-            cbSize = Marshal.SizeOf<ConsoleFontInfo>(),
-            FontIndex = 0,
-            FontFamily = ConsoleFontInfo.FIXED_WIDTH_TRUETYPE,
-            FontName = font.Name,
-            FontWeight = font.Bold ? 700 : 400,
-            FontSize = font.Size > 0 ? (default, (short)font.Size) : before.FontSize,
-        };
-
-        FontInfo = set;
-
-        return (before, FontInfo);
-    }
 
     // hexdump now moved to Unknown6656.Serialization
 

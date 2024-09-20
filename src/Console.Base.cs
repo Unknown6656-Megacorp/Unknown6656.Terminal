@@ -4,6 +4,7 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.IO;
 using System;
+
 using Unknown6656.Runtime;
 
 namespace Unknown6656.Console;
@@ -34,6 +35,27 @@ public static unsafe partial class Console
     {
         get => sysconsole.BufferWidth;
         set => BufferSize = BufferSize with { Width = value };
+    }
+
+    /// <inheritdoc cref="sysconsole.CursorVisible"/>
+    public static bool CursorVisible
+    {
+        get
+        {
+            if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+                return sysconsole.CursorVisible;
+#pragma warning restore CA1416
+            else
+                throw _unsupported_os; // TODO
+        }
+        set
+        {
+            if (OS.IsWindows)
+                sysconsole.CursorVisible = value;
+            else
+                SetVT100Bit(25, value);
+        }
     }
 
 }
