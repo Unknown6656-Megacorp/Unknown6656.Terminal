@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text;
@@ -348,4 +348,73 @@ public static unsafe partial class Console
     public static void SetOut(TextWriter writer) => sysconsole.SetOut(writer);
 
     #endregion
+    #region METHODS: READING
+
+    /// <inheritdoc cref="sysconsole.Read"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    public static int Read() => sysconsole.Read();
+
+    /// <inheritdoc cref="sysconsole.ReadKey()"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    [UnsupportedOSPlatform(OS.IOS)]
+    [UnsupportedOSPlatform(OS.TVOS)]
+    public static ConsoleKeyInfo ReadKey() => sysconsole.ReadKey();
+
+    /// <inheritdoc cref="sysconsole.ReadKey(bool)"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    [UnsupportedOSPlatform(OS.IOS)]
+    [UnsupportedOSPlatform(OS.TVOS)]
+    public static ConsoleKeyInfo ReadKey(bool intercept) => sysconsole.ReadKey(intercept);
+
+    /// <inheritdoc cref="sysconsole.ReadLine"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    public static string? ReadLine() => sysconsole.ReadLine();
+
+    #endregion
+    #region METHODS: WRITING
+
+    /// <inheritdoc cref="sysconsole.Write(ulong)"/>
+    public static void Write(ulong value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(bool)"/>
+    public static void Write(bool value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(char)"/>
+    public static void Write(char value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(char[])"/>
+    public static void Write(char[]? buffer) => sysconsole.Write(buffer);
+
+    /// <inheritdoc cref="sysconsole.Write(int)"/>
+    public static void Write(int value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(long)"/>
+    public static void Write(long value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(decimal)"/>
+    public static void Write(decimal value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(object)"/>
+    public static void Write(object? value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(float)"/>
+    public static void Write(float value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(string)"/>
+    public static void Write(string? value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(double)"/>
+    public static void Write(double value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(uint)"/>
+    public static void Write(uint value) => sysconsole.Write(value);
+
+    /// <inheritdoc cref="sysconsole.Write(char[], int, int)"/>
+    public static void Write(char[] buffer, int index, int count) => sysconsole.Write(buffer, index, count);
+
+
 }
