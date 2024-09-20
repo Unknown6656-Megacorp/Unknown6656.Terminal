@@ -60,15 +60,7 @@ public static unsafe partial class Console
     public static Point WindowPosition
     {
         get => new(WindowLeft, WindowTop);
-        set
-        {
-            if (OS.IsWindows)
-#pragma warning disable CA1416 // Validate platform compatibility
-                SetWindowPosition(value.X, value.Y);
-#pragma warning restore CA1416
-            else
-                Write($"\e[3;{value.X};{value.Y}t");
-        }
+        set => SetWindowPosition(value.X, value.Y);
     }
 
     /// <summary>
@@ -78,15 +70,7 @@ public static unsafe partial class Console
     public static Size WindowSize
     {
         get => new(WindowWidth, WindowHeight);
-        set
-        {
-            if (OS.IsWindows)
-#pragma warning disable CA1416 // Validate platform compatibility
-                SetWindowSize(value.Width, value.Height);
-#pragma warning restore CA1416
-            else
-                Write($"\e[8;{value.Height};{value.Width}t");
-        }
+        set => SetWindowSize(value.Width, value.Height);
     }
 
     /// <summary>
