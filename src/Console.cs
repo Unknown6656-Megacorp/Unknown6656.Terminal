@@ -16,7 +16,6 @@ namespace Unknown6656.Console;
 
 
 
-// WITH C#13, THIS WILL BE REPLACED BY SHAPES/EXTENSIONS
 public static unsafe partial class Console
 {
     /// <summary>

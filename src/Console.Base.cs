@@ -1,18 +1,16 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text;
-using System.Linq;
 using System.IO;
 using System;
 
-using Unknown6656.Generics;
 using Unknown6656.Runtime;
 
 namespace Unknown6656.Console;
 
 
 // This file only forwards the members of the System.Console class to the Unknown6656.Console.Console class.
+// WITH C#14, THIS WILL HOPEFULLY BE REPLACED BY SHAPES/EXTENSIONS
 
 
 public static unsafe partial class Console
@@ -267,7 +265,7 @@ public static unsafe partial class Console
         set
         {
             if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
-                Write(GenerateVT520ColorString(value, true));
+                Write($"\e[{GenerateVT520ColorString(value, true)}m");
             else
                 sysconsole.BackgroundColor = value;
         }
@@ -291,7 +289,7 @@ public static unsafe partial class Console
         set
         {
             if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
-                Write(GenerateVT520ColorString(value, false));
+                Write($"\e[{GenerateVT520ColorString(value, false)}m");
             else
                 sysconsole.BackgroundColor = value;
         }
