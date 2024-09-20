@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Globalization;
 using System.Drawing;
 using System.Text;
 using System.Linq;
@@ -15,6 +15,8 @@ using Unknown6656.Common;
 namespace Unknown6656.Console;
 
 
+// TODO : add support for XTWINOPS
+// TODO : add support for Sixel drawing https://en.wikipedia.org/wiki/Sixel
 
 
 
@@ -52,16 +54,20 @@ public static unsafe partial class Console
         set => sysconsole.SetCursorPosition(value.X, value.Y);
     }
 
-    ///   
+    /// <summary>
+    /// Gets or sets the position of the console window.
+    /// </summary>
     public static Point WindowPosition
     {
         get => new(sysconsole.WindowLeft, sysconsole.WindowTop);
         set
         {
             if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
                 sysconsole.SetWindowPosition(value.X, value.Y);
+#pragma warning restore CA1416
             else
-                throw new NotImplementedException();
+                sysconsole.Write($"\e[3;{value.X};{value.Y}t");
         }
     }
 
@@ -83,13 +89,22 @@ public static unsafe partial class Console
         }
     }
 
-    // TODO : add support for XTWINOPS
-    // TODO : add support for Sixel drawing https://en.wikipedia.org/wiki/Sixel
+    /// <summary>
+    /// Gets or sets the size of the console buffer.
+    /// Changing the value of this member is currently not supported on non-Windows operating systems.
+    /// </summary>
+    public static Size BufferSize
+    {
+        get => new(sysconsole.BufferWidth, sysconsole.BufferHeight);
+#pragma warning disable CA1416 // Validate platform compatibility
+        set => sysconsole.SetBufferSize(value.Width, value.Height);
+#pragma warning restore CA1416
+    }
+
 
 
     public static ConsoleCursorShape CursorShape
     {
-        get => throw new NotImplementedException();
         set => sysconsole.Write($"\e[{(int)value} q");
     }
 
@@ -107,26 +122,23 @@ public static unsafe partial class Console
             if (OS.IsWindows)
                 sysconsole.CursorVisible = value;
             else
-                sysconsole.Write(value ? "\e[?25h" : "\e[?25l");
+                SetVT100Bit(25, value);
         }
     }
 
     public static bool AlternateScreenEnabled
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?1049h" : "\e[?1049l");
+        set => SetVT100Bit(1049, value);
     }
 
     public static bool BracketedPasteModeEnabled
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?2004h" : "\e[?2004l");
+        set => SetVT100Bit(2004, value);
     }
 
     public static bool WindowAutoResizeModeEnabled
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?98h" : "\e[?98l");
+        set => SetVT100Bit(98, value);
     }
 
 
@@ -134,52 +146,44 @@ public static unsafe partial class Console
 
     public static bool MouseEnabled
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?1000h" : "\e[?1000l");
+        set => SetVT100Bit(1000, value);
     }
 
     public static bool MouseDraggingEnabled
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?1002h" : "\e[?1002l");
+        set => SetVT100Bit(1002, value);
     }
 
     public static bool MouseAnyEventEnabled
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?1003h" : "\e[?1003l");
+        set => SetVT100Bit(1003, value);
     }
 
     public static bool MouseFocusReportingEnabled
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?1004h" : "\e[?1004l");
+        set => SetVT100Bit(1004, value);
     }
 
     public static bool MouseFocusEnabled
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?1005h" : "\e[?1005l");
+        set => SetVT100Bit(1005, value);
     }
 
     public static bool MouseHighlightingEnabled
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?1006h" : "\e[?1006l");
+        set => SetVT100Bit(1006, value);
     }
 
 
 
     public static bool DarkMode
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?5l" : "\e[?5h");
+        set => SetVT100Bit(5, !value);
     }
 
     public static bool RightToLeft
     {
-        get => throw new NotImplementedException();
-        set => sysconsole.Write(value ? "\e[?34h" : "\e[?34l");
+        set => SetVT100Bit(34, value);
     }
 
     public static (ConsoleColor Foreground, ConsoleColor Background) WindowFrameColors
@@ -283,6 +287,8 @@ public static unsafe partial class Console
             LINQ.TryDo(() => STDERRConsoleMode |= ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
         }
     }
+
+    public static void SetVT100Bit(int mode, bool bit) => sysconsole.Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
 
     public static string? GetRawVT100Report(string report_sequence, char terminator)
     {
