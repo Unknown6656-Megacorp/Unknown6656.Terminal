@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Collections.Generic;
@@ -11,7 +11,6 @@ using System;
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
 using Unknown6656.Common;
-using System.IO;
 
 namespace Unknown6656.Console;
 
@@ -725,6 +724,30 @@ public record ConsoleGraphicRendition(string[] RawVT100SGRs)
         }
     }
 }
+
+/// <summary>
+/// Represents the state of the console. This datatype can be used to restore the console to a previous state.
+/// </summary>
+public record ConsoleState
+{
+    public ConsoleMode STDINMode { get; init; }
+    public ConsoleMode STDOUTMode { get; init; }
+    public ConsoleMode STDERRMode { get; init; }
+    public ConsoleGraphicRendition? GraphicRendition { get; init; }
+    public Encoding? OutputEncoding { get; init; }
+    public Encoding? InputEncoding { get; init; }
+    [SupportedOSPlatform(OS.WIN)]
+    public int? CursorSize { get; init; }
+    public Size BufferSize { get; init; }
+    public Size WindowSize { get; init; }
+    public Point CursorPosition { get; init; }
+    public Point WindowPosition { get; init; }
+
+    // TODO : save console buffer / alternate buffer ?
+}
+
+
+
 
 // WITH C#13, THIS WILL BE REPLACED BY SHAPES/EXTENSIONS
 public static unsafe partial class ConsoleExtensions
@@ -1462,26 +1485,34 @@ public static unsafe partial class ConsoleExtensions
 
     public static ConsoleState SaveConsoleState()
     {
-        bool? cursor_visible = null;
         ConsoleMode stdinmode = default;
+        ConsoleMode stderrmode = default;
+        ConsoleMode stdoutmode = default;
+        int? cursor_size = null;
 
         if (OS.IsWindows)
         {
 #pragma warning disable CA1416 // Validate platform compatibility
-            cursor_visible = sysconsole.CursorVisible;
+            cursor_size = sysconsole.CursorSize;
             stdinmode = STDINConsoleMode;
+            stderrmode = STDERRConsoleMode;
+            stdoutmode = STDOUTConsoleMode;
 #pragma warning restore CA1416
         }
 
         return new()
         {
-            Background = sysconsole.BackgroundColor,
-            Foreground = sysconsole.ForegroundColor,
             InputEncoding = sysconsole.InputEncoding,
             OutputEncoding = sysconsole.OutputEncoding,
-            CursorVisible = cursor_visible,
-            CursorSize = OS.IsWindows ? sysconsole.CursorSize : 100,
-            Mode = stdinmode,
+            CursorSize = cursor_size,
+            STDINMode = stdinmode,
+            STDOUTMode = stdoutmode,
+            STDERRMode = stderrmode,
+            BufferSize = BufferSize,
+            WindowSize = WindowSize,
+            WindowPosition = WindowPosition,
+            CursorPosition = CursorPosition,
+            GraphicRendition = CurrentGraphicRendition,
         };
     }
 
@@ -1489,23 +1520,26 @@ public static unsafe partial class ConsoleExtensions
     { 
         if (state is { })
         {
-            sysconsole.BackgroundColor = state.Background;
-            sysconsole.ForegroundColor = state.Foreground;
             sysconsole.InputEncoding = state.InputEncoding ?? Encoding.Default;
             sysconsole.OutputEncoding = state.OutputEncoding ?? Encoding.Default;
-
-            if (state.CursorVisible is bool vis)
-                CursorVisible = vis;
 
             if (OS.IsWindows)
             {
 #pragma warning disable CA1416 // Validate platform compatibility
-                STDINConsoleMode = state.Mode;
+                STDINConsoleMode = state.STDINMode;
+                STDOUTConsoleMode = state.STDOUTMode;
+                STDERRConsoleMode = state.STDERRMode;
 
                 if (state.CursorSize is int sz)
                     LINQ.TryDo(() => sysconsole.CursorSize = sz);
 #pragma warning restore CA1416
             }
+
+            BufferSize = state.BufferSize;
+            WindowSize = state.WindowSize;
+            WindowPosition = state.WindowPosition;
+            CursorPosition = state.CursorPosition;
+            CurrentGraphicRendition = state.GraphicRendition;
         }
     }
 
@@ -1578,18 +1612,6 @@ public static unsafe partial class ConsoleExtensions
     [GeneratedRegex(@"(\x1b\[|\x9b)([0-\?]*[\x20-\/]*[@-~]|[^@-_]*[@-_]|[\da-z]{1,2};\d{1,2}H)|\x1b([@-_0-\?\x60-~]|[\x20-\/]|[\x20-\/]{2,}[@-~]|[\x30-\x3f]|[\x20-\x2f]+[\x30-\x7e]|\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e])", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex GenerateVT100Regex();
 }
-
-public sealed class ConsoleState
-{
-    public ConsoleMode Mode { get; set; }
-    public ConsoleColor Background { set; get; }
-    public ConsoleColor Foreground { set; get; }
-    public Encoding? OutputEncoding { set; get; }
-    public Encoding? InputEncoding { set; get; }
-    public bool? CursorVisible { set; get; }
-    public int? CursorSize { set; get; }
-}
-
 
 
 // TODO : https://web.mit.edu/dosathena/doc/www/ek-vt520-rm.pdf
