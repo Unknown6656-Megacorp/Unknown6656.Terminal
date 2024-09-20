@@ -273,7 +273,7 @@ public static unsafe partial class Console
 
 
 
-    static ConsoleExtensions()
+    static Console()
     {
         if (OS.IsWindows)
         {
