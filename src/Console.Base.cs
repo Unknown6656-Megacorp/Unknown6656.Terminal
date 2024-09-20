@@ -261,7 +261,7 @@ public static unsafe partial class Console
     #endregion
     #region METHODS: BUFFER/WINDOW/CURSOR SIZE AND POSITION
 
-    /// <inheritdoc cref="GetCursorPosition"/>
+    /// <inheritdoc cref="sysconsole.GetCursorPosition"/>
     public static (int Left, int Top) GetCursorPosition()
     {
         if (OS.IsUnix || OS.IsWindows)
@@ -272,7 +272,7 @@ public static unsafe partial class Console
             throw new InvalidOperationException("Failed to get cursor position.");
     }
 
-    /// <inheritdoc cref="SetCursorPosition"/>
+    /// <inheritdoc cref="sysconsole.SetCursorPosition"/>
     public static void SetCursorPosition(int left, int top)
     {
         if (OS.IsUnix || OS.IsWindows)
@@ -281,7 +281,7 @@ public static unsafe partial class Console
             sysconsole.Write($"\e[{top + 1};{left + 1}H");
     }
 
-    /// <inheritdoc cref="SetWindowPosition"/>
+    /// <inheritdoc cref="sysconsole.SetWindowPosition"/>
     public static void SetWindowPosition(int left, int top)
     {
         if (OS.IsWindows)
@@ -292,7 +292,7 @@ public static unsafe partial class Console
             Write($"\e[3;{left};{top}t");
     }
 
-    /// <inheritdoc cref="SetWindowSize(int, int)"/>
+    /// <inheritdoc cref="sysconsole.SetWindowSize(int, int)"/>
     public static void SetWindowSize(int width, int height)
     {
         if (OS.IsWindows)
