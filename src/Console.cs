@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Collections.Generic;
@@ -270,36 +270,24 @@ public static unsafe partial class Console
         }
     }
 
-    public static void SetVT520Bit(int mode, bool bit) => Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
 
-    public static string? GetRawVT520Report(string report_sequence, char terminator)
+
+    public static (int X, int Y, int Page)? GetExtendedCursorPosition()
     {
-        Write($"\e{report_sequence}");
-
-        try
+        if (GetRawVT520Report("[?6n", 'R') is ['\e', '[', '?', .. string response])
         {
-            string response = "";
+            int[] parts = response.Split(';').ToArray(int.Parse);
 
-            while (KeyAvailable && ReadKey(true).KeyChar is char c && c != terminator)
-                response += c;
-
-            return response;
+            return (parts[0], parts[1], parts[2]);
         }
-        catch
-        {
-        }
-
-        return null;
+        else
+            return null;
     }
 
-    public static string? GetRawVT520SettingsReport(string report_sequence, char? response_introducer = 'r')
-    {
-        if (GetRawVT520Report($"\eP$q{report_sequence}\e\\", '\\') is ['\e', 'P', _, '$', char ri, ..string response, '\e', '\\'] &&
-            (response_introducer is null || ri == response_introducer))
-            return response.TrimEnd(report_sequence);
 
-        return null;
-    }
+
+
+
 
     public static (int Mode, int[] Attributes)? GetDeviceAttributes()
     {
@@ -398,11 +386,6 @@ public static unsafe partial class Console
     public static void DuplicateArea(ConsoleArea source, int source_page, (int X, int Y, int Page) destination) =>
         Write($"\e[{source.Top};{source.Left};{source.Bottom};{source.Right};{source_page};{destination.X};{destination.Y};{destination.Page}$v");
 
-    public static void ChangeVT520ForArea(ConsoleArea area, IEnumerable<int> modes) => ChangeVT520ForArea(area, modes.StringJoin(";"));
-
-    public static void ChangeVT520ForArea(ConsoleArea area, string modes) =>
-        Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
-
     public static void GetCursorInformation()
     {
         if (GetRawVT520Report("[1$w", '\\') is ['\e', 'P', _, '$', 'u', .. string response, '\e', '\\'])
@@ -420,8 +403,6 @@ public static unsafe partial class Console
     }
 
     // TODO : page 151 of https://web.mit.edu/dosathena/doc/www/ek-vt520-rm.pdf
-
-    public static string[]? GetRawVT520GraphicRenditions() => GetRawVT520SettingsReport("m")?.Split(';');
 
     public static void GetCursorType()
     {

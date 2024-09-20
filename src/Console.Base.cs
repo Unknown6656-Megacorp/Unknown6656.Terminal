@@ -137,18 +137,6 @@ public static unsafe partial class Console
 
 
 
-    private static (int X, int Y, int Page)? GetVT100CursorPosition()
-    {
-        if (GetRawVT100Report("[?6n", 'R') is ['\e', '[', '?', .. string response])
-        {
-            int[] parts = response.Split(';').ToArray(int.Parse);
-
-            return (parts[0], parts[1], parts[2]);
-        }
-        else
-            return null;
-    }
-
     //public static int CursorSize { get; set; }
 
 
