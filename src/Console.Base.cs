@@ -17,6 +17,8 @@ namespace Unknown6656.Console;
 
 public static unsafe partial class Console
 {
+    #region I/E/O STREAMS
+
     /// <inheritdoc cref="sysconsole.Error"/>
     public static TextWriter Error => sysconsole.Error;
 
@@ -30,6 +32,24 @@ public static unsafe partial class Console
     /// <inheritdoc cref="sysconsole.Out"/>
     public static TextWriter Out => sysconsole.Out;
 
+    /// <inheritdoc cref="sysconsole.InputEncoding"/>
+    [UnsupportedOSPlatform(OS.ANDR)]
+    [UnsupportedOSPlatform(OS.BROW)]
+    [UnsupportedOSPlatform(OS.IOS)]
+    [UnsupportedOSPlatform(OS.TVOS)]
+    public static Encoding InputEncoding
+    {
+        get => sysconsole.InputEncoding;
+        set => sysconsole.InputEncoding = value;
+    }
+
+    /// <inheritdoc cref="sysconsole.OutputEncoding"/>
+    public static Encoding OutputEncoding
+    {
+        get => sysconsole.OutputEncoding;
+        set => sysconsole.OutputEncoding = value;
+    }
+
     /// <inheritdoc cref="sysconsole.IsInputRedirected"/>
     public static bool IsInputRedirected => sysconsole.IsInputRedirected;
 
@@ -38,6 +58,9 @@ public static unsafe partial class Console
 
     /// <inheritdoc cref="sysconsole.IsErrorRedirected"/>
     public static bool IsErrorRedirected => sysconsole.IsErrorRedirected;
+
+    #endregion
+    #region BUFFER/WINDOW SIZE AND POSITION
 
     /// <inheritdoc cref="sysconsole.BufferHeight"/>
     public static int BufferHeight 
@@ -53,21 +76,8 @@ public static unsafe partial class Console
         set => BufferSize = BufferSize with { Width = value };
     }
 
-    /// <inheritdoc cref="sysconsole.CapsLock"/>
-    public static bool CapsLock
-    {
-        get
-        {
-            if (OS.IsWindows)
-#pragma warning disable CA1416 // Validate platform compatibility
-                return sysconsole.CapsLock;
-#pragma warning restore CA1416
-            else
-#warning TODO : implement capslock functionality on non-Windows systems
-                throw _unsupported_os;
-        }
-        set => SetVT520Bit(109, value);
-    }
+    #endregion
+    #region CURSOR SIZE, POSITION, VISIBILITY
 
     /// <inheritdoc cref="sysconsole.CursorVisible"/>
     public static bool CursorVisible
@@ -132,6 +142,31 @@ public static unsafe partial class Console
         }
     }
 
+    #endregion
+    #region KEYBOARD
+
+    /// <inheritdoc cref="sysconsole.CapsLock"/>
+    public static bool CapsLock
+    {
+        get
+        {
+            if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+                return sysconsole.CapsLock;
+#pragma warning restore CA1416
+            else
+#warning TODO : implement capslock functionality on non-Windows systems
+                throw _unsupported_os;
+        }
+        set => SetVT520Bit(109, value);
+    }
+
+    [SupportedOSPlatform(OS.WIN)]
+    public static bool NumberLock { get; }
+
+    public static bool KeyAvailable { get; }
+
+    #endregion
 
 
 
