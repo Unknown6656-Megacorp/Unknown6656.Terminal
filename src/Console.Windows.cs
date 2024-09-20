@@ -9,6 +9,9 @@ namespace Unknown6656.Console;
 
 public static unsafe partial class Console
 {
+    private static readonly PlatformNotSupportedException _unsupported_os = new("This operation is not (yet) supported supported on the current operating system.");
+
+
     /// <summary>
     /// Indicates whether to throw an <see cref="Win32Exception"/> when an invalid console mode is encountered.
     /// <para/>
@@ -24,31 +27,28 @@ public static unsafe partial class Console
     /// <summary>
     /// Returns the handle of the standard input stream.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="PlatformNotSupportedException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     [SupportedOSPlatform(OS.WIN)]
-    public static void* STDINHandle => OS.IsWindows ? NativeInterop.GetStdHandle(-10)
-                                                    : throw new InvalidOperationException("This operation is not supported on non-Windows operating systems.");
+    public static void* STDINHandle => OS.IsWindows ? NativeInterop.GetStdHandle(-10) : throw _unsupported_os;
 
     /// <summary>
     /// Returns the handle of the standard output stream.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="PlatformNotSupportedException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     [SupportedOSPlatform(OS.WIN)]
-    public static void* STDOUTHandle => OS.IsWindows ? NativeInterop.GetStdHandle(-11)
-                                                     : throw new InvalidOperationException("This operation is not supported on non-Windows operating systems.");
+    public static void* STDOUTHandle => OS.IsWindows ? NativeInterop.GetStdHandle(-11) : throw _unsupported_os;
 
     /// <summary>
     /// Returns the handle of the standard error stream.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="PlatformNotSupportedException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     [SupportedOSPlatform(OS.WIN)]
-    public static void* STDERRHandle => OS.IsWindows ? NativeInterop.GetStdHandle(-12)
-                                                     : throw new InvalidOperationException("This operation is not supported on non-Windows operating systems.");
+    public static void* STDERRHandle => OS.IsWindows ? NativeInterop.GetStdHandle(-12) : throw _unsupported_os;
 
     /// <summary>
     /// Gets or sets the <see cref="ConsoleMode"/> of the standard input stream.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="PlatformNotSupportedException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     /// <exception cref="Win32Exception">Thrown, if an invalid console mode is encountered and <see cref="ThrowOnInvalidConsoleMode"/> is <see langword="true"/>.</exception>"
     [SupportedOSPlatform(OS.WIN)]
     public static ConsoleMode STDINConsoleMode
@@ -56,7 +56,7 @@ public static unsafe partial class Console
         set
         {
             if (!OS.IsWindows)
-                throw new InvalidOperationException("Writing the STDIN console mode is not supported on non-Windows operating systems.");
+                throw _unsupported_os;
             else if (!NativeInterop.SetConsoleMode(STDINHandle, value))
                 if (ThrowOnInvalidConsoleMode)
                     throw NETRuntimeInterop.GetLastWin32Error();
@@ -64,7 +64,7 @@ public static unsafe partial class Console
         get
         {
             if (!OS.IsWindows)
-                throw new InvalidOperationException("Reading the STDIN console mode is not supported on non-Windows operating systems.");
+                throw _unsupported_os;
 
             ConsoleMode mode = default;
 
@@ -80,7 +80,7 @@ public static unsafe partial class Console
     /// <summary>
     /// Gets or sets the <see cref="ConsoleMode"/> of the standard output stream.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="PlatformNotSupportedException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     /// <exception cref="Win32Exception">Thrown, if an invalid console mode is encountered and <see cref="ThrowOnInvalidConsoleMode"/> is <see langword="true"/>.</exception>"
     [SupportedOSPlatform(OS.WIN)]
     public static ConsoleMode STDOUTConsoleMode
@@ -88,7 +88,7 @@ public static unsafe partial class Console
         set
         {
             if (!OS.IsWindows)
-                throw new InvalidOperationException("Writing the STDOUT console mode is not supported on non-Windows operating systems.");
+                throw _unsupported_os;
             else if (!NativeInterop.SetConsoleMode(STDOUTHandle, value))
                 if (ThrowOnInvalidConsoleMode)
                     throw NETRuntimeInterop.GetLastWin32Error();
@@ -96,7 +96,7 @@ public static unsafe partial class Console
         get
         {
             if (!OS.IsWindows)
-                throw new InvalidOperationException("Reading the STDOUT console mode is not supported on non-Windows operating systems.");
+                throw _unsupported_os;
 
             ConsoleMode mode = default;
 
@@ -112,7 +112,7 @@ public static unsafe partial class Console
     /// <summary>
     /// Gets or sets the <see cref="ConsoleMode"/> of the standard error stream.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="PlatformNotSupportedException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     /// <exception cref="Win32Exception">Thrown, if an invalid console mode is encountered and <see cref="ThrowOnInvalidConsoleMode"/> is <see langword="true"/>.</exception>"
     [SupportedOSPlatform(OS.WIN)]
     public static ConsoleMode STDERRConsoleMode
@@ -120,7 +120,7 @@ public static unsafe partial class Console
         set
         {
             if (!OS.IsWindows)
-                throw new InvalidOperationException("Writing the STDERR console mode is not supported on non-Windows operating systems.");
+                throw _unsupported_os;
             else if (!NativeInterop.SetConsoleMode(STDERRHandle, value))
                 if (ThrowOnInvalidConsoleMode)
                     throw NETRuntimeInterop.GetLastWin32Error();
@@ -128,7 +128,7 @@ public static unsafe partial class Console
         get
         {
             if (!OS.IsWindows)
-                throw new InvalidOperationException("Reading the STDERR console mode is not supported on non-Windows operating systems.");
+                throw _unsupported_os;
 
             ConsoleMode mode = default;
 
@@ -144,7 +144,7 @@ public static unsafe partial class Console
     /// <summary>
     /// Sets or gets the current console font information.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="PlatformNotSupportedException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     /// <exception cref="Win32Exception">Thrown, if an invalid <see cref="ConsoleFontInfo"/> is encountered or if any errors occurred whilst reading/writing to this property.</exception>
     [SupportedOSPlatform(OS.WIN)]
     public static ConsoleFontInfo FontInfo
@@ -152,14 +152,14 @@ public static unsafe partial class Console
         set
         {
             if (!OS.IsWindows)
-                throw new InvalidOperationException("Changing the console font is not supported on non-Windows operating systems.");
+                throw _unsupported_os;
             else if (!NativeInterop.SetCurrentConsoleFontEx(STDOUTHandle, false, ref value))
                 throw NETRuntimeInterop.GetLastWin32Error();
         }
         get
         {
             if (!OS.IsWindows)
-                throw new InvalidOperationException("Reading the console font is not supported on non-Windows operating systems.");
+                throw _unsupported_os;
 
             ConsoleFontInfo font = new()
             {
@@ -207,5 +207,4 @@ public static unsafe partial class Console
     /// </summary>
     public static bool AreSTDErrVT100EscapeSequencesEnabled => !OS.IsWindows || STDERRConsoleMode.HasFlag(ConsoleMode.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 #pragma warning restore CA1416
-
 }
