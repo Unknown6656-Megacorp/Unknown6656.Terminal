@@ -37,6 +37,19 @@ public static unsafe partial class Console
         set => BufferSize = BufferSize with { Width = value };
     }
 
+    /// <inheritdoc cref="sysconsole.CapsLock"/>
+    public static bool CapsLock
+    {
+        get
+        {
+            if (OS.IsWindows)
+                return sysconsole.CapsLock;
+            else
+                throw _unsupported_os; // TODO
+        }
+        set => SetVT100Bit(109, value);
+    }
+
     /// <inheritdoc cref="sysconsole.CursorVisible"/>
     public static bool CursorVisible
     {
