@@ -579,6 +579,79 @@ public static unsafe partial class Console
 
     #endregion
 
+    /// <inheritdoc cref="sysconsole.ResetColor"/>
+    public static void ResetColor()
+    {
+        if (OS.IsWindows)
+            sysconsole.ResetColor();
+        else
+            Write($"\e[{GenerateVT520ColorString(null, true)};{GenerateVT520ColorString(null, false)}m");
+    }
+
+    /// <inheritdoc cref="sysconsole.Clear"/>
+    public static void Clear()
+    {
+        if (OS.CurrentOS is KnownOS.Android or KnownOS.iOS or KnownOS.TvOS)
+            Write("\e[H\e[2J");
+        else
+            sysconsole.Clear();
+    }
+
+    /// <inheritdoc cref="sysconsole.Beep()"/>
+    public static void Beep()
+    {
+        if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+            Beep(800, 200);
+#pragma warning restore CA1416
+        else
+            Beep(ConsoleTone.GSharp5, 200);
+    }
+
+    /// <inheritdoc cref="sysconsole.Beep(int, int)"/>
+    [SupportedOSPlatform(OS.WIN)]
+#warning TODO : implement this on non-Windows systems
+    public static void Beep(int frequency, int duration) => sysconsole.Beep(frequency, duration);
+
+    public static void Beep(ConsoleTone tone, int duration, double volume = 1)
+    {
+        volume = Math.Clamp(volume, 0, 1);
+
+        if (OS.IsWindows && volume == 1)
+#pragma warning disable CA1416 // Validate platform compatibility
+            Beep(tone switch
+            {
+                ConsoleTone.C5 => 523,
+                ConsoleTone.CSharp5 => 554,
+                ConsoleTone.D5 => 587,
+                ConsoleTone.DSharp5 => 622,
+                ConsoleTone.E5 => 659,
+                ConsoleTone.F5 => 698,
+                ConsoleTone.FSharp5 => 740,
+                ConsoleTone.G5 => 784,
+                ConsoleTone.GSharp5 => 810,
+                ConsoleTone.A5 => 880,
+                ConsoleTone.ASharp5 => 932,
+                ConsoleTone.B5 => 988,
+                ConsoleTone.C6 => 1047,
+                ConsoleTone.CSharp6 => 1109,
+                ConsoleTone.D6 => 1175,
+                ConsoleTone.DSharp6 => 1245,
+                ConsoleTone.E6 => 1319,
+                ConsoleTone.F6 => 1397,
+                ConsoleTone.FSharp6 => 1480,
+                ConsoleTone.G6 => 1568,
+                ConsoleTone.GSharp6 => 1661,
+                ConsoleTone.A6 => 1760,
+                ConsoleTone.ASharp6 => 1865,
+                ConsoleTone.B6 => 1976,
+                ConsoleTone.C7 => 2093,
+                _ => 0,
+            }, duration);
+#pragma warning restore CA1416
+        else
+            Write($"\e[{(int)Math.Round(volume * 7)};{(int)tone};{(int)Math.Round(duration * .032)}\a");
+    }
 
 
 }
