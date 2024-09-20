@@ -2,13 +2,16 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 using System.Linq;
 using System;
 
 using Unknown6656.Generics;
+using Unknown6656.Runtime;
 using Unknown6656.Common;
+using System.IO;
 
 namespace Unknown6656.Console;
 
@@ -167,33 +170,114 @@ public enum ConsoleCursorShape
     SolidBar = 6,
 }
 
+/// <summary>
+/// An enumeration of musical notes that can be played by the console speaker.
+/// </summary>
 public enum ConsoleTone
 {
+    /// <summary>
+    /// No sound.
+    /// </summary>
     Silent = 0,
+    /// <summary>
+    /// Note C in the 5th octave.
+    /// </summary>
     C5 = 1,
+    /// <summary>
+    /// Note C# (C sharp) in the 5th octave.
+    /// </summary>
     CSharp5 = 2,
+    /// <summary>
+    /// Note D in the 5th octave.
+    /// </summary>
     D5 = 3,
+    /// <summary>
+    /// Note D# (D sharp) in the 5th octave.
+    /// </summary>
     DSharp5 = 4,
+    /// <summary>
+    /// Note E in the 5th octave.
+    /// </summary>
     E5 = 5,
+    /// <summary>
+    /// Note F in the 5th octave.
+    /// </summary>
     F5 = 6,
+    /// <summary>
+    /// Note F# (F sharp) in the 5th octave.
+    /// </summary>
     FSharp5 = 7,
+    /// <summary>
+    /// Note G in the 5th octave.
+    /// </summary>
     G5 = 8,
+    /// <summary>
+    /// Note G# (G sharp) in the 5th octave.
+    /// </summary>
     GSharp5 = 9,
+    /// <summary>
+    /// Note A in the 5th octave.
+    /// </summary>
     A5 = 10,
+    /// <summary>
+    /// Note A# (A sharp) in the 5th octave.
+    /// </summary>
     ASharp5 = 11,
+    /// <summary>
+    /// Note B in the 5th octave.
+    /// </summary>
     B5 = 12,
+    /// <summary>
+    /// Note C in the 6th octave.
+    /// </summary>
     C6 = 13,
+    /// <summary>
+    /// Note C# (C sharp) in the 6th octave.
+    /// </summary>
     CSharp6 = 14,
+    /// <summary>
+    /// Note D in the 6th octave.
+    /// </summary>
     D6 = 15,
+    /// <summary>
+    /// Note D# (D sharp) in the 6th octave.
+    /// </summary>
     DSharp6 = 16,
+    /// <summary>
+    /// Note E in the 6th octave.
+    /// </summary>
     E6 = 17,
+    /// <summary>
+    /// Note F in the 6th octave.
+    /// </summary>
     F6 = 18,
+    /// <summary>
+    /// Note F# (F sharp) in the 6th octave.
+    /// </summary>
     FSharp6 = 19,
+    /// <summary>
+    /// Note G in the 6th octave.
+    /// </summary>
     G6 = 20,
+    /// <summary>
+    /// Note G# (G sharp) in the 6th octave.
+    /// </summary>
     GSharp6 = 21,
+    /// <summary>
+    /// Note A in the 6th octave.
+    /// </summary>
     A6 = 22,
+    /// <summary>
+    /// Note A# (A sharp) in the 6th octave.
+    /// </summary>
     ASharp6 = 23,
+    /// <summary>
+    /// Note B in the 6th octave.
+    /// </summary>
     B6 = 24,
+    /// <summary>
+    /// Note C in the 7th octave.
+    /// </summary>
     C7 = 25,
 }
 
@@ -310,6 +394,31 @@ public readonly record struct ConsoleArea(int X, int Y, int Width, int Height)
     /// </returns>
     public readonly bool Contains(ConsoleArea area) => area.X >= X && area.Right <= Right && area.Y >= Y && area.Bottom <= Bottom;
 
+    // TODO : check if this is correct.
+    public readonly bool Overlaps(ConsoleArea area) => area.X < Right && area.Right > X && area.Y < Bottom && area.Bottom > Y;
+
+    /// <summary>
+    /// Returns the intersection of this <see cref="ConsoleArea"/> with another <see cref="ConsoleArea"/>.
+    /// </summary>
+    /// <param name="area">The other <see cref="ConsoleArea"/> to intersect the current instance with.</param>
+    /// <returns>The intersection between the two <see cref="ConsoleArea"/>s.</returns>
+    public readonly ConsoleArea Intersect(ConsoleArea area)
+    {
+        int x = Math.Max(X, area.X);
+        int y = Math.Max(Y, area.Y);
+        int right = Math.Min(Right, area.Right);
+        int bottom = Math.Min(Bottom, area.Bottom);
+
+        return new ConsoleArea(x, y, right - x, bottom - y);
+    }
+
+    public static ConsoleArea CreateBoundingArea(IEnumerable<ConsoleArea> areas) => ;
+
+    public static ConsoleArea CreateBoundingArea(IEnumerable<Point> points) => CreateBoundingArea(points.Select(p => (p.X, p.Y)));
+
+    public static ConsoleArea CreateBoundingArea(IEnumerable<(int X, int Y)> points) => ;
+
+
     /// <summary>
     /// Converts a <see cref="Rectangle"/> to a <see cref="ConsoleArea"/>.
     /// </summary>
@@ -333,35 +442,115 @@ public readonly record struct ConsoleArea(int X, int Y, int Width, int Height)
     /// </summary>
     /// <param name="area">The tuple of left, top, width, and height to convert.</param>
     public static implicit operator ConsoleArea((int Left, int Top, int Width, int Height) area) => new(area.Left, area.Top, area.Width, area.Height);
+
+    public static ConsoleArea operator &(ConsoleArea a, ConsoleArea b) => a.Intersect(b);
 }
 
+/// <summary>
+/// Represents a console graphic rendition, which includes various text attributes such as intensity, blink, underline, and colors.
+/// </summary>
+/// <param name="RawVT100SGRs">The raw VT100 SGR (Select Graphic Rendition) sequences.</param>
 public record ConsoleGraphicRendition(string[] RawVT100SGRs)
 {
+    /// <summary>
+    /// Gets the default console graphic rendition (<c>^[0m</c>).
+    /// </summary>
     public static ConsoleGraphicRendition Default { get; } = new(["0"]);
 
 
+    /// <summary>
+    /// The intensity of the text (regular, bold, dim).
+    /// </summary>
     public TextIntensityMode Intensity { get; init; } = TextIntensityMode.Regular;
+
+    /// <summary>
+    /// The blink mode of the text (none, slow, rapid).
+    /// </summary>
     public TextBlinkMode Blink { get; init; } = TextBlinkMode.NotBlinking;
+
+    /// <summary>
+    /// The underline mode of the text (not underlined, single, double).
+    /// </summary>
     public TextUnderlinedMode Underlined { get; init; } = TextUnderlinedMode.NotUnderlined;
+
+    /// <summary>
+    /// Indicates whether the text colors are inverted.
+    /// </summary>
     public bool AreColorsInverted { get; init; } = false;
+
+    /// <summary>
+    /// Indicates whether the text is italic.
+    /// </summary>
     public bool IsItalic { get; init; } = false;
+
+    /// <summary>
+    /// Indicates whether the text is concealed.
+    /// </summary>
     public bool IsTextConcealed { get; init; } = false;
+
+    /// <summary>
+    /// Indicates whether the text is crossed out.
+    /// </summary>
     public bool IsCrossedOut { get; init; } = false;
+
+    /// <summary>
+    /// Indicates whether the text is overlined.
+    /// </summary>
     public bool IsOverlined { get; init; } = false;
+
+    /// <summary>
+    /// Indicates whether the font is the default font (i.e., whether the <see cref="FontIndex"/> is equal to <c>0</c>).
+    /// </summary>
     public bool IsDefaultFont => FontIndex == 0;
+
+    /// <summary>
+    /// The index of the font to use.
+    /// </summary>
     public int FontIndex { get; init; } = 0;
+
+    /// <summary>
+    /// Indicates whether the font is monospace.
+    /// </summary>
     public bool IsMonospace { get; init; } = true;
+
+    /// <summary>
+    /// Indicates whether the font is gothic.
+    /// </summary>
     public bool IsGothic { get; init; } = false;
+
+    /// <summary>
+    /// The text frame mode.
+    /// </summary>
     public TextFrameMode TextFrame { get; init; } = TextFrameMode.NotFramed;
+
+    /// <summary>
+    /// The text transformation mode (regular, superscript, subscript).
+    /// </summary>
     public TextTransformationMode TextTransformation { get; init; } = TextTransformationMode.Regular;
+
+    /// <summary>
+    /// The foreground color of the text. A value of <see langword="null"/> indicates the default color.
+    /// </summary>
     public Union<ConsoleColor, Color>? ForegroundColor { get; init; } = null;
+
+    /// <summary>
+    /// The background color of the text. A value of <see langword="null"/> indicates the default color.
+    /// </summary>
     public Union<ConsoleColor, Color>? BackgroundColor { get; init; } = null;
+
+    /// <summary>
+    /// The color of the underline. A value of <see langword="null"/> indicates that the <see cref="UnderlineColor"/> is identical to the <see cref="ForegroundColor"/>.
+    /// </summary>
     public Color? UnderlineColor { get; init; } = null;
 
 
+    /// <summary>
+    /// Returns the full VT100 SGR (Select Graphic Rendition) sequences for this console graphic rendition.
+    /// </summary>
+    /// <returns>An array of VT100 SGR sequences.</returns>
     public string[] FullVT100SGR()
     {
-        return [
+        IEnumerable<string> modes = [
             .. RawVT100SGRs,
             ((int)Intensity).ToString(),
             ((int)Blink).ToString(),
@@ -380,6 +569,11 @@ public record ConsoleGraphicRendition(string[] RawVT100SGRs)
             generate_color(BackgroundColor, false),
             generate_color(UnderlineColor, null),
         ];
+
+        if (modes.LastIndexOf("0") is int reset and > 0)
+            modes = modes.Skip(reset);
+
+        return modes.Distinct().ToArray();
 
         string generate_color(Union<ConsoleColor, Color>? color, bool? foreground)
         {
@@ -430,6 +624,11 @@ public record ConsoleGraphicRendition(string[] RawVT100SGRs)
         }
     }
 
+    /// <summary>
+    /// Parses the specified VT100 SGR (Select Graphic Rendition) sequences and returns the corresponding console graphic rendition.
+    /// </summary>
+    /// <param name="SGRs">Sequence of VT100 SGRs.</param>
+    /// <returns>Parsed <see cref="ConsoleGraphicRendition"/>.</returns>
     public static ConsoleGraphicRendition TryParse(string[] SGRs)
     {
         ConsoleGraphicRendition rendition = new(SGRs);
@@ -530,20 +729,47 @@ public record ConsoleGraphicRendition(string[] RawVT100SGRs)
 // WITH C#13, THIS WILL BE REPLACED BY SHAPES/EXTENSIONS
 public static unsafe partial class ConsoleExtensions
 {
+    /// <summary>
+    /// Indicates whether to throw an <see cref="Win32Exception"/> when an invalid console mode is encountered.
+    /// <para/>
+    /// This is only relevant on Windows operating systems for the following members:
+    /// <list type="bullet">
+    ///     <item><see cref="STDINConsoleMode"/></item>
+    ///     <item><see cref="STDERRConsoleMode"/></item>
+    ///     <item><see cref="STDOUTConsoleMode"/></item>
+    /// </list>
+    /// </summary>
     public static bool ThrowOnInvalidConsoleMode { get; set; } = false;
 
+    /// <summary>
+    /// Returns the handle of the standard input stream.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     [SupportedOSPlatform(OS.WIN)]
     public static void* STDINHandle => OS.IsWindows ? NativeInterop.GetStdHandle(-10)
                                                     : throw new InvalidOperationException("This operation is not supported on non-Windows operating systems.");
 
+    /// <summary>
+    /// Returns the handle of the standard output stream.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     [SupportedOSPlatform(OS.WIN)]
     public static void* STDOUTHandle => OS.IsWindows ? NativeInterop.GetStdHandle(-11)
                                                      : throw new InvalidOperationException("This operation is not supported on non-Windows operating systems.");
 
+    /// <summary>
+    /// Returns the handle of the standard error stream.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
     [SupportedOSPlatform(OS.WIN)]
     public static void* STDERRHandle => OS.IsWindows ? NativeInterop.GetStdHandle(-12)
                                                      : throw new InvalidOperationException("This operation is not supported on non-Windows operating systems.");
 
+    /// <summary>
+    /// Gets or sets the <see cref="ConsoleMode"/> of the standard input stream.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="Win32Exception">Thrown, if an invalid console mode is encountered and <see cref="ThrowOnInvalidConsoleMode"/> is <see langword="true"/>.</exception>"
     [SupportedOSPlatform(OS.WIN)]
     public static ConsoleMode STDINConsoleMode
     {
@@ -571,6 +797,11 @@ public static unsafe partial class ConsoleExtensions
         }
     }
 
+    /// <summary>
+    /// Gets or sets the <see cref="ConsoleMode"/> of the standard output stream.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="Win32Exception">Thrown, if an invalid console mode is encountered and <see cref="ThrowOnInvalidConsoleMode"/> is <see langword="true"/>.</exception>"
     [SupportedOSPlatform(OS.WIN)]
     public static ConsoleMode STDOUTConsoleMode
     {
@@ -598,6 +829,11 @@ public static unsafe partial class ConsoleExtensions
         }
     }
 
+    /// <summary>
+    /// Gets or sets the <see cref="ConsoleMode"/> of the standard error stream.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="Win32Exception">Thrown, if an invalid console mode is encountered and <see cref="ThrowOnInvalidConsoleMode"/> is <see langword="true"/>.</exception>"
     [SupportedOSPlatform(OS.WIN)]
     public static ConsoleMode STDERRConsoleMode
     {
@@ -625,6 +861,11 @@ public static unsafe partial class ConsoleExtensions
         }
     }
 
+    /// <summary>
+    /// Sets or gets the current console font information.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown, if this member is accessed on any non-Windows operating system.</exception>
+    /// <exception cref="Win32Exception">Thrown, if an invalid <see cref="ConsoleFontInfo"/> is encountered or if any errors occurred whilst reading/writing to this property.</exception>
     [SupportedOSPlatform(OS.WIN)]
     public static ConsoleFontInfo FontInfo
     {
