@@ -82,14 +82,14 @@ public static class ConsoleMouseListener
                 nint handle;
                 unsafe
                 {
-                    handle = (nint)ConsoleExtensions.STDINHandle;
+                    handle = (nint)Console.STDINHandle;
                 }
-                ConsoleMode mode = ConsoleExtensions.STDINConsoleMode;
-                ConsoleExtensions.STDINConsoleMode = (mode | ConsoleMode.ENABLE_MOUSE_INPUT
-                                                           | ConsoleMode.ENABLE_WINDOW_INPUT
-                                                           | ConsoleMode.ENABLE_EXTENDED_FLAGS)
-                                                          & ~ConsoleMode.ENABLE_QUICK_EDIT_MODE;
-                ConsoleExtensions.MouseEnabled = true;
+                ConsoleMode mode = Console.STDINConsoleMode;
+                Console.STDINConsoleMode = (mode | ConsoleMode.ENABLE_MOUSE_INPUT
+                                                 | ConsoleMode.ENABLE_WINDOW_INPUT
+                                                 | ConsoleMode.ENABLE_EXTENDED_FLAGS)
+                                                & ~ConsoleMode.ENABLE_QUICK_EDIT_MODE;
+                Console.MouseEnabled = true;
 
                 while (_running)
                     if (NativeInterop.GetNumberOfConsoleInputEvents(handle, out int count))
@@ -126,7 +126,7 @@ public static class ConsoleMouseListener
                     else
                         await Task.Delay(10);
 
-                ConsoleExtensions.STDINConsoleMode = mode;
+                Console.STDINConsoleMode = mode;
             });
         }
     }
