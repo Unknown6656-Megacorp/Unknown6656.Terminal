@@ -654,4 +654,20 @@ public static unsafe partial class Console
     }
 
 
+    /// <inheritdoc cref="sysconsole.MoveBufferArea(int, int, int, int, int, int)"/>
+    [Obsolete($"The usage of this function is not recommended. Use {nameof(DuplicateBufferArea)} instead.")]
+    public static void MoveBufferArea(int sourceLeft, int sourceTop, int sourceWidth, int sourceHeight, int targetLeft, int targetTop) =>
+        MoveBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop, ' ', ConsoleColor.Black, BackgroundColor);
+
+    /// <inheritdoc cref="sysconsole.MoveBufferArea(int, int, int, int, int, int, char, ConsoleColor, ConsoleColor)"/>
+    [Obsolete($"The usage of this function is not recommended. Use {nameof(DuplicateBufferArea)} instead.")]
+    public static void MoveBufferArea(int sourceLeft, int sourceTop, int sourceWidth, int sourceHeight, int targetLeft, int targetTop, char sourceChar, ConsoleColor sourceForeColor, ConsoleColor sourceBackColor)
+    {
+        if (OS.IsWindows)
+#pragma warning disable CA1416 // Validate platform compatibility
+            sysconsole.MoveBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop, sourceChar, sourceForeColor, sourceBackColor);
+#pragma warning restore CA1416
+        else
+            DuplicateBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop);
+    }
 }
