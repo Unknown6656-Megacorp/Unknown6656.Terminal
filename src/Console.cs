@@ -254,11 +254,25 @@ public static unsafe partial class Console
         }
     }
 
+    #region RESET/CLEAR FUNCTIONS
 
+    public static void SoftReset() => Write("\e[!p");
 
+    public static void FullClear()
+    {
+        Clear();
+        Write("\e[3J");
+    }
 
+    public static void ClearAndResetAll() => Write("\e[3J\ec\e[m");
 
+    public static void ResetAllAttributes() => Write("\e[m");
 
+    public static void ResetForegroundColor() => Write("\e[39m");
+
+    public static void ResetBackgroundColor() => Write("\e[49m");
+
+    #endregion
     #region BUFFER AREA
 
     public static void ClearBufferArea(ConsoleArea area, bool selective = false) =>
@@ -289,16 +303,10 @@ public static unsafe partial class Console
     public static void DuplicateBufferArea(int sourceLeft, int sourceTop, int sourceWidth, int sourceHeight, int targetLeft, int targetTop) =>
         DuplicateBufferArea(new(sourceLeft, sourceTop, sourceWidth, sourceHeight), (targetLeft, targetTop));
 
-
     public static void ModifyBufferArea(ConsoleArea area, ConsoleGraphicRendition sgr) => ChangeVT520ForBufferArea(area, sgr.FullVT520SGR());
 
     #endregion
-
-
-
-
-
-
+    #region CURSOR POSITION
 
     public static (int X, int Y, int Page)? GetExtendedCursorPosition()
     {
@@ -311,6 +319,154 @@ public static unsafe partial class Console
         else
             return null;
     }
+
+    public static void ScrollUp(int lines)
+    {
+        if (lines < 0)
+            ScrollDown(-lines);
+        else if (lines > 0)
+            Write($"\e[{lines}S");
+    }
+
+    public static void ScrollDown(int lines)
+    {
+        if (lines < 0)
+            ScrollUp(-lines);
+        else if (lines > 0)
+            Write($"\e[{lines}T");
+    }
+
+
+    #endregion
+    #region WRITE FUNCTIONS
+
+    public static void Write(object? value, int left, int top) => Write(value, (left, top));
+
+    public static void Write(object? value, (int left, int top) starting_pos)
+    {
+        SetCursorPosition(starting_pos.left, starting_pos.top);
+        Write(value);
+    }
+
+
+    public static (int max_line_length, int line_count) WriteBlock(string value, int left, int top) =>
+        WriteBlock(value, (left, top));
+
+    public static (int max_line_length, int line_count) WriteBlock(string value, (int left, int top) starting_pos) =>
+        WriteBlock(value.SplitIntoLines(), starting_pos);
+
+    public static (int max_line_length, int line_count) WriteBlock(IEnumerable<string> lines, int left, int top) => WriteBlock(lines, (left, top));
+
+    public static (int max_line_length, int line_count) WriteBlock(IEnumerable<string> lines, (int left, int top) starting_pos) =>
+        WriteBlock(lines, starting_pos, (0x0fffffff, 0x0fffffff), true);
+
+    public static (int max_line_length, int line_count) WriteBlock(string value, int left, int top, int max_width, int max_height, bool wrap_overflow = true) =>
+        WriteBlock(value, (left, top), (max_width, max_height), wrap_overflow);
+
+    public static (int max_line_length, int line_count) WriteBlock(string value, (int left, int top) starting_pos, (int width, int height) max_size, bool wrap_overflow = true) =>
+        WriteBlock(value.SplitIntoLines(), starting_pos, max_size, wrap_overflow);
+
+    public static (int max_line_length, int line_count) WriteBlock(IEnumerable<string> lines, int left, int top, int max_width, int max_height, bool wrap_overflow = true) =>
+        WriteBlock(lines, (left, top), (max_width, max_height), wrap_overflow);
+
+    public static (int max_line_length, int line_count) WriteBlock(IEnumerable<string> lines, (int left, int top) starting_pos, (int width, int height) max_size, bool wrap_overflow = true)
+    {
+        List<string> cropped_lines = VT520.SplitLinesWithVT520(lines.ToList(), max_size.width, wrap_overflow);
+        int line_no = 0;
+        int max_width = 0;
+
+        foreach (string line in cropped_lines.Take(max_size.height))
+        {
+            SetCursorPosition(starting_pos.left, starting_pos.top + line_no);
+            Write(line);
+
+            ++line_no;
+            max_width = Math.Max(max_width, CursorLeft - starting_pos.left);
+        }
+
+        return (max_width, line_no);
+    }
+
+    public static void WriteVertical(object? value) => WriteVertical(value, CursorLeft, CursorTop);
+
+    public static void WriteVertical(object? value, int left, int top) => WriteVertical(value, (left, top));
+
+    public static void WriteVertical(object? value, (int left, int top) starting_pos)
+    {
+        string s = value?.ToString() ?? "";
+
+        for (int i = 0; i < s.Length; i++)
+        {
+            CursorTop = starting_pos.top + i;
+            CursorLeft = starting_pos.left;
+            Write(s[i]);
+        }
+    }
+
+    public static void WriteUnderlined(object? value) => Write($"\e[4m{value}\e[24m");
+
+    public static void WriteInverted(object? value) => Write($"\e[7m{value}\e[27m");
+
+    // TODO : implement all other (temporary) formatting styles
+
+
+
+
+    // TODO : handle line wrapping/breaks for the following functions
+
+    public static void WriteDoubleWidthLine(object? value) => WriteDoubleWidthLine(value, (CursorLeft, CursorTop));
+
+    public static void WriteDoubleWidthLine(object? value, int left, int top) => WriteDoubleWidthLine(value, (left, top));
+
+    public static void WriteDoubleWidthLine(object? value, (int left, int top)? starting_pos)
+    {
+        if (starting_pos is (int x, int y))
+            SetCursorPosition(x, y);
+
+        WriteLine($"\e#5{value}");
+    }
+
+    public static void WriteDoubleSizeLine(object? value) => WriteDoubleSizeLine(value, (CursorLeft, CursorTop));
+
+    public static void WriteDoubleSizeLine(object? value, int left, int top) => WriteDoubleSizeLine(value, (left, top));
+
+    public static void WriteDoubleSizeLine(object? value, (int left, int top)? starting_pos)
+    {
+        int x = starting_pos?.left ?? CursorLeft;
+        int y = starting_pos?.top ?? CursorTop;
+        string text = value?.ToString() ?? "";
+
+        SetCursorPosition(x, y);
+        Write($"\e#3{text}");
+        SetCursorPosition(x, y + 1);
+        WriteLine($"\e#4{text}");
+    }
+
+    #endregion
+
+    public static void ChangeLineRendering(int line, LineRenderingMode mode)
+    {
+        if (mode is LineRenderingMode.DoubleHeight)
+        {
+            ChangeLineRendering(line, LineRenderingMode.DoubleHeight_Top);
+            ChangeLineRendering(line + 1, LineRenderingMode.DoubleHeight_Bottom);
+        }
+        else
+        {
+            CursorTop = line;
+            Write($"\e#{mode switch
+            {
+                LineRenderingMode.DoubleWidth => 6,
+                LineRenderingMode.DoubleHeight_Top => 3,
+                LineRenderingMode.DoubleHeight_Bottom => 4,
+                _ => 5
+            }}");
+        }
+    }
+
+
+
+
 
 
 
@@ -332,32 +488,6 @@ public static unsafe partial class Console
             }
 
         return null;
-    }
-
-    public static void SoftReset() => Write("\e[!p");
-
-    public static void ClearAndResetAll() => Write("\e[3J\ec\e[m");
-
-    public static void ResetAllAttributes() => Write("\e[m");
-
-    public static void ResetForegroundColor() => Write("\e[39m");
-
-    public static void ResetBackgroundColor() => Write("\e[49m");
-
-    public static void ScrollUp(int lines)
-    {
-        if (lines < 0)
-            ScrollDown(-lines);
-        else if (lines > 0)
-            Write($"\e[{lines}S");
-    }
-
-    public static void ScrollDown(int lines)
-    {
-        if (lines < 0)
-            ScrollUp(-lines);
-        else if (lines > 0)
-            Write($"\e[{lines}T");
     }
 
     public static void GetCursorInformation()
@@ -410,14 +540,6 @@ public static unsafe partial class Console
 
     public static void WriteReverseIndex() => Write("\eM");
 
-    public static void Write(object? value, int left, int top) => Write(value, (left, top));
-
-    public static void Write(object? value, (int left, int top) starting_pos)
-    {
-        SetCursorPosition(starting_pos.left, starting_pos.top);
-        Write(value);
-    }
-
     public static void InsertLine(int count = 1) => Write($"\e[{count}L");
 
     public static void DeleteLine(int count = 1) => Write($"\e[{count}M");
@@ -426,119 +548,6 @@ public static unsafe partial class Console
 
     public static void DeleteCharacter(int count = 1) => Write($"\e[{count}P");
 
-    public static void ChangeLineRendering(int line, LineRenderingMode mode)
-    {
-        if (mode is LineRenderingMode.DoubleHeight)
-        {
-            ChangeLineRendering(line, LineRenderingMode.DoubleHeight_Top);
-            ChangeLineRendering(line + 1, LineRenderingMode.DoubleHeight_Bottom);
-        }
-        else
-        {
-            CursorTop = line;
-            Write($"\e#{mode switch
-            {
-                LineRenderingMode.DoubleWidth => 6,
-                LineRenderingMode.DoubleHeight_Top => 3,
-                LineRenderingMode.DoubleHeight_Bottom => 4,
-                _ => 5
-            }}");
-        }
-    }
-
-    public static void WriteDoubleWidthLine(object? value) => WriteDoubleWidthLine(value, (CursorLeft, CursorTop));
-
-    public static void WriteDoubleWidthLine(object? value, int left, int top) => WriteDoubleWidthLine(value, (left, top));
-
-    public static void WriteDoubleWidthLine(object? value, (int left, int top)? starting_pos)
-    {
-        if (starting_pos is (int x, int y))
-            SetCursorPosition(x, y);
-
-        WriteLine($"\e#5{value}");
-    }
-
-    public static void WriteDoubleSizeLine(object? value) => WriteDoubleSizeLine(value, (CursorLeft, CursorTop));
-
-    public static void WriteDoubleSizeLine(object? value, int left, int top) => WriteDoubleSizeLine(value, (left, top));
-
-    public static void WriteDoubleSizeLine(object? value, (int left, int top)? starting_pos)
-    {
-        int x = starting_pos?.left ?? CursorLeft;
-        int y = starting_pos?.top ?? CursorTop;
-        string text = value?.ToString() ?? "";
-
-        SetCursorPosition(x, y);
-        Write($"\e#3{text}");
-        SetCursorPosition(x, y + 1);
-        WriteLine($"\e#4{text}");
-    }
-
-    public static void FullClear()
-    {
-        Clear();
-        Write("\e[3J");
-    }
-
-    public static (int max_line_length, int line_count) WriteBlock(string value, int left, int top) =>
-        WriteBlock(value, (left, top));
-
-    public static (int max_line_length, int line_count) WriteBlock(string value, (int left, int top) starting_pos) =>
-        WriteBlock(value.SplitIntoLines(), starting_pos);
-
-    public static (int max_line_length, int line_count) WriteBlock(IEnumerable<string> lines, int left, int top) => WriteBlock(lines, (left, top));
-
-    public static (int max_line_length, int line_count) WriteBlock(IEnumerable<string> lines, (int left, int top) starting_pos) =>
-        WriteBlock(lines, starting_pos, (0x0fffffff, 0x0fffffff), true);
-
-    public static (int max_line_length, int line_count) WriteBlock(string value, int left, int top, int max_width, int max_height, bool wrap_overflow = true) =>
-        WriteBlock(value, (left, top), (max_width, max_height), wrap_overflow);
-
-    public static (int max_line_length, int line_count) WriteBlock(string value, (int left, int top) starting_pos, (int width, int height) max_size, bool wrap_overflow = true) =>
-        WriteBlock(value.SplitIntoLines(), starting_pos, max_size, wrap_overflow);
-
-    public static (int max_line_length, int line_count) WriteBlock(IEnumerable<string> lines, int left, int top, int max_width, int max_height, bool wrap_overflow = true) =>
-        WriteBlock(lines, (left, top), (max_width, max_height), wrap_overflow);
-
-    public static (int max_line_length, int line_count) WriteBlock(IEnumerable<string> lines, (int left, int top) starting_pos, (int width, int height) max_size, bool wrap_overflow = true)
-    {
-        List<string> cropped_lines = SplitLinesWithVT520(lines.ToList(), max_size.width, wrap_overflow);
-        int line_no = 0;
-        int max_width = 0;
-
-        foreach (string line in cropped_lines.Take(max_size.height))
-        {
-            SetCursorPosition(starting_pos.left, starting_pos.top + line_no);
-            Write(line);
-
-            ++line_no;
-            max_width = Math.Max(max_width, CursorLeft - starting_pos.left);
-        }
-
-        return (max_width, line_no);
-    }
-
-    public static void WriteVertical(object? value) => WriteVertical(value, CursorLeft, CursorTop);
-
-    public static void WriteVertical(object? value, int left, int top) => WriteVertical(value, (left, top));
-
-    public static void WriteVertical(object? value, (int left, int top) starting_pos)
-    {
-        string s = value?.ToString() ?? "";
-
-        for (int i = 0; i < s.Length; i++)
-        {
-            CursorTop = starting_pos.top + i;
-            CursorLeft = starting_pos.left;
-            Write(s[i]);
-        }
-    }
-
-    public static void WriteUnderlined(object? value) => Write($"\e[4m{value}\e[24m");
-
-    public static void WriteInverted(object? value) => Write($"\e[7m{value}\e[27m");
-
-    // hexdump now moved to Unknown6656.Serialization
 
     public static ConsoleState SaveConsoleState()
     {
