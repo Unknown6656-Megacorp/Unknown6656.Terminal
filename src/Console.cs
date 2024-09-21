@@ -256,6 +256,50 @@ public static unsafe partial class Console
 
 
 
+
+
+
+    #region BUFFER AREA
+
+    public static void ClearBufferArea(ConsoleArea area, bool selective = false) =>
+        Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right}${(selective ? 'z' : '{')}");
+
+    public static void FillBufferArea(ConsoleArea area, char @char) =>
+        Write($"\e[{(int)@char};{area.Top};{area.Left};{area.Bottom};{area.Right}$z");
+
+    public static void DuplicateBufferArea(ConsoleArea source, (int X, int Y) destination) => DuplicateBufferArea(source, 0, destination);
+
+    public static void DuplicateBufferArea(ConsoleArea source, int source_page, (int X, int Y) destination) =>
+        DuplicateBufferArea(source, source_page, (destination.X, destination.Y, source_page));
+
+    public static void DuplicateBufferArea(ConsoleArea source, int source_page, (int X, int Y, int Page) destination)
+    {
+        if (source.Left < 0 || source.Top < 0 || source.Width < 0 || source.Height < 0 || destination.X < 0 || destination.Y < 0)
+            throw new ArgumentOutOfRangeException("All coordinates must be non-negative.");
+        else if (source.Width == 0 || source.Height == 0)
+            return;
+        //else if (sourceLeft + sourceWidth > BufferWidth || sourceTop + sourceHeight > BufferHeight)
+        //    throw new ArgumentOutOfRangeException("The source area must fit into the buffer.");
+        //else if (targetLeft + sourceWidth > BufferWidth || targetTop + sourceHeight > BufferHeight)
+        //    throw new ArgumentOutOfRangeException("The target area must fit into the buffer.");
+
+        Write($"\e[{source.Top};{source.Left};{source.Bottom};{source.Right};{source_page};{destination.X};{destination.Y};{destination.Page}$v");
+    }
+
+    public static void DuplicateBufferArea(int sourceLeft, int sourceTop, int sourceWidth, int sourceHeight, int targetLeft, int targetTop) =>
+        DuplicateBufferArea(new(sourceLeft, sourceTop, sourceWidth, sourceHeight), (targetLeft, targetTop));
+
+
+    public static void ModifyBufferArea(ConsoleArea area, ConsoleGraphicRendition sgr) => ChangeVT520ForBufferArea(area, sgr.FullVT520SGR());
+
+    #endregion
+
+
+
+
+
+
+
     public static (int X, int Y, int Page)? GetExtendedCursorPosition()
     {
         if (GetRawVT520Report("[?6n", 'R') is ['\e', '[', '?', .. string response])
@@ -315,20 +359,6 @@ public static unsafe partial class Console
         else if (lines > 0)
             Write($"\e[{lines}T");
     }
-
-    public static void ClearArea(ConsoleArea area, bool selective = false) =>
-        Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right}${(selective ? 'z' : '{')}");
-
-    public static void FillArea(ConsoleArea area, char @char) =>
-        Write($"\e[{(int)@char};{area.Top};{area.Left};{area.Bottom};{area.Right}$z");
-
-    public static void DuplicateArea(ConsoleArea source, (int X, int Y) destination) => DuplicateArea(source, 0, destination);
-
-    public static void DuplicateArea(ConsoleArea source, int source_page, (int X, int Y) destination) =>
-        DuplicateArea(source, source_page, (destination.X, destination.Y, source_page));
-
-    public static void DuplicateArea(ConsoleArea source, int source_page, (int X, int Y, int Page) destination) =>
-        Write($"\e[{source.Top};{source.Left};{source.Bottom};{source.Right};{source_page};{destination.X};{destination.Y};{destination.Page}$v");
 
     public static void GetCursorInformation()
     {
