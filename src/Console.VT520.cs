@@ -130,20 +130,16 @@ public static unsafe partial class Console
     /// <summary>
     /// Generates a VT100/VT520/ANSI color string for the given <paramref name="color"/> and foreground/background flag.
     /// <para/>
-    /// <b>
-    ///     Please do note that this string does NOT start with <c>\e[</c> and does NOT end with <c>m</c>.
-    ///     This has still to be done by the caller. The reason for this is that <see cref="GenerateVT520ColorString"/> is intended to be used in combination with other VT520 escape sequences.
-    /// </b>
+    /// Please do note that this string does <b>NOT</b> start with <c>\e[</c> and does <b>NOT</b> end with <c>m</c>.
+    /// This has still to be done by the caller. The reason for this is that <see cref="GenerateVT520ColorString"/> is intended to be used in combination with other VT520 escape sequences.
     /// </summary>
-    /// <param name="color">The color to be rendered as VT520 code. This may be an instance of <see cref="ConsoleColor"/> or <see cref="Color"/>.</param>
-    /// <param name="foreground">
-    ///     Indicates whether the given <paramref name="color"/> is a foreground color.
-    ///     A value of <see langword="true"/> indicates a foreground color, while a value of <see langword="false"/> indicates a background color.
-    ///     A value of <see langword="null"/> indicates a color for underline coloring.
-    /// </param>
+    /// <param name="color">The color to be rendered as VT520 code.</param>
+    /// <param name="mode">The color mode to use (foreground, background, underline).</param>
     /// <returns>The VT100/VT520/ANSI color string for the given <paramref name="color"/>.</returns>
-    public static string GenerateVT520ColorString(Union<ConsoleColor, Color>? color, bool? foreground)
+    public static string GenerateVT520ColorString(ConsoleColor color, ColorMode mode)
     {
+        // TODO
+
         if (color?.Is(out ConsoleColor cc) ?? false)
         {
             (bool bright, ConsoleColor normalized) = cc switch

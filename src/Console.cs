@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using System.Linq;
@@ -273,38 +273,179 @@ public static unsafe partial class Console
         }
     }
 
+    /// <summary>
+    /// Saves the current state of the console and returns it as a <see cref="ConsoleState"/> object.
+    /// </summary>
+    /// <returns>The saved console state.</returns>
+    public static ConsoleState SaveConsoleState()
+    {
+        ConsoleMode stdinmode = default;
+        ConsoleMode stderrmode = default;
+        ConsoleMode stdoutmode = default;
+        int? cursor_size = null;
+
+        if (OS.IsWindows)
+        {
+#pragma warning disable CA1416 // Validate platform compatibility
+            cursor_size = CursorSize;
+            stdinmode = STDINConsoleMode;
+            stderrmode = STDERRConsoleMode;
+            stdoutmode = STDOUTConsoleMode;
+#pragma warning restore CA1416
+        }
+
+        return new()
+        {
+            InputEncoding = InputEncoding,
+            OutputEncoding = OutputEncoding,
+            CursorSize = cursor_size,
+            STDINMode = stdinmode,
+            STDOUTMode = stdoutmode,
+            STDERRMode = stderrmode,
+            BufferSize = BufferSize,
+            WindowSize = WindowSize,
+            WindowPosition = WindowPosition,
+            CursorPosition = CursorPosition,
+            GraphicRendition = CurrentGraphicRendition,
+            WindowFrameForeground = null, // TODO : implement
+            WindowFrameBackground = null, // TODO : implement
+        };
+    }
+
+    /// <summary>
+    /// Restores the console to the state specified by the given <see cref="ConsoleState"/> object.
+    /// </summary>
+    /// <param name="state">The console state to restore.</param>
+    public static void RestoreConsoleState(ConsoleState? state)
+    {
+        if (state is { })
+        {
+            InputEncoding = state.InputEncoding ?? Encoding.Default;
+            OutputEncoding = state.OutputEncoding ?? Encoding.Default;
+
+            if (OS.IsWindows)
+            {
+#pragma warning disable CA1416 // Validate platform compatibility
+                STDINConsoleMode = state.STDINMode;
+                STDOUTConsoleMode = state.STDOUTMode;
+                STDERRConsoleMode = state.STDERRMode;
+
+                if (state.CursorSize is int sz)
+                    LINQ.TryDo(() => CursorSize = sz);
+#pragma warning restore CA1416
+            }
+
+            BufferSize = state.BufferSize;
+            WindowSize = state.WindowSize;
+            WindowPosition = state.WindowPosition;
+            CursorPosition = state.CursorPosition;
+            CurrentGraphicRendition = state.GraphicRendition;
+
+            if (!(state.WindowFrameForeground is null && state.WindowFrameBackground is null))
+                WindowFrameColors = (
+                    state.WindowFrameForeground ?? ConsoleColor.White,
+                    state.WindowFrameBackground ?? ConsoleColor.Black
+                );
+        }
+    }
+
     #region RESET/CLEAR FUNCTIONS
 
+    /// <summary>
+    /// Performs a soft reset of the console. This will reset the following settings to their respective default values:
+    /// <list type="bullet">
+    ///     <item>Text cursor enable mode.</item>
+    ///     <item>Insert/replacement mode.</item>
+    ///     <item>Cursor origin.</item>
+    ///     <item>Autowrapping mode.</item>
+    ///     <item>Keyboard action mode.</item>
+    ///     <item>Numeric keypad.</item>
+    ///     <item>Cursor keys.</item>
+    ///     <item>Top and bottom margins.</item>
+    ///     <item>Graphic renditions (SGR).</item>
+    ///     <item>Character attributes.</item>
+    ///     <item>Cursor direction.</item>
+    /// </list>
+    /// </summary>
     public static void SoftReset() => Write("\e[!p");
 
+    /// <summary>
+    /// Clears the entire console screen and resets the cursor position to the top-left corner.
+    /// Note that the behavior of this function is similar to the <see cref="Clear"/> method, although it delivers more consistent results across various terminals.
+    /// </summary>
     public static void FullClear()
     {
         Clear();
         Write("\e[3J");
     }
 
-    public static void ClearAndResetAll() => Write("\e[3J\ec\e[m");
+    /// <summary>
+    /// Clears the entire console screen and performs a hard reset of the console, as well as all cursor and graphic renditions and attributes.
+    /// </summary>
+    public static void HardResetAndFullClear() => Write("\e[m\e[3J\e[!p\ec");
 
-    public static void ResetAllAttributes() => Write("\e[m");
+    /// <summary>
+    /// Resets all graphic renditions to their default values.
+    /// </summary>
+    public static void ResetGraphicRenditions() => Write("\e[m");
 
+    /// <summary>
+    /// Resets the text's foreground color to its default value.
+    /// </summary>
     public static void ResetForegroundColor() => Write("\e[39m");
 
+    /// <summary>
+    /// Resets the text's background color to its default value.
+    /// </summary>
     public static void ResetBackgroundColor() => Write("\e[49m");
 
     #endregion
     #region BUFFER AREA
 
+    /// <summary>
+    /// Clears the current line.
+    /// </summary>
+    public static void ClearLine() => Write("\e[K");
+
+    /// <summary>
+    /// Clears the specified <paramref name="area"/> of the console buffer.
+    /// </summary>
+    /// <param name="area">The area of the console buffer to clear.</param>
+    /// <param name="selective">If set to <see langword="true"/>, only the characters in the specified area will be cleared, leaving the attributes unchanged.</param>
     public static void ClearBufferArea(ConsoleArea area, bool selective = false) =>
         Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right}${(selective ? 'z' : '{')}");
 
+    /// <summary>
+    /// Fills the specified <paramref name="area"/> of the console buffer with the given character.
+    /// </summary>
+    /// <param name="area">The area of the console buffer to fill.</param>
+    /// <param name="char">The character to fill the area with.</param>
     public static void FillBufferArea(ConsoleArea area, char @char) =>
         Write($"\e[{(int)@char};{area.Top};{area.Left};{area.Bottom};{area.Right}$z");
 
+    /// <summary>
+    /// Duplicates the specified source area of the console buffer to the specified destination.
+    /// </summary>
+    /// <param name="source">The source area of the console buffer to duplicate.</param>
+    /// <param name="destination">The destination coordinates where the source area will be duplicated.</param>
     public static void DuplicateBufferArea(ConsoleArea source, (int X, int Y) destination) => DuplicateBufferArea(source, 0, destination);
 
+    /// <summary>
+    /// Duplicates the specified source area of the console buffer to the specified destination on the specified page.
+    /// </summary>
+    /// <param name="source">The source area of the console buffer to duplicate.</param>
+    /// <param name="source_page">The page number of the source area.</param>
+    /// <param name="destination">The destination coordinates where the source area will be duplicated.</param>
     public static void DuplicateBufferArea(ConsoleArea source, int source_page, (int X, int Y) destination) =>
         DuplicateBufferArea(source, source_page, (destination.X, destination.Y, source_page));
 
+    /// <summary>
+    /// Duplicates the specified source area of the console buffer to the specified destination on the specified page.
+    /// </summary>
+    /// <param name="source">The source area of the console buffer to duplicate.</param>
+    /// <param name="source_page">The page number of the source area.</param>
+    /// <param name="destination">The destination coordinates and page where the source area will be duplicated.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if any of the coordinates are negative or if the source area has zero width or height.</exception>
     public static void DuplicateBufferArea(ConsoleArea source, int source_page, (int X, int Y, int Page) destination)
     {
         if (source.Left < 0 || source.Top < 0 || source.Width < 0 || source.Height < 0 || destination.X < 0 || destination.Y < 0)
@@ -316,17 +457,67 @@ public static unsafe partial class Console
         //else if (targetLeft + sourceWidth > BufferWidth || targetTop + sourceHeight > BufferHeight)
         //    throw new ArgumentOutOfRangeException("The target area must fit into the buffer.");
 
+
+#warning TODO : check for off-by-one errors
         Write($"\e[{source.Top};{source.Left};{source.Bottom};{source.Right};{source_page};{destination.X};{destination.Y};{destination.Page}$v");
     }
 
+    /// <summary>
+    /// 
+    /// Duplicates the specified source area of the console buffer to the specified destination.
+    /// </summary>
+    /// <param name="sourceLeft">The left coordinate of the source area.</param>
+    /// <param name="sourceTop">The top coordinate of the source area.</param>
+    /// <param name="sourceWidth">The width of the source area.</param>
+    /// <param name="sourceHeight">The height of the source area.</param>
+    /// <param name="targetLeft">The left coordinate of the target area.</param>
+    /// <param name="targetTop">The top coordinate of the target area.</param>
     public static void DuplicateBufferArea(int sourceLeft, int sourceTop, int sourceWidth, int sourceHeight, int targetLeft, int targetTop) =>
         DuplicateBufferArea(new(sourceLeft, sourceTop, sourceWidth, sourceHeight), (targetLeft, targetTop));
 
+    /// <summary>
+    /// Modifies the specified area of the console buffer with the given graphic rendition.
+    /// </summary>
+    /// <param name="area">The area of the console buffer to modify.</param>
+    /// <param name="sgr">The graphic rendition to apply to the specified area.</param>
     public static void ModifyBufferArea(ConsoleArea area, ConsoleGraphicRendition sgr) => ChangeVT520ForBufferArea(area, sgr.FullVT520SGR());
+
+    /// <summary>
+    /// Scrolls the console buffer up by the specified number of lines.
+    /// Please note that the cursor position will not be changed by this operation.
+    /// </summary>
+    /// <param name="lines">The number of lines to scroll. If negative, the buffer will scroll down.</param>
+    public static void MoveBufferUp(int lines)
+    {
+        if (lines < 0)
+            MoveBufferDown(-lines);
+        else if (lines > 0)
+            Write($"\e[{lines}S");
+    }
+
+    /// <summary>
+    /// Scrolls the console buffer down by the specified number of lines.
+    /// Please note that the cursor position will not be changed by this operation.
+    /// </summary>
+    /// <param name="lines">The number of lines to scroll. If negative, the buffer will scroll up.</param>
+    public static void MoveBufferDown(int lines)
+    {
+        if (lines < 0)
+            MoveBufferUp(-lines);
+        else if (lines > 0)
+            Write($"\e[{lines}T");
+    }
 
     #endregion
     #region CURSOR POSITION
 
+    /// <summary>
+    /// Gets the extended cursor position, including the page number.
+    /// </summary>
+    /// <returns>
+    /// A tuple containing the X-coordinate, Y-coordinate, and page number of the cursor position,
+    /// or <see langword="null"/> if the position could not be determined.
+    /// </returns>
     public static (int X, int Y, int Page)? GetExtendedCursorPosition()
     {
         if (GetRawVT520Report("[?6n", 'R') is ['\e', '[', '?', .. string response])
@@ -390,25 +581,60 @@ public static unsafe partial class Console
         return (max_width, line_no);
     }
 
+    /// <summary>
+    /// Writes the specified value vertically down starting from the current cursor position.
+    /// </summary>
+    /// <param name="value">The value to write vertically.</param>
     public static void WriteVertical(object? value) => WriteVertical(value, CursorLeft, CursorTop);
 
+    /// <summary>
+    /// Writes the specified value vertically down starting from the specified position.
+    /// </summary>
+    /// <param name="value">The value to write vertically.</param>
+    /// <param name="left">The left coordinate to start writing from.</param>
+    /// <param name="top">The top coordinate to start writing from.</param>
     public static void WriteVertical(object? value, int left, int top) => WriteVertical(value, (left, top));
 
+    /// <summary>
+    /// Writes the specified value vertically down starting from the specified position.
+    /// </summary>
+    /// <param name="value">The value to write vertically.</param>
+    /// <param name="starting_pos">The starting position to write from.</param>
     public static void WriteVertical(object? value, (int left, int top) starting_pos)
     {
-        string s = value?.ToString() ?? "";
+        string s = value as string ?? value?.ToString() ?? "";
 
-        for (int i = 0; i < s.Length; i++)
-        {
-            CursorTop = starting_pos.top + i;
-            CursorLeft = starting_pos.left;
-            Write(s[i]);
-        }
+        for (int i = 0; i < s.Length; ++i)
+            if (s[i] is '\e' or '\x9b' && VT520.StartsWithVT520Sequence(s[i..], out string? sequence))
+            {
+                Write(sequence);
+
+                i += sequence.Length - 1;
+            }
+            else
+            {
+                CursorTop = starting_pos.top + i;
+                CursorLeft = starting_pos.left;
+
+                Write(s[i]);
+            }
     }
 
     public static void WriteUnderlined(object? value) => Write($"\e[4m{value}\e[24m");
 
     public static void WriteInverted(object? value) => Write($"\e[7m{value}\e[27m");
+
+    public static void WriteFormatted(object? value, ConsoleGraphicRendition format)
+    {
+        ConsoleGraphicRendition? current = CurrentGraphicRendition;
+
+        CurrentGraphicRendition = format;
+
+        Write(value);
+
+        CurrentGraphicRendition = current;
+    }
+
 
     // TODO : implement all other (temporary) formatting styles
 
@@ -445,7 +671,13 @@ public static unsafe partial class Console
         WriteLine($"\e#4{text}");
     }
 
-    #endregion
+    /// <summary>
+    /// Changes the line rendering mode of the current line.
+    /// <para/>
+    /// Please note that if the value of <paramref name="mode"/> is set to <see cref="LineRenderingMode.DoubleHeight"/>, the line below the current line will also be affected.
+    /// </summary>
+    /// <param name="mode">The new rendering mode for the current (and possibly following) line.</param>
+    public static void ChangeLineRendering(LineRenderingMode mode) => ChangeLineRendering(CursorTop, mode);
 
     public static void ChangeLineRendering(int line, LineRenderingMode mode)
     {
@@ -466,6 +698,8 @@ public static unsafe partial class Console
             }}");
         }
     }
+
+    #endregion
 
 
 
@@ -552,65 +786,6 @@ public static unsafe partial class Console
     public static void DeleteCharacter(int count = 1) => Write($"\e[{count}P");
 
 
-    public static ConsoleState SaveConsoleState()
-    {
-        ConsoleMode stdinmode = default;
-        ConsoleMode stderrmode = default;
-        ConsoleMode stdoutmode = default;
-        int? cursor_size = null;
-
-        if (OS.IsWindows)
-        {
-#pragma warning disable CA1416 // Validate platform compatibility
-            cursor_size = CursorSize;
-            stdinmode = STDINConsoleMode;
-            stderrmode = STDERRConsoleMode;
-            stdoutmode = STDOUTConsoleMode;
-#pragma warning restore CA1416
-        }
-
-        return new()
-        {
-            InputEncoding = InputEncoding,
-            OutputEncoding = OutputEncoding,
-            CursorSize = cursor_size,
-            STDINMode = stdinmode,
-            STDOUTMode = stdoutmode,
-            STDERRMode = stderrmode,
-            BufferSize = BufferSize,
-            WindowSize = WindowSize,
-            WindowPosition = WindowPosition,
-            CursorPosition = CursorPosition,
-            GraphicRendition = CurrentGraphicRendition,
-        };
-    }
-
-    public static void RestoreConsoleState(ConsoleState? state)
-    { 
-        if (state is { })
-        {
-            InputEncoding = state.InputEncoding ?? Encoding.Default;
-            OutputEncoding = state.OutputEncoding ?? Encoding.Default;
-
-            if (OS.IsWindows)
-            {
-#pragma warning disable CA1416 // Validate platform compatibility
-                STDINConsoleMode = state.STDINMode;
-                STDOUTConsoleMode = state.STDOUTMode;
-                STDERRConsoleMode = state.STDERRMode;
-
-                if (state.CursorSize is int sz)
-                    LINQ.TryDo(() => CursorSize = sz);
-#pragma warning restore CA1416
-            }
-
-            BufferSize = state.BufferSize;
-            WindowSize = state.WindowSize;
-            WindowPosition = state.WindowPosition;
-            CursorPosition = state.CursorPosition;
-            CurrentGraphicRendition = state.GraphicRendition;
-        }
-    }
 }
 
 
