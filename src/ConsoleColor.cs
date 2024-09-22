@@ -465,6 +465,7 @@ public readonly record struct ConsoleColor
                              .StringJoin(";");
 
 #pragma warning disable CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
+#pragma warning disable CS8524 // The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value.
         if (_color is null)
             return mode switch
             {
@@ -474,15 +475,31 @@ public readonly record struct ConsoleColor
             };
         else if (_color.Is(out sysconsolecolor color))
         {
-            int colvalue = (int)color;
-            (int lo, int hi) = mode switch
+            (string bg, string fg) = color switch
             {
-                ColorMode.Foreground => (30, 90),
-                ColorMode.Background => (40, 100),
-                ColorMode.Underline => throw new ArgumentException($"Underline color in combination with '{typeof(sysconsolecolor)}' is not supported in VT520.", nameof(mode)),
+                sysconsolecolor.Black => ("40", "30"),
+                sysconsolecolor.DarkBlue => ("44", "34"),
+                sysconsolecolor.DarkGreen => ("42", "32"),
+                sysconsolecolor.DarkCyan => ("46", "36"),
+                sysconsolecolor.DarkRed => ("41", "31"),
+                sysconsolecolor.DarkMagenta => ("45", "35"),
+                sysconsolecolor.DarkYellow => ("43", "33"),
+                sysconsolecolor.Gray => ("47", "37"),
+                sysconsolecolor.DarkGray => ("100", "90"),
+                sysconsolecolor.Blue => ("104", "94"),
+                sysconsolecolor.Green => ("102", "92"),
+                sysconsolecolor.Cyan => ("106", "96"),
+                sysconsolecolor.Red => ("101", "91"),
+                sysconsolecolor.Magenta => ("105", "95"),
+                sysconsolecolor.Yellow => ("103", "93"),
+                sysconsolecolor.White => ("107", "97"),
             };
 
-            return (colvalue + (colvalue < 8 ? lo : hi - 8)).ToString();
+            return mode switch
+            {
+                ColorMode.Foreground => fg,
+                ColorMode.Background => bg,
+            };
         }
         else if (_color.Is(out Color rgb))
             return $"{mode switch
@@ -493,6 +510,7 @@ public readonly record struct ConsoleColor
             }};2;{rgb.R};{rgb.G};{rgb.B}";
         else
             throw new InvalidOperationException($"Invalid color type '{_color}'.");
+#pragma warning restore CS8524
 #pragma warning restore CS8509
     }
 

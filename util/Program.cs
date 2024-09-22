@@ -196,9 +196,9 @@ public static class Program
         image: Visual Studio 2022
         configuration: Release
         install:
-            - ps: Invoke-WebRequest "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1" -OutFile ".\lib\install-dotnet.ps1"
+            - ps: Invoke-WebRequest "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1" -OutFile ".\install-dotnet.ps1"
             - ps: $env:DOTNET_INSTALL_DIR = "$pwd\.dotnetcli"
-            - ps: '.\lib\install-dotnet.ps1 {(DOTNET_PREVIEW ? "-Channel Preview" : "")} -Version "{DOTNET_VERSION}" -InstallDir "$env:DOTNET_INSTALL_DIR" -NoPath'
+            - ps: '.\install-dotnet.ps1 {(DOTNET_PREVIEW ? "-Channel Preview" : "")} -Version "{DOTNET_VERSION}" -InstallDir "$env:DOTNET_INSTALL_DIR" -NoPath'
             - ps: $env:Path += ";$env:DOTNET_INSTALL_DIR"
         before_build:
             #- cmd: nuget restore "{Path.GetRelativePath(dir_reporoot.FullName, path_sln.FullName).Replace('\\', '/')}"
