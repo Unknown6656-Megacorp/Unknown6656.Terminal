@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using System.Linq;
@@ -113,7 +113,7 @@ public static unsafe partial class Console
 
     public static TextIntensityMode TextIntensity
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Intensity;
+        get => CurrentGraphicRendition?.Intensity ?? TextIntensityMode.Regular;
         set => Write(value switch
         {
             TextIntensityMode.Bold => "\e[1m",
@@ -124,7 +124,7 @@ public static unsafe partial class Console
 
     public static TextBlinkMode TextBlink
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Blink;
+        get => CurrentGraphicRendition?.Blink ?? TextBlinkMode.NotBlinking;
         set => Write(value switch
         {
             TextBlinkMode.Slow => "\e[5m",
@@ -135,55 +135,55 @@ public static unsafe partial class Console
 
     public static bool InvertedColors
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).AreColorsInverted;
+        get => CurrentGraphicRendition?.AreColorsInverted ?? false;
         set => Write(value ? "\e[7m" : "\e[27m");
     }
 
     public static TextUnderlinedMode TextUnderline
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Underlined;
+        get => CurrentGraphicRendition?.Underlined ?? TextUnderlinedMode.NotUnderlined;
         set => Write($"\e[{(int)value}m");
     }
 
     public static bool OverlinedText
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsOverlined;
+        get => CurrentGraphicRendition?.IsOverlined ?? false;
         set => Write(value ? "\e[53m" : "\e[55m");
     }
 
     public static bool CrossedOutText
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsCrossedOut;
+        get => CurrentGraphicRendition?.IsCrossedOut ?? false;
         set => Write(value ? "\e[9m" : "\e[29m");
     }
 
     public static TextFrameMode TextFrame
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).TextFrame;
+        get => CurrentGraphicRendition?.TextFrame ?? TextFrameMode.NotFramed;
         set => Write($"\e[{(int)value}m");
     }
 
     public static bool ConcealedText
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsTextConcealed;
+        get => CurrentGraphicRendition?.IsTextConcealed ?? false;
         set => Write(value ? "\e[8m" : "\e[28m");
     }
 
     public static bool ItalicText
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsItalic;
+        get => CurrentGraphicRendition?.IsItalic ?? false;
         set => Write(value ? "\e[3m" : "\e[23m");
     }
 
     public static bool GothicText
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsGothic;
+        get => CurrentGraphicRendition?.IsGothic ?? false;
         set => Write(value ? "\e[20m" : "\e[23m");
     }
 
     public static TextTransformationMode TextTransformation
     {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).TextTransformation;
+        get => CurrentGraphicRendition?.TextTransformation ?? TextTransformationMode.Regular;
         set => Write($"\e[{(int)value}m");
     }
 
