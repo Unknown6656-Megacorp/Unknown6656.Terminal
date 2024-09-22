@@ -204,26 +204,14 @@ public static unsafe partial class Console
             else
                 throw _unsupported_os; // TODO
         }
-        set
-        {
-            if (OS.IsWindows)
-                sysconsole.CursorVisible = value;
-            else
-                SetVT520Bit(25, value);
-        }
+        set => SetVT520Bit(25, value);
     }
 
     /// <inheritdoc cref="sysconsole.CursorLeft"/>
     public static int CursorLeft
     {
         get => OS.IsUnix || OS.IsWindows ? sysconsole.CursorLeft : GetCursorPosition().Left;
-        set
-        {
-            if (OS.IsUnix || OS.IsWindows)
-                sysconsole.CursorLeft = value;
-            else
-                sysconsole.Write($"\e[{value + 1}G");
-        }
+        set => sysconsole.Write($"\e[{value + 1}G");
     }
 
     /// <inheritdoc cref="sysconsole.CursorTop"/>
@@ -266,10 +254,8 @@ public static unsafe partial class Console
         {
             if (value.IsDefault)
                 ResetForegroundColor();
-            else if ((OS.IsWindows || OS.IsLinux || OS.IsOSX) && value.ToSystemColor() is sysconsolecolor c)
-                sysconsole.ForegroundColor = c;
             else
-                Write(value.ToVT520(ColorMode.Foreground));
+                Write(value.ToVT520(ColorMode.Foreground)); // That is actually faster than the original implementation in System.Console
         }
     }
 
@@ -292,10 +278,8 @@ public static unsafe partial class Console
         {
             if (value.IsDefault)
                 ResetBackgroundColor();
-            else if ((OS.IsWindows || OS.IsLinux || OS.IsOSX) && value.ToSystemColor() is sysconsolecolor c)
-                sysconsole.BackgroundColor = c;
             else
-                Write(value.ToVT520(ColorMode.Background));
+                Write(value.ToVT520(ColorMode.Background)); // That is actually faster than the original implementation in System.Console
         }
     }
 

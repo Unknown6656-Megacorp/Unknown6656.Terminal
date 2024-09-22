@@ -1,4 +1,5 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Runtime.Versioning;
 using System.Drawing;
 using System.Text;
 using System.Linq;
@@ -78,16 +79,23 @@ public static unsafe partial class Console
         set => SetVT520Bit(98, value);
     }
 
-
     public static bool IsWindowFramed
     {
         // get maybe via private DEC mode?
         set => SetVT520Bit(111, value);
     }
 
+    public static ConsoleColor WindowFrameBackgroundColor
+    {
+        set => SetWindowFrameColor(value);
+    }
+
+    [SupportedOSPlatform(OS.LNX)]
+    [SupportedOSPlatform(OS.MAC)]
+    [SupportedOSPlatform(OS.MACC)]
     public static (ConsoleColor Foreground, ConsoleColor Background) WindowFrameColors
     {
-        set => Write($"\e[2;{(int)value.Foreground};{(int)value.Background},|");
+        set => SetWindowFrameColor(value.Foreground, value.Background);
     }
 
     public static ConsoleCursorShape CursorShape
@@ -531,6 +539,25 @@ public static unsafe partial class Console
 
 
     #endregion
+
+#pragma warning disable CA1416 // Validate platform compatibility
+    public static void SetWindowFrameColor(ConsoleColor background) => SetWindowFrameColor(ConsoleColor.Black, background);
+#pragma warning restore CA1416
+
+    [SupportedOSPlatform(OS.LNX)]
+    [SupportedOSPlatform(OS.MAC)]
+    [SupportedOSPlatform(OS.MACC)]
+    public static void SetWindowFrameColor(ConsoleColor foreground, ConsoleColor background)
+    {
+        if (background.ToSystemColor() is not sysconsolecolor bg)
+            throw new ArgumentOutOfRangeException(nameof(background), $"The specified background color '{background}' is not supported.");
+        else if (foreground.ToSystemColor() is not sysconsolecolor fg)
+            throw new ArgumentOutOfRangeException(nameof(foreground), $"The specified foreground color '{foreground}' is not supported.");
+        else
+            Write($"\e[2;{(int)fg};{(int)bg},|");
+    }
+
+
     #region WRITE FUNCTIONS
 
     public static void Write(object? value, int left, int top) => Write(value, (left, top));
