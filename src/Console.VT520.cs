@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Drawing;
@@ -304,4 +304,14 @@ public static partial class VT520
     /// <param name="input">The input string to measure.</param>
     /// <returns>The length of the input string excluding VT520 escape sequences.</returns>
     public static int LengthWithoutVT520Sequences(this string input) => input.Length - MatchVT520Sequences(input).Sum(m => m.Length);
+
+    public static bool StartsWithVT520Sequence(this string input, [NotNullWhen(true), MaybeNullWhen(false)] out string? sequence)
+    {
+        sequence = null;
+
+        if (GenerateVT520Regex().Match(input) is { Success: true, Index: 0, Value: string seq })
+            sequence = seq;
+
+        return sequence is { };
+    }
 }
