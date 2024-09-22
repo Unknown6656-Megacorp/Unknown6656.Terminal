@@ -8,12 +8,15 @@ using Unknown6656.Generics;
 namespace Unknown6656.Console;
 
 
+[Flags]
 public enum ColorMode
+    : byte
 {
-    Foreground,
-    Background,
-    Underline,
-    Any,
+    // None = 0,
+    Foreground = 1,
+    Background = 2,
+    Underline = 4,
+    Any = Foreground | Background | Underline,
 }
 
 public readonly record struct ConsoleColor
@@ -365,6 +368,21 @@ public readonly record struct ConsoleColor
     /// </summary>
     public static ConsoleColor Yellow { get; } = new(sysconsolecolor.Yellow);
 
+    /// <summary>
+    /// Indicates whether the current <see cref="ConsoleColor"/> is the default color, i.e., whether it is equal to <see cref="Default"/> or <see langword="null"/>.
+    /// </summary>
+    public bool IsDefault => _color is null;
+
+    /// <summary>
+    /// Indicates whether the current <see cref="ConsoleColor"/> is a RGB color, i.e., whether it is an instance of <see cref="Color"/>.
+    /// </summary>
+    public bool IsRGB => _color?.IsCase1 ?? false;
+
+    /// <summary>
+    /// Indicates whether the current <see cref="ConsoleColor"/> is a system color, i.e., whether it is an instance of <see cref="sysconsolecolor"/>.
+    /// </summary>
+    public bool IsSystemColor => _color?.IsCase0 ?? false;
+
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the default color.
@@ -395,6 +413,19 @@ public readonly record struct ConsoleColor
     /// <param name="color">The <see cref="sysconsolecolor"/> to initialize the <see cref="ConsoleColor"/> with.</param>
     public ConsoleColor(sysconsolecolor? color) => _color = color is sysconsolecolor cc ? new Union<sysconsolecolor, Color>.Case0(cc) : null;
 
+    /// <inheritdoc/>
+    public override int GetHashCode()
+    {
+        if (_color is null)
+            return 0;
+        else if (_color.Is(out sysconsolecolor color))
+            return color.GetHashCode();
+        else if (_color.Is(out Color rgb))
+            return rgb.GetHashCode();
+        else
+            throw new InvalidOperationException($"Invalid color type '{_color}'.");
+    }
+
     /// <summary>
     /// Returns a string that represents the current <see cref="ConsoleColor"/>.
     /// Please note that this is <b>NOT</b> a VT520 escape sequence. Use the function <see cref="ToVT520(ColorMode)"/> for generating VT520 escape sequences.
@@ -402,13 +433,21 @@ public readonly record struct ConsoleColor
     /// <returns>A string that represents the current <see cref="ConsoleColor"/>.</returns>
     public override string ToString() => _color is null ? "(Default)" : _color.Match(c => c.ToString(), rgb => $"#{rgb.ToArgb():x8}: {rgb}");
 
+    public sysconsolecolor? ToSystemColor()
+    {
+        if (_color?.Is(out sysconsolecolor color) ?? false)
+            return color;
+        else
+            return null;
+    }
+
     /// <summary>
     /// Converts the current <see cref="ConsoleColor"/> to a VT520 escape sequence string for the specified <see cref="ColorMode"/>.
     /// The generated VT520 escape sequence contains the SGR code for the current <see cref="ConsoleColor"/> and starts with <c>\e[</c> and ends with <c>m</c>.
     /// </summary>
     /// <param name="mode">The <see cref="ColorMode"/> to use for the conversion.</param>
     /// <returns>A VT520 escape sequence string that represents the current <see cref="ConsoleColor"/>.</returns>
-    public string ToVT520(ColorMode mode) => $"\e[{GetVT520SGRCode(mode)}m";
+    public string ToVT520(ColorMode mode) => GetVT520SGRCode(mode) is { Length: > 0 } sgr ? $"\e[{sgr}m" : "";
 
     /// <summary>
     /// Generates a VT100/VT520/ANSI color string for the current <see cref="ConsoleColor"/> instance and given color mode flag (foreground, background, underline).
@@ -420,24 +459,41 @@ public readonly record struct ConsoleColor
     /// <returns>The VT100/VT520/ANSI color string for the current color.</returns>
     public string GetVT520SGRCode(ColorMode mode)
     {
+        if (mode is not (ColorMode.Foreground or ColorMode.Background or ColorMode.Underline))
+            return Enumerable.Where([ColorMode.Foreground, ColorMode.Background, ColorMode.Underline], m => mode.HasFlag(m))
+                             .Select(GetVT520SGRCode)
+                             .StringJoin(";");
+
+#pragma warning disable CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
         if (_color is null)
             return mode switch
             {
                 ColorMode.Foreground => "39",
                 ColorMode.Background => "49",
                 ColorMode.Underline => "59",
-                _ => "39;49;59",
             };
         else if (_color.Is(out sysconsolecolor color))
         {
+            int colvalue = (int)color;
+            (int lo, int hi) = mode switch
+            {
+                ColorMode.Foreground => (30, 90),
+                ColorMode.Background => (40, 100),
+                ColorMode.Underline => throw new ArgumentException($"Underline color in combination with '{typeof(sysconsolecolor)}' is not supported in VT520.", nameof(mode)),
+            };
 
+            return (colvalue + (colvalue < 8 ? lo : hi - 8)).ToString();
         }
         else if (_color.Is(out Color rgb))
-        {
-
-        }
+            return $"{mode switch
+            {
+                ColorMode.Foreground => "38",
+                ColorMode.Background => "48",
+                ColorMode.Underline => "58",
+            }};2;{rgb.R};{rgb.G};{rgb.B}";
         else
             throw new InvalidOperationException($"Invalid color type '{_color}'.");
+#pragma warning restore CS8509
     }
 
     /// <summary>
@@ -489,6 +545,9 @@ public readonly record struct ConsoleColor
             ['4', '8', ':' or ';', '5', .. string num] => (ColorMode.Foreground, From256ColorCode(byte.Parse(num))),
             ['4', '8', ':' or ';', '2', ':' or ';', .. string rgb] => (ColorMode.Foreground, parse_rgb(rgb)),
             "49" => (ColorMode.Background, Default),
+            ['5', '8', ':' or ';', '5', .. string num] => (ColorMode.Underline, From256ColorCode(byte.Parse(num))),
+            ['5', '8', ':' or ';', '2', ':' or ';', .. string rgb] => (ColorMode.Underline, parse_rgb(rgb)),
+            "59" => (ColorMode.Underline, Default),
             "90" => (ColorMode.Foreground, DarkGray),
             "91" => (ColorMode.Foreground, Red),
             "92" => (ColorMode.Foreground, Green),

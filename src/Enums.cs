@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Runtime.Versioning;
+using System.ComponentModel;
 using System.Globalization;
+using System.Diagnostics;
 using System.Drawing;
 using System.Text;
 using System.Linq;
@@ -8,8 +10,6 @@ using System;
 
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
-using System.ComponentModel;
-using System.Diagnostics;
 
 namespace Unknown6656.Console;
 
@@ -606,7 +606,7 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
     /// <summary>
     /// The color of the underline. A value of <see langword="null"/> indicates that the <see cref="UnderlineColor"/> is identical to the <see cref="ForegroundColor"/>.
     /// </summary>
-    public Color? UnderlineColor { get; init; }
+    public ConsoleColor? UnderlineColor { get; init; }
 
     /// <summary>
     /// Indicates whether this console graphic rendition resets all previous SGRs.
@@ -668,7 +668,7 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
             modes.Add(bg.ToVT520(ColorMode.Background));
 
         if (UnderlineColor is { } ul)
-            modes.Add(new ConsoleColor(ul).ToVT520(ColorMode.Underline));
+            modes.Add(ul.ToVT520(ColorMode.Underline));
 
         return modes.Distinct().ToArray();
     }
@@ -729,19 +729,14 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
             {
                 ConsoleColor color = ConsoleColor.FromVT520(sgr, out ColorMode mode);
 
-                if (mode is ColorMode.Foreground)
+                if (mode.HasFlag(ColorMode.Foreground))
                     rendition = rendition with { ForegroundColor = color };
-                else if (mode is ColorMode.Background)
+
+                if (mode.HasFlag(ColorMode.Background))
                     rendition = rendition with { BackgroundColor = color };
-                else if (mode is ColorMode.Underline)
+
+                if (mode.HasFlag(ColorMode.Underline))
                     rendition = rendition with { UnderlineColor = color };
-                else if (mode is ColorMode.Any)
-                    rendition = rendition with
-                    {
-                        UnderlineColor = color,
-                        ForegroundColor = color,
-                        BackgroundColor = color,
-                    };
             }
             else if (sgr is "50")
                 rendition = rendition with { IsMonospace = true };

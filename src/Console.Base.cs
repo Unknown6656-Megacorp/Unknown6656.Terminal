@@ -257,17 +257,19 @@ public static unsafe partial class Console
         get
         {
             if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
-#warning TODO : implement this
+#warning TODO : implement this, probably by parsing the SGR?
                 throw _unsupported_os;
             else
                 return sysconsole.ForegroundColor;
         }
         set
         {
-            if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
-                Write(value.ToVT520(ColorMode.Foreground));
+            if (value.IsDefault)
+                ResetForegroundColor();
+            else if ((OS.IsWindows || OS.IsLinux || OS.IsOSX) && value.ToSystemColor() is sysconsolecolor c)
+                sysconsole.ForegroundColor = c;
             else
-                sysconsole.BackgroundColor = value;
+                Write(value.ToVT520(ColorMode.Foreground));
         }
     }
 
@@ -281,17 +283,19 @@ public static unsafe partial class Console
         get
         {
             if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
-#warning TODO : implement this
+#warning TODO : implement this, probably by parsing the SGR?
                 throw _unsupported_os;
             else
                 return sysconsole.BackgroundColor;
         }
         set
         {
-            if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
-                Write(value.ToVT520(ColorMode.Background));
+            if (value.IsDefault)
+                ResetBackgroundColor();
+            else if ((OS.IsWindows || OS.IsLinux || OS.IsOSX) && value.ToSystemColor() is sysconsolecolor c)
+                sysconsole.BackgroundColor = c;
             else
-                sysconsole.BackgroundColor = value;
+                Write(value.ToVT520(ColorMode.Background));
         }
     }
 
@@ -668,13 +672,15 @@ public static unsafe partial class Console
     public static void MoveBufferArea(int sourceLeft, int sourceTop, int sourceWidth, int sourceHeight, int targetLeft, int targetTop) =>
         MoveBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop, ' ', ConsoleColor.Black, BackgroundColor);
 
-    /// <inheritdoc cref="sysconsole.MoveBufferArea(int, int, int, int, int, int, char, ConsoleColor, ConsoleColor)"/>
+    /// <inheritdoc cref="sysconsole.MoveBufferArea(int, int, int, int, int, int, char, sysconsolecolor, sysconsolecolor)"/>
     [Obsolete($"The usage of this function is not recommended. Use {nameof(DuplicateBufferArea)} instead.")]
     public static void MoveBufferArea(int sourceLeft, int sourceTop, int sourceWidth, int sourceHeight, int targetLeft, int targetTop, char sourceChar, ConsoleColor sourceForeColor, ConsoleColor sourceBackColor)
     {
-        if (OS.IsWindows)
+        if (OS.IsWindows &&
+            ForegroundColor.ToSystemColor() is sysconsolecolor fg &&
+            BackgroundColor.ToSystemColor() is sysconsolecolor bg)
 #pragma warning disable CA1416 // Validate platform compatibility
-            sysconsole.MoveBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop, sourceChar, sourceForeColor, sourceBackColor);
+            sysconsole.MoveBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop, sourceChar, fg, bg);
 #pragma warning restore CA1416
         else
             DuplicateBufferArea(sourceLeft, sourceTop, sourceWidth, sourceHeight, targetLeft, targetTop);
