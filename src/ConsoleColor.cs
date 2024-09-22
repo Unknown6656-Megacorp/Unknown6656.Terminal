@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System;
@@ -367,29 +367,98 @@ public readonly record struct ConsoleColor
 
 
     /// <summary>
-
-
+    /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the default color.
+    /// </summary>
     public ConsoleColor()
         : this(null)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the specified <see cref="Color"/>.
+    /// </summary>
+    /// <param name="color">The <see cref="Color"/> to initialize the <see cref="ConsoleColor"/> with.</param>
     public ConsoleColor(Color color) => _color = color;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the specified <see cref="KnownColor"/>.
+    /// </summary>
+    /// <param name="color">The <see cref="KnownColor"/> to initialize the <see cref="ConsoleColor"/> with.</param>
     public ConsoleColor(KnownColor color)
         : this(Color.FromKnownColor(color))
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the specified <see cref="sysconsolecolor"/>.
+    /// </summary>
+    /// <param name="color">The <see cref="sysconsolecolor"/> to initialize the <see cref="ConsoleColor"/> with.</param>
     public ConsoleColor(sysconsolecolor? color) => _color = color is sysconsolecolor cc ? new Union<sysconsolecolor, Color>.Case0(cc) : null;
 
+    /// <summary>
+    /// Returns a string that represents the current <see cref="ConsoleColor"/>.
+    /// Please note that this is <b>NOT</b> a VT520 escape sequence. Use the function <see cref="ToVT520(ColorMode)"/> for generating VT520 escape sequences.
+    /// </summary>
+    /// <returns>A string that represents the current <see cref="ConsoleColor"/>.</returns>
     public override string ToString() => _color is null ? "(Default)" : _color.Match(c => c.ToString(), rgb => $"#{rgb.ToArgb():x8}: {rgb}");
 
     /// <summary>
     /// Converts the current <see cref="ConsoleColor"/> to a VT520 escape sequence string for the specified <see cref="ColorMode"/>.
+    /// The generated VT520 escape sequence contains the SGR code for the current <see cref="ConsoleColor"/> and starts with <c>\e[</c> and ends with <c>m</c>.
+    /// </summary>
+    /// <param name="mode">The <see cref="ColorMode"/> to use for the conversion.</param>
+    /// <returns>A VT520 escape sequence string that represents the current <see cref="ConsoleColor"/>.</returns>
     public string ToVT520(ColorMode mode) => $"\e[{GetVT520SGRCode(mode)}m";
+
+    /// <summary>
+    /// Generates a VT100/VT520/ANSI color string for the current <see cref="ConsoleColor"/> instance and given color mode flag (foreground, background, underline).
+    /// <para/>
+    /// Please do note that this string does <b>NOT</b> start with <c>\e[</c> and does <b>NOT</b> end with <c>m</c>.
+    /// This has still to be done by the caller. The reason for this is that <see cref="GetVT520SGRCode"/> is intended to be used in combination with other VT520 escape sequences.
+    /// </summary>
+    /// <param name="mode">The color mode to use (foreground, background, underline).</param>
+    /// <returns>The VT100/VT520/ANSI color string for the current color.</returns>
+    public string GetVT520SGRCode(ColorMode mode)
+    {
+        if (_color is null)
+            return mode switch
+            {
+                ColorMode.Foreground => "39",
+                ColorMode.Background => "49",
+                ColorMode.Underline => "59",
+                _ => "39;49;59",
+            };
+        else if (_color.Is(out sysconsolecolor color))
+        {
+
+        }
+        else if (_color.Is(out Color rgb))
+        {
+
+        }
+        else
+            throw new InvalidOperationException($"Invalid color type '{_color}'.");
+    }
+
+    /// <summary>
+    /// Converts a VT100/VT500/VT520/ANSI escape sequence string to a <see cref="ConsoleColor"/> instance.
+    /// <para/>
+    /// Note that the given escape sequence string is not required to start with <c>\e[</c> and end with <c>m</c>.
+    /// </summary>
+    /// <param name="vt520_color">The VT100/VT500/VT520/ANSI escape sequence string.</param>
+    /// <returns>A <see cref="ConsoleColor"/> instance that represents the specified given color string.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the VT520 color code is invalid.</exception>
     public static ConsoleColor FromVT520(string vt520_color) => FromVT520(vt520_color, out _);
 
+    /// <summary>
+    /// Converts a VT100/VT500/VT520/ANSI escape sequence string to a <see cref="ConsoleColor"/> instance and outputs the <see cref="ColorMode"/>.
+    /// <para/>
+    /// Note that the given escape sequence string is not required to start with <c>\e[</c> and end with <c>m</c>.
+    /// </summary>
+    /// <param name="vt520_color">The VT100/VT500/VT520/ANSI escape sequence string.</param>
+    /// <param name="mode">The <see cref="ColorMode"/> that represents the color mode of the parsed color.</param>
+    /// <returns>A <see cref="ConsoleColor"/> instance that represents the specified given color string.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the VT520 color code is invalid.</exception>
     public static ConsoleColor FromVT520(string vt520_color, out ColorMode mode)
     {
         if (vt520_color is ['\e', '[', .., 'm'])
@@ -450,17 +519,48 @@ public readonly record struct ConsoleColor
     }
 
     /// <summary>
+    /// Converts a VT100/VT500/VT520/ANSI 256-color code to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="color_code">The VT100/VT500/VT520/ANSI 256-color code.</param>
+    /// <returns>A <see cref="ConsoleColor"/> instance that represents the specified 256-color code.</returns>
     public static ConsoleColor From256ColorCode(byte color_code) => _256colorLUT[color_code];
 
+    /// <summary>
+    /// Converts a <see cref="Color"/> to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="color">The <see cref="Color"/> to convert.</param>
+    /// <returns>A <see cref="ConsoleColor"/> instance that represents the specified color.</returns>
     public static ConsoleColor FromColor(Color color) => new(color);
 
+    /// <summary>
+    /// Converts a <see cref="KnownColor"/> to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="color">The <see cref="KnownColor"/> to convert.</param>
+    /// <returns>A <see cref="ConsoleColor"/> instance that represents the specified known color.</returns>
     public static ConsoleColor FromKnownColor(KnownColor color) => new(color);
 
+    /// <summary>
+    /// Converts a <see cref="sysconsolecolor"/> to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="color">The <see cref="sysconsolecolor"/> to convert.</param>
+    /// <returns>A <see cref="ConsoleColor"/> instance that represents the specified console color.</returns>
     public static ConsoleColor FromConsoleColor(sysconsolecolor? color) => new(color);
 
+    /// <summary>
+    /// Implicitly converts a <see cref="Color"/> to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="color">The <see cref="Color"/> to convert.</param>
     public static implicit operator ConsoleColor(Color color) => FromColor(color);
 
+    /// <summary>
+    /// Implicitly converts a <see cref="KnownColor"/> to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="color">The <see cref="KnownColor"/> to convert.</param>
     public static implicit operator ConsoleColor(KnownColor color) => FromKnownColor(color);
 
+    /// <summary>
+    /// Implicitly converts a <see cref="sysconsolecolor"/> to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="color">The <see cref="sysconsolecolor"/> to convert.</param>
     public static implicit operator ConsoleColor(sysconsolecolor? color) => FromConsoleColor(color);
 }
