@@ -509,6 +509,31 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
     /// </summary>
     public static ConsoleGraphicRendition Default { get; } = new(["0"]);
 
+    /// <summary>
+    /// Gets a console graphic rendition that forces all attributes to their default values.
+    /// Although, its behavior is similar to <see cref="Default"/>, it is inteded to be used as a forced reset or when picking individual values.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never), DebuggerHidden, DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public static ConsoleGraphicRendition Forced { get; } = Default with
+    {
+        Intensity = TextIntensityMode.Regular,
+        Blink = TextBlinkMode.NotBlinking,
+        Underlined = TextUnderlinedMode.NotUnderlined,
+        AreColorsInverted = false,
+        IsItalic = false,
+        IsTextConcealed = false,
+        IsCrossedOut = false,
+        IsOverlined = false,
+        FontIndex = 0,
+        IsMonospace = true,
+        IsGothic = false,
+        TextFrame = TextFrameMode.NotFramed,
+        TextTransformation = TextTransformationMode.Regular,
+        ForegroundColor = ConsoleColor.Default,
+        BackgroundColor = ConsoleColor.Default,
+        UnderlineColor = ConsoleColor.Default,
+    };
+
 
     /// <summary>
     /// The intensity of the text (regular, bold, dim).
