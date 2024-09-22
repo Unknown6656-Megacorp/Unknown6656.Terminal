@@ -1,16 +1,16 @@
 ################################################################
-# Auto-generated 2024-09-22 09:13:55.662                       #
+# Auto-generated 2024-09-22 09:28:38.486                       #
 # ANY CHANGES TO THIS DOCUMENT WILL BE LOST UPON RE-GENERATION #
 ################################################################
 #
-# git commit: 340dfa0c636d8f1cc1dd649fb8a686991ada1ee5
-version: 1.0.19.8810
+# git commit: 5346496abaf814515883ff84b6f55ddea5c84de8
+version: 1.0.22.8810
 image: Visual Studio 2022
 configuration: Release
 install:
     - ps: Invoke-WebRequest "https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1" -OutFile ".\lib\install-dotnet.ps1"
     - ps: $env:DOTNET_INSTALL_DIR = "$pwd\.dotnetcli"
-    - ps: '.\lib\install-dotnet.ps1 -Channel Preview -Version "9.0.100-rc.1.24452.12" -InstallDir "$env:DOTNET_INSTALL_DIR" -NoPath'
+    - ps: '.\lib\install-dotnet.ps1  -Version "9.0.100-rc.1.24452.12" -InstallDir "$env:DOTNET_INSTALL_DIR" -NoPath'
     - ps: $env:Path += ";$env:DOTNET_INSTALL_DIR"
 before_build:
     #- cmd: nuget restore "Unknown6656.Console.sln"

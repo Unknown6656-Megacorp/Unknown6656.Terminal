@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/############?svg=true)](https://ci.appveyor.com/project/Unknown6656-Megacorp/Unknown6656.Console)
+[![Build status](https://ci.appveyor.com/api/projects/status/e38tsbxk5dcwa9w7?svg=true)](https://ci.appveyor.com/project/Unknown6656-Megacorp/Unknown6656.Console)
 [![releases](https://img.shields.io/github/downloads/Unknown6656-Megacorp/Unknown6656.Console/total)](https://github.com/Unknown6656-Megacorp/Unknown6656.Console/releases)
 [![nuget package](https://img.shields.io/nuget/vpre/Unknown6656.Console)](https://www.nuget.org/packages/Unknown6656.Console/)
 [![nuget downloads](https://img.shields.io/nuget/dt/Unknown6656.Console)](https://www.nuget.org/packages/Unknown6656.Console/)

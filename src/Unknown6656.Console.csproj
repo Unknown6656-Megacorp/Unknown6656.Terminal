@@ -23,7 +23,7 @@
         <DisableWinExeOutputInference>true</DisableWinExeOutputInference>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-        <DocumentationFile>$(OutDir)$(AssemblyName).xml</DocumentationFile>
+        <DocumentationFile>$(OutputPath)/$(AssemblyName).xml</DocumentationFile>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 
