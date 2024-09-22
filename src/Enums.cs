@@ -407,6 +407,11 @@ public readonly record struct ConsoleArea(int X, int Y, int Width, int Height)
         return new ConsoleArea(x, y, right - x, bottom - y);
     }
 
+    /// <summary>
+    /// Creates a bounding <see cref="ConsoleArea"/> that encompasses all the specified areas.
+    /// </summary>
+    /// <param name="areas">The collection of <see cref="ConsoleArea"/> to create a bounding area for.</param>
+    /// <returns>A <see cref="ConsoleArea"/> that represents the bounding area of the specified areas.</returns>
     public static ConsoleArea CreateBoundingArea(IEnumerable<ConsoleArea>? areas)
     {
         if (areas?.Count() is null or 0)
@@ -429,8 +434,18 @@ public readonly record struct ConsoleArea(int X, int Y, int Width, int Height)
         return new ConsoleArea(x, y, right - x, bottom - y);
     }
 
+    /// <summary>
+    /// Creates a bounding <see cref="ConsoleArea"/> that encompasses all the specified points.
+    /// </summary>
+    /// <param name="points">The collection of <see cref="Point"/> to create a bounding area for.</param>
+    /// <returns>A <see cref="ConsoleArea"/> that represents the bounding area of the specified points.</returns>
     public static ConsoleArea CreateBoundingArea(IEnumerable<Point>? points) => CreateBoundingArea(points?.Select(p => (p.X, p.Y)));
 
+    /// <summary>
+    /// Creates a bounding <see cref="ConsoleArea"/> that encompasses all the specified points.
+    /// </summary>
+    /// <param name="points">The collection of points to create a bounding area for.</param>
+    /// <returns>A <see cref="ConsoleArea"/> that represents the bounding area of the specified points.</returns>
     public static ConsoleArea CreateBoundingArea(IEnumerable<(int X, int Y)>? points)
     {
         if (points?.Count() is null or 0)

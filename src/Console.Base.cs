@@ -613,6 +613,12 @@ public static unsafe partial class Console
 #warning TODO : implement this on non-Windows systems
     public static void Beep(int frequency, int duration) => sysconsole.Beep(frequency, duration);
 
+    /// <summary>
+    /// Plays a beep sound with the specified tone, duration, and volume.
+    /// </summary>
+    /// <param name="tone">The tone of the beep sound.</param>
+    /// <param name="duration">The duration of the beep sound in milliseconds.</param>
+    /// <param name="volume">The volume of the beep sound (0 to 1).</param>
     public static void Beep(ConsoleTone tone, int duration, double volume = 1)
     {
         volume = Math.Clamp(volume, 0, 1);

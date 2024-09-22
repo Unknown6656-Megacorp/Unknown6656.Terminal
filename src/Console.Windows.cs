@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.ComponentModel;
 using System.Drawing;
 using System;
 
@@ -187,7 +188,13 @@ public static unsafe partial class Console
         }
     }
 
-
+    /// <summary>
+    /// Sets the current console font to the specified <see cref="System.Drawing.Font"/> and returns the font information before and after the change.
+    /// </summary>
+    /// <param name="font">The new font to set for the console.</param>
+    /// <returns>A tuple containing the <see cref="ConsoleFontInfo"/> before and after the change.</returns>
+    /// <exception cref="PlatformNotSupportedException">Thrown if this method is called on a non-Windows operating system.</exception>
+    /// <exception cref="Win32Exception">Thrown if an error occurs while setting the console font.</exception>
     [SupportedOSPlatform(OS.WIN)]
     public static (ConsoleFontInfo before, ConsoleFontInfo after) SetCurrentFont(Font font)
     {
