@@ -265,7 +265,7 @@ public static unsafe partial class Console
         set
         {
             if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
-                Write($"\e[{GenerateVT520ColorString(value, true)}m");
+                Write(value.ToVT520(ColorMode.Foreground));
             else
                 sysconsole.BackgroundColor = value;
         }
@@ -289,7 +289,7 @@ public static unsafe partial class Console
         set
         {
             if (OS.CurrentOS is KnownOS.Android or KnownOS.Browser or KnownOS.iOS or KnownOS.TvOS)
-                Write($"\e[{GenerateVT520ColorString(value, false)}m");
+                Write(value.ToVT520(ColorMode.Background));
             else
                 sysconsole.BackgroundColor = value;
         }
@@ -585,7 +585,10 @@ public static unsafe partial class Console
         if (OS.IsWindows)
             sysconsole.ResetColor();
         else
-            Write($"\e[{GenerateVT520ColorString(null, true)};{GenerateVT520ColorString(null, false)}m");
+        {
+            ResetForegroundColor();
+            ResetBackgroundColor();
+        }
     }
 
     /// <inheritdoc cref="sysconsole.Clear"/>

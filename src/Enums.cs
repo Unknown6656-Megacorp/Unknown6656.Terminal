@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Runtime.Versioning;
+using System.Globalization;
 using System.Drawing;
 using System.Text;
 using System.Linq;
@@ -7,7 +8,8 @@ using System;
 
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
-using System.Globalization;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Unknown6656.Console;
 

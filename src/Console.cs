@@ -7,7 +7,6 @@ using System;
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
 using Unknown6656.Common;
-using System.Globalization;
 
 namespace Unknown6656.Console;
 
@@ -392,12 +391,12 @@ public static unsafe partial class Console
     /// <summary>
     /// Resets the text's foreground color to its default value.
     /// </summary>
-    public static void ResetForegroundColor() => Write("\e[39m");
+    public static void ResetForegroundColor() => ForegroundColor = ConsoleColor.Default;
 
     /// <summary>
     /// Resets the text's background color to its default value.
     /// </summary>
-    public static void ResetBackgroundColor() => Write("\e[49m");
+    public static void ResetBackgroundColor() => BackgroundColor = ConsoleColor.Default;
 
     #endregion
     #region BUFFER AREA
