@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using System.Linq;
@@ -7,19 +7,24 @@ using System;
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
 using Unknown6656.Common;
+using System.Globalization;
 
 namespace Unknown6656.Console;
 
 
 // TODO : add support for XTWINOPS
 // TODO : add support for Sixel drawing https://en.wikipedia.org/wiki/Sixel
-
+// TODO : progress bars
+// TODO : markdown rendering/formatting
 
 
 public static unsafe partial class Console
 {
     /// <summary>
-    /// Sets or gets the console's current <see cref="ConsoleState"/>. This can be used to restore the console to an earlier state.
+    /// Sets or gets the console's current <see cref="ConsoleState"/>.
+    /// This can be used to restore the console to an earlier state.
+    /// <para/>
+    /// Please note that this property is merely a thin wrapper for the <see cref="SaveConsoleState"/> and <see cref="RestoreConsoleState"/> methods, respectively.
     /// </summary>
     public static ConsoleState CurrentConsoleState
     {
@@ -27,18 +32,7 @@ public static unsafe partial class Console
         set => RestoreConsoleState(value);
     }
 
-    /// <summary>
-    /// Sets or gets the console's current graphic rendition.
-    /// </summary>
-    public static ConsoleGraphicRendition? CurrentGraphicRendition
-    {
-        get => GetRawVT520GraphicRenditions() is { } sgr ? new(sgr) : null;
-        set
-        {
-            if (value?.FullVT520SGR() is { } sgr)
-                Write($"\e[{string.Join(';', sgr)}m");
-        }
-    }
+    #region BUFFER/WINDOW/SCREEN/CURSOR POSITIONING PROPERTIES
 
     /// <summary>
     /// Gets or sets the current cursor position.
@@ -80,12 +74,132 @@ public static unsafe partial class Console
 #pragma warning restore CA1416
     }
 
+    public static bool WindowAutoResizeModeEnabled
+    {
+        set => SetVT520Bit(98, value);
+    }
 
+
+    public static bool IsWindowFramed
+    {
+        // get maybe via private DEC mode?
+        set => SetVT520Bit(111, value);
+    }
+
+    public static (ConsoleColor Foreground, ConsoleColor Background) WindowFrameColors
+    {
+        set => Write($"\e[2;{(int)value.Foreground};{(int)value.Background},|");
+    }
 
     public static ConsoleCursorShape CursorShape
     {
         set => Write($"\e[{(int)value} q");
     }
+
+    #endregion
+    #region TEXT COLORING/STYLING PROPERTIES
+
+    /// <summary>
+    /// Sets or gets the console's current graphic rendition.
+    /// </summary>
+    public static ConsoleGraphicRendition? CurrentGraphicRendition
+    {
+        get => GetRawVT520GraphicRenditions() is { } sgr ? new(sgr) : null;
+        set
+        {
+            if (value?.FullVT520SGR() is { } sgr)
+                Write($"\e[{string.Join(';', sgr)}m");
+        }
+    }
+
+    public static TextIntensityMode TextIntensity
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Intensity;
+        set => Write(value switch
+        {
+            TextIntensityMode.Bold => "\e[1m",
+            TextIntensityMode.Dim => "\e[2m",
+            _ => "\e[22m"
+        });
+    }
+
+    public static TextBlinkMode TextBlink
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Blink;
+        set => Write(value switch
+        {
+            TextBlinkMode.Slow => "\e[5m",
+            TextBlinkMode.Rapid => "\e[6m",
+            _ => "\e[25m"
+        });
+    }
+
+    public static bool InvertedColors
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).AreColorsInverted;
+        set => Write(value ? "\e[7m" : "\e[27m");
+    }
+
+    public static TextUnderlinedMode TextUnderline
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Underlined;
+        set => Write($"\e[{(int)value}m");
+    }
+
+    public static bool OverlinedText
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsOverlined;
+        set => Write(value ? "\e[53m" : "\e[55m");
+    }
+
+    public static bool CrossedOutText
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsCrossedOut;
+        set => Write(value ? "\e[9m" : "\e[29m");
+    }
+
+    public static TextFrameMode TextFrame
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).TextFrame;
+        set => Write($"\e[{(int)value}m");
+    }
+
+    public static bool ConcealedText
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsTextConcealed;
+        set => Write(value ? "\e[8m" : "\e[28m");
+    }
+
+    public static bool ItalicText
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsItalic;
+        set => Write(value ? "\e[3m" : "\e[23m");
+    }
+
+    public static bool GothicText
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsGothic;
+        set => Write(value ? "\e[20m" : "\e[23m");
+    }
+
+    public static TextTransformationMode TextTransformation
+    {
+        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).TextTransformation;
+        set => Write($"\e[{(int)value}m");
+    }
+
+    public static bool RightToLeft
+    {
+        set => SetVT520Bit(34, value);
+    }
+
+    public static bool ControlCharactersVisible
+    {
+        set => SetVT520Bit(3, value);
+    }
+
+    #endregion
+
 
     public static bool AlternateScreenEnabled
     {
@@ -97,24 +211,15 @@ public static unsafe partial class Console
         set => SetVT520Bit(2004, value);
     }
 
-    public static bool WindowAutoResizeModeEnabled
-    {
-        set => SetVT520Bit(98, value);
-    }
-
-    public static bool IsWindowFramed
-    {
-        // get maybe via private DEC mode?
-        set => SetVT520Bit(111, value);
-    }
 
 
 #warning TODO : verify if this is correct
-
     public static bool MouseEnabled
     {
         set => SetVT520Bit(1000, value);
     }
+
+    // TODO : 1001h
 
     public static bool MouseDraggingEnabled
     {
@@ -146,92 +251,6 @@ public static unsafe partial class Console
     public static bool DarkMode
     {
         set => SetVT520Bit(5, !value);
-    }
-
-    public static bool RightToLeft
-    {
-        set => SetVT520Bit(34, value);
-    }
-
-    public static (ConsoleColor Foreground, ConsoleColor Background) WindowFrameColors
-    {
-        get => throw new NotImplementedException();
-        set => Write($"\e[2;{(int)value.Foreground};{(int)value.Background},|");
-    }
-
-    public static TextIntensityMode TextIntensity
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Intensity;
-        set => Write(value switch {
-            TextIntensityMode.Bold => "\e[1m",
-            TextIntensityMode.Dim => "\e[2m",
-            _ => "\e[22m"
-        });
-    }
-
-    public static TextBlinkMode TextBlink
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Blink;
-        set => Write(value switch
-        {
-            TextBlinkMode.Slow => "\e[5m",
-            TextBlinkMode.Rapid => "\e[6m",
-            _ => "\e[25m"
-        });
-    }
-
-    public static bool InvertedColors
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).AreColorsInverted;
-        set => Write(value ? "\e[7m" : "\e[27m");
-    }
-
-    public static TextUnderlinedMode TextUnderline
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).Underlined;
-        set => Write($"\e[{(int)value}m");
-    }
-
-    public static bool CrossedOutText
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsCrossedOut;
-        set => Write(value ? "\e[9m" : "\e[29m");
-    }
-
-    public static bool OverlinedText
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsOverlined;
-        set => Write(value ? "\e[53m" : "\e[55m");
-    }
-
-    public static TextFrameMode TextFrame
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).TextFrame;
-        set => Write($"\e[{(int)value}m");
-    }
-
-    public static bool ConcealedText
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsTextConcealed;
-        set => Write(value ? "\e[8m" : "\e[28m");
-    }
-
-    public static bool ItalicText
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsItalic;
-        set => Write(value ? "\e[3m" : "\e[23m");
-    }
-
-    public static bool GothicText
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).IsGothic;
-        set => Write(value ? "\e[20m" : "\e[23m");
-    }
-
-    public static TextTransformationMode TextTransformation
-    {
-        get => (CurrentGraphicRendition ?? ConsoleGraphicRendition.Default).TextTransformation;
-        set => Write($"\e[{(int)value}m");
     }
 
 
@@ -320,22 +339,6 @@ public static unsafe partial class Console
             return null;
     }
 
-    public static void ScrollUp(int lines)
-    {
-        if (lines < 0)
-            ScrollDown(-lines);
-        else if (lines > 0)
-            Write($"\e[{lines}S");
-    }
-
-    public static void ScrollDown(int lines)
-    {
-        if (lines < 0)
-            ScrollUp(-lines);
-        else if (lines > 0)
-            Write($"\e[{lines}T");
-    }
-
 
     #endregion
     #region WRITE FUNCTIONS
@@ -414,7 +417,7 @@ public static unsafe partial class Console
 
     // TODO : handle line wrapping/breaks for the following functions
 
-    public static void WriteDoubleWidthLine(object? value) => WriteDoubleWidthLine(value, (CursorLeft, CursorTop));
+    public static void WriteDoubleWidthLine(object? value) => WriteDoubleWidthLine(value, null);
 
     public static void WriteDoubleWidthLine(object? value, int left, int top) => WriteDoubleWidthLine(value, (left, top));
 
@@ -426,7 +429,7 @@ public static unsafe partial class Console
         WriteLine($"\e#5{value}");
     }
 
-    public static void WriteDoubleSizeLine(object? value) => WriteDoubleSizeLine(value, (CursorLeft, CursorTop));
+    public static void WriteDoubleSizeLine(object? value) => WriteDoubleSizeLine(value, null);
 
     public static void WriteDoubleSizeLine(object? value, int left, int top) => WriteDoubleSizeLine(value, (left, top));
 

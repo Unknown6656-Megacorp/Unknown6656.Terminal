@@ -121,7 +121,7 @@ public static class ConsoleMouseListener
                         }
                         catch (Exception e)
                         {
-                            System.Console.WriteLine(e);
+                            Console.WriteLine(e);
                         }
                     else
                         await Task.Delay(10);
