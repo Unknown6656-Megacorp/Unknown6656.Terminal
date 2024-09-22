@@ -407,11 +407,50 @@ public readonly record struct ConsoleArea(int X, int Y, int Width, int Height)
         return new ConsoleArea(x, y, right - x, bottom - y);
     }
 
-    public static ConsoleArea CreateBoundingArea(IEnumerable<ConsoleArea> areas) => ;
+    public static ConsoleArea CreateBoundingArea(IEnumerable<ConsoleArea>? areas)
+    {
+        if (areas?.Count() is null or 0)
+            return Empty;
 
-    public static ConsoleArea CreateBoundingArea(IEnumerable<Point> points) => CreateBoundingArea(points.Select(p => (p.X, p.Y)));
+        ConsoleArea first = areas.First();
+        int x = first.X;
+        int y = first.Y;
+        int right = first.Right;
+        int bottom = first.Bottom;
 
-    public static ConsoleArea CreateBoundingArea(IEnumerable<(int X, int Y)> points) => ;
+        foreach (ConsoleArea area in areas.Skip(1))
+        {
+            x = Math.Min(x, area.X);
+            y = Math.Min(y, area.Y);
+            right = Math.Max(right, area.Right);
+            bottom = Math.Max(bottom, area.Bottom);
+        }
+
+        return new ConsoleArea(x, y, right - x, bottom - y);
+    }
+
+    public static ConsoleArea CreateBoundingArea(IEnumerable<Point>? points) => CreateBoundingArea(points?.Select(p => (p.X, p.Y)));
+
+    public static ConsoleArea CreateBoundingArea(IEnumerable<(int X, int Y)>? points)
+    {
+        if (points?.Count() is null or 0)
+            return Empty;
+
+        int x = int.MaxValue;
+        int y = int.MaxValue;
+        int right = int.MinValue;
+        int bottom = int.MinValue;
+
+        foreach ((int X, int Y) point in points)
+        {
+            x = Math.Min(x, point.X);
+            y = Math.Min(y, point.Y);
+            right = Math.Max(right, point.X);
+            bottom = Math.Max(bottom, point.Y);
+        }
+
+        return new ConsoleArea(x, y, right - x, bottom - y);
+    }
 
 
     /// <summary>
