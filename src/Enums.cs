@@ -7,6 +7,7 @@ using System;
 
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
+using System.Globalization;
 
 namespace Unknown6656.Console;
 
@@ -509,89 +510,113 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
 
     /// <summary>
     /// The intensity of the text (regular, bold, dim).
+    /// A value of <see langword="null"/> indicates the default value (<see cref="TextIntensityMode.Regular"/>).
     /// </summary>
-    public TextIntensityMode Intensity { get; init; } = TextIntensityMode.Regular;
+    public TextIntensityMode? Intensity { get; init; }
 
     /// <summary>
     /// The blink mode of the text (none, slow, rapid).
+    /// A value of <see langword="null"/> indicates the default value (<see cref="TextBlinkMode.NotBlinking"/>).
     /// </summary>
-    public TextBlinkMode Blink { get; init; } = TextBlinkMode.NotBlinking;
+    public TextBlinkMode? Blink { get; init; }
 
     /// <summary>
     /// The underline mode of the text (not underlined, single, double).
+    /// A value of <see langword="null"/> indicates the default value (<see cref="TextUnderlinedMode.Single"/>).
     /// </summary>
-    public TextUnderlinedMode Underlined { get; init; } = TextUnderlinedMode.NotUnderlined;
+    public TextUnderlinedMode? Underlined { get; init; }
 
     /// <summary>
     /// Indicates whether the text colors are inverted.
+    /// A value of <see langword="null"/> indicates the default value (<see langword="false"/>);
     /// </summary>
-    public bool AreColorsInverted { get; init; } = false;
+    public bool? AreColorsInverted { get; init; }
 
     /// <summary>
     /// Indicates whether the text is italic.
+    /// A value of <see langword="null"/> indicates the default value (<see langword="false"/>);
     /// </summary>
-    public bool IsItalic { get; init; } = false;
+    public bool? IsItalic { get; init; }
 
     /// <summary>
     /// Indicates whether the text is concealed.
+    /// A value of <see langword="null"/> indicates the default value (<see langword="false"/>);
     /// </summary>
-    public bool IsTextConcealed { get; init; } = false;
+    public bool? IsTextConcealed { get; init; }
 
     /// <summary>
     /// Indicates whether the text is crossed out.
+    /// A value of <see langword="null"/> indicates the default value (<see langword="false"/>);
     /// </summary>
-    public bool IsCrossedOut { get; init; } = false;
+    public bool? IsCrossedOut { get; init; }
 
     /// <summary>
     /// Indicates whether the text is overlined.
+    /// A value of <see langword="null"/> indicates the default value (<see langword="false"/>);
     /// </summary>
-    public bool IsOverlined { get; init; } = false;
+    public bool? IsOverlined { get; init; }
 
     /// <summary>
     /// Indicates whether the font is the default font (i.e., whether the <see cref="FontIndex"/> is equal to <c>0</c>).
     /// </summary>
-    public bool IsDefaultFont => FontIndex == 0;
+    public bool IsDefaultFont => FontIndex is null or 0;
 
     /// <summary>
     /// The index of the font to use.
+    /// A value of <see langword="null"/> indicates the default value (<c>0</c>);
     /// </summary>
-    public int FontIndex { get; init; } = 0;
+    public int? FontIndex { get; init; }
 
     /// <summary>
     /// Indicates whether the font is monospace.
+    /// A value of <see langword="null"/> indicates the default value (<see langword="true"/>);
     /// </summary>
-    public bool IsMonospace { get; init; } = true;
+    public bool? IsMonospace { get; init; }
 
     /// <summary>
     /// Indicates whether the font is gothic.
+    /// A value of <see langword="null"/> indicates the default value (<see langword="false"/>);
     /// </summary>
-    public bool IsGothic { get; init; } = false;
+    public bool? IsGothic { get; init; }
 
     /// <summary>
     /// The text frame mode.
+    /// A value of <see langword="null"/> indicates the default value (<see cref="TextFrameMode.NotFramed"/>).
     /// </summary>
-    public TextFrameMode TextFrame { get; init; } = TextFrameMode.NotFramed;
+    public TextFrameMode? TextFrame { get; init; }
 
     /// <summary>
     /// The text transformation mode (regular, superscript, subscript).
+    /// A value of <see langword="null"/> indicates the default value (<see cref="TextTransformationMode.Regular"/>).
     /// </summary>
-    public TextTransformationMode TextTransformation { get; init; } = TextTransformationMode.Regular;
+    public TextTransformationMode? TextTransformation { get; init; }
 
     /// <summary>
     /// The foreground color of the text. A value of <see langword="null"/> indicates the default color.
     /// </summary>
-    public Union<ConsoleColor, Color>? ForegroundColor { get; init; } = null;
+    public ConsoleColor? ForegroundColor { get; init; }
 
     /// <summary>
     /// The background color of the text. A value of <see langword="null"/> indicates the default color.
     /// </summary>
-    public Union<ConsoleColor, Color>? BackgroundColor { get; init; } = null;
+    public ConsoleColor? BackgroundColor { get; init; }
 
     /// <summary>
     /// The color of the underline. A value of <see langword="null"/> indicates that the <see cref="UnderlineColor"/> is identical to the <see cref="ForegroundColor"/>.
     /// </summary>
-    public Color? UnderlineColor { get; init; } = null;
+    public Color? UnderlineColor { get; init; }
 
+    /// <summary>
+    /// Indicates whether this console graphic rendition resets all previous SGRs.
+    /// </summary>
+    public bool ResetsAllPreviousSGRs => RawVT520SGRs.Contains("0");
+
+
+    /// <summary>
+    /// Returns this console graphic rendition as a VT520 SGR (Select Graphic Rendition) escape sequence.
+    /// </summary>
+    /// <returns>The VT520 SGR escape sequence.</returns>
+    public override string ToString() => $"\e[{FullVT520SGR().StringJoin(";")}m";
 
     /// <summary>
     /// Returns the full VT520 SGR (Select Graphic Rendition) sequences for this console graphic rendition.
@@ -599,28 +624,49 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
     /// <returns>An array of VT520 SGR sequences.</returns>
     public string[] FullVT520SGR()
     {
-        IEnumerable<string> modes = [
-            .. RawVT520SGRs,
-            ((int)Intensity).ToString(),
-            ((int)Blink).ToString(),
-            ((int)Underlined).ToString(),
-            AreColorsInverted ? "7" : "27",
-            IsItalic ? "3" : "23",
-            IsTextConcealed ? "8" : "28",
-            IsCrossedOut ? "9" : "29",
-            IsOverlined ? "53" : "55",
-            $"1{FontIndex}",
-            IsGothic ? "20" : "23",
-            IsMonospace ? "50" : "26",
-            ((int)TextFrame).ToString(),
-            ((int)TextTransformation).ToString(),
-            Console.GenerateVT520ColorString(ForegroundColor, true),
-            Console.GenerateVT520ColorString(BackgroundColor, false),
-            Console.GenerateVT520ColorString(UnderlineColor, null),
-        ];
+        List<string> modes = [.. RawVT520SGRs];
+
+        void add_mode<T>(T? value) where T : struct, Enum
+        {
+            if (value is { } mode)
+                modes.Add(((int)(object)mode).ToString(CultureInfo.InvariantCulture));
+        }
+
+        void add_flag(bool? flag, string hi, string lo)
+        {
+            if (flag is { } f)
+                modes.Add(f ? hi : lo);
+        }
+
 
         if (modes.LastIndexOf("0") is int reset and > 0)
-            modes = modes.Skip(reset);
+            modes.RemoveRange(0, reset);
+
+        add_mode(Intensity);
+        add_mode(Blink);
+        add_mode(Underlined);
+        add_flag(AreColorsInverted, "7", "27");
+        add_flag(IsItalic, "3", "23");
+        add_flag(IsTextConcealed, "8", "28");
+        add_flag(IsCrossedOut, "9", "29");
+        add_flag(IsOverlined, "53", "55");
+
+        if (FontIndex is { } fi and not 0)
+            modes.Add($"1{fi}");
+
+        add_flag(IsGothic, "20", "23");
+        add_flag(IsMonospace, "50", "26");
+        add_mode(TextFrame);
+        add_mode(TextTransformation);
+
+        if (ForegroundColor is { } fg)
+            modes.Add(fg.ToVT520(ColorMode.Foreground));
+
+        if (ForegroundColor is { } bg)
+            modes.Add(bg.ToVT520(ColorMode.Background));
+
+        if (UnderlineColor is { } ul)
+            modes.Add(new ConsoleColor(ul).ToVT520(ColorMode.Underline));
 
         return modes.Distinct().ToArray();
     }
@@ -677,18 +723,24 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
                 rendition = rendition with { IsTextConcealed = false };
             else if (sgr is "29")
                 rendition = rendition with { IsCrossedOut = false };
-            else if (sgr is ['3', '8', .. string fg_color])
-                rendition = rendition with { ForegroundColor = parse_color(fg_color) };
-            else if (sgr is ['3', char fg_color_index])
-                rendition = rendition with { ForegroundColor = (ConsoleColor)(fg_color_index - '0') };
-            else if (sgr is "39")
-                rendition = rendition with { ForegroundColor = ConsoleColor.Gray };
-            else if (sgr is ['4', '8', .. string bg_color])
-                rendition = rendition with { BackgroundColor = parse_color(bg_color) };
-            else if (sgr is ['4', char bg_color_index])
-                rendition = rendition with { BackgroundColor = (ConsoleColor)(bg_color_index - '0') };
-            else if (sgr is "49")
-                rendition = rendition with { BackgroundColor = ConsoleColor.Black };
+            else if (sgr is ['3' or '4' or '9', _] or ['1', '0', _] or "59" or ['5', '8', _, ..])
+            {
+                ConsoleColor color = ConsoleColor.FromVT520(sgr, out ColorMode mode);
+
+                if (mode is ColorMode.Foreground)
+                    rendition = rendition with { ForegroundColor = color };
+                else if (mode is ColorMode.Background)
+                    rendition = rendition with { BackgroundColor = color };
+                else if (mode is ColorMode.Underline)
+                    rendition = rendition with { UnderlineColor = color };
+                else if (mode is ColorMode.Any)
+                    rendition = rendition with
+                    {
+                        UnderlineColor = color,
+                        ForegroundColor = color,
+                        BackgroundColor = color,
+                    };
+            }
             else if (sgr is "50")
                 rendition = rendition with { IsMonospace = true };
             else if (sgr is "51")
@@ -701,29 +753,14 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
                 rendition = rendition with { TextFrame = TextFrameMode.NotFramed };
             else if (sgr is "55")
                 rendition = rendition with { IsOverlined = false };
-            else if (sgr is ['5', '8', .. string ul_color])
-                rendition = rendition with { UnderlineColor = parse_color(ul_color) };
-            else if (sgr is "59")
-                rendition = rendition with { UnderlineColor = null };
             else if (sgr is "73")
                 rendition = rendition with { TextTransformation = TextTransformationMode.Superscript };
             else if (sgr is "74")
                 rendition = rendition with { TextTransformation = TextTransformationMode.Subscript };
             else if (sgr is "75")
                 rendition = rendition with { TextTransformation = TextTransformationMode.Regular };
-            else if (sgr is ['9', char fg_bcolor_index and >= '0' and <= '7'])
-                rendition = rendition with { ForegroundColor = (ConsoleColor)(fg_bcolor_index - '0' + 7) };
-            else if (sgr is ['1', '0', char bg_bcolor_index and >= '0' and <= '7'])
-                rendition = rendition with { BackgroundColor = (ConsoleColor)(bg_bcolor_index - '0' + 7) };
 
         return rendition;
-
-        Color parse_color(string VT520)
-        {
-            // TODO :  "2:..." or "5:..."
-
-            throw new NotImplementedException();
-        }
     }
 }
 
@@ -788,6 +825,9 @@ public record ConsoleState
     /// </summary>
     public Point WindowPosition { get; init; }
 
+    public ConsoleColor? WindowFrameForeground { get; init; }
+
+    public ConsoleColor? WindowFrameBackground { get; init; }
 
     // TODO : save console buffer / alternate buffer ?
 }
