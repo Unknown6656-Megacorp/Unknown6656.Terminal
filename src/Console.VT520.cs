@@ -38,9 +38,23 @@ public static unsafe partial class Console
 
 #pragma warning restore CA1416
 
-
+    /// <summary>
+    /// Enables or disables the given VT520 <paramref name="mode"/>.
+    /// </summary>
+    /// <param name="mode">The mode to set.</param>
+    /// <param name="bit">The bit value to set (<see langword="true"/> to enable, <see langword="false"/> to disable).</param>
     public static void SetVT520Bit(int mode, bool bit) => Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
 
+    /// <summary>
+    /// Gets the VT520 private DEC mode.
+    /// </summary>
+    /// <param name="mode">The mode to get.</param>
+    /// <returns>
+    /// A nullable boolean indicating the mode status:
+    /// <see langword="true"/> if the mode is enabled,
+    /// <see langword="false"/> if the mode is disabled,
+    /// <see langword="null"/> if the mode status is unknown or the <paramref name="mode"/> is not defined.
+    /// </returns>
     public static bool? GetVT520PrivateDECMode(int mode)
     {
         if (GetRawVT520Report($"?{mode.ToString(CultureInfo.InvariantCulture)}$p", 'y') is ['\e', '[', '?', .. string response, '$']
@@ -55,9 +69,19 @@ public static unsafe partial class Console
         return null;
     }
 
+    /// <summary>
+    /// Gets the raw VT520 report.
+    /// </summary>
+    /// <param name="report_sequence">The report sequence to send. (the leading <c>\e</c> does not need to be included)</param>
+    /// <param name="terminator">The character that terminates the report.</param>
+    /// <returns>
+    /// The raw VT520 report string, or <see langword="null"/> if an error occurs.
+    /// <para/>
+    /// Please note that the returned string does include the leading <c>\e</c>, but does <b>NOT</b> include the <paramref name="terminator"/> character.
+    /// </returns>
     public static string? GetRawVT520Report(string report_sequence, char terminator)
     {
-        Write($"\e{report_sequence}");
+        Write($"\e{report_sequence.TrimStart('\e')}");
 
         try
         {
@@ -75,6 +99,18 @@ public static unsafe partial class Console
         return null;
     }
 
+    /// <summary>
+    /// Gets the raw DCS VT520 settings report.
+    /// </summary>
+    /// <param name="report_sequence">
+    /// The report sequence to send. Note that this sequence must only the report-specific characters.
+    /// Leading <c>\eP$q</c> and trailing <c>\e\</c> characters are to be omitted.
+    /// </param>
+    /// <param name="response_introducer">The response introducer character. If this value is set to <see langword="null"/>, the introducer character is ignored. The default value is <c>r</c>.</param>
+    /// <returns>
+    /// The raw DCS VT520 settings report string, or <see langword="null"/> if an error occurs.
+    /// This string does <b>NOT</b> include the leading <c>\eP...$</c> and trailing <c>\e\</c> characters.
+    /// </returns>
     public static string? GetRawVT520SettingsReport(string report_sequence, char? response_introducer = 'r')
     {
         if (GetRawVT520Report($"\eP$q{report_sequence}\e\\", '\\') is ['\e', 'P', _, '$', char ri, .. string response, '\e', '\\'] &&
