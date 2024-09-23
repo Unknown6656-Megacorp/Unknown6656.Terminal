@@ -512,7 +512,7 @@ public readonly record struct ConsoleArea(int X, int Y, int Width, int Height)
 /// Represents a console graphic rendition, which includes various text attributes such as intensity, blink, underline, and colors.
 /// </summary>
 /// <param name="RawVT520SGRs">The raw VT520 SGR (Select Graphic Rendition) sequences.</param>
-public record ConsoleGraphicRendition(string[] RawVT520SGRs)
+public record ConsoleGraphicRendition(params string[] RawVT520SGRs)
 {
     /// <summary>
     /// Gets the default console graphic rendition (<c>^[0m</c>).
@@ -697,13 +697,13 @@ public record ConsoleGraphicRendition(string[] RawVT520SGRs)
         add_mode(TextTransformation);
 
         if (ForegroundColor is { } fg)
-            modes.Add(fg.ToVT520(ColorMode.Foreground));
+            modes.Add(fg.GetVT520SGRCode(ColorMode.Foreground));
 
-        if (ForegroundColor is { } bg)
-            modes.Add(bg.ToVT520(ColorMode.Background));
+        if (BackgroundColor is { } bg)
+            modes.Add(bg.GetVT520SGRCode(ColorMode.Background));
 
         if (UnderlineColor is { } ul)
-            modes.Add(ul.ToVT520(ColorMode.Underline));
+            modes.Add(ul.GetVT520SGRCode(ColorMode.Underline));
 
         return modes.Distinct().ToArray();
     }
