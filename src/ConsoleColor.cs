@@ -8,17 +8,36 @@ using Unknown6656.Generics;
 namespace Unknown6656.Console;
 
 
+/// <summary>
+/// Specifies the color mode for the rendering of <see cref="ConsoleColor"/>.
+/// </summary>
 [Flags]
 public enum ColorMode
     : byte
 {
     // None = 0,
+
+    /// <summary>
+    /// Specifies the foreground color.
+    /// </summary>
     Foreground = 1,
+    /// <summary>
+    /// Specifies the background color.
+    /// </summary>
     Background = 2,
+    /// <summary>
+    /// Specifies the underline color.
+    /// </summary>
     Underline = 4,
+    /// <summary>
+    /// Specifies any color mode.
+    /// </summary>
     Any = Foreground | Background | Underline,
 }
 
+/// <summary>
+/// Represents a console color that can be a system color (<see cref="sysconsolecolor"/>) or an RGB color (<see cref="Color"/>).
+/// </summary>
 public readonly record struct ConsoleColor
 {
     private static readonly Dictionary<byte, ConsoleColor> _256colorLUT = new()
@@ -433,6 +452,10 @@ public readonly record struct ConsoleColor
     /// <returns>A string that represents the current <see cref="ConsoleColor"/>.</returns>
     public override string ToString() => _color is null ? "(Default)" : _color.Match(c => c.ToString(), rgb => $"#{rgb.ToArgb():x8}: {rgb}");
 
+    /// <summary>
+    /// Converts the current <see cref="ConsoleColor"/> to a <see cref="sysconsolecolor"/> if possible.
+    /// </summary>
+    /// <returns>Returns the <see cref="sysconsolecolor"/> if the current <see cref="ConsoleColor"/> is a system color; otherwise, <see langword="null"/>.</returns>
     public sysconsolecolor? ToSystemColor()
     {
         if (_color?.Is(out sysconsolecolor color) ?? false)

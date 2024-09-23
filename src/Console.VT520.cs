@@ -121,11 +121,25 @@ public static unsafe partial class Console
         return null;
     }
 
+    /// <summary>
+    /// Changes the VT520 SGR modes for a specified buffer area.
+    /// </summary>
+    /// <param name="area">The console area to change the SGR modes for.</param>
+    /// <param name="modes">The SGR modes to set, represented as an enumerable collection of strings.</param>
     public static void ChangeVT520ForBufferArea(ConsoleArea area, IEnumerable<string> modes) => ChangeVT520ForBufferArea(area, modes.StringJoin(";"));
 
+    /// <summary>
+    /// Changes the VT520 SGR modes for a specified buffer area.
+    /// </summary>
+    /// <param name="area">The console area to change the SGR modes for.</param>
+    /// <param name="modes">The SGR modes to set, represented as a semicolon-separated string.</param>
     public static void ChangeVT520ForBufferArea(ConsoleArea area, string modes) =>
         Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
 
+    /// <summary>
+    /// Gets the raw VT520 graphic renditions (SGRs).
+    /// </summary>
+    /// <returns>An array of strings representing the raw VT520 graphic renditions, or <see langword="null"/> if an error occurs.</returns>
     public static string[]? GetRawVT520GraphicRenditions() => GetRawVT520SettingsReport("m")?.Split(';');
 }
 
@@ -242,6 +256,17 @@ public static partial class VT520
     /// <returns>The length of the input string excluding VT520 escape sequences.</returns>
     public static int LengthWithoutVT520Sequences(this string input) => input.Length - MatchVT520Sequences(input).Sum(m => m.Length);
 
+    /// <summary>
+    /// Determines whether the given input string starts with a VT520 escape sequence.
+    /// </summary>
+    /// <param name="input">The input string to check for a VT520 escape sequence.</param>
+    /// <param name="sequence">
+    /// When this method returns, contains the VT520 escape sequence if the input string starts with one; otherwise, <see langword="null"/>.
+    /// This parameter is passed uninitialized.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the input string starts with a VT520 escape sequence; otherwise, <see langword="false"/>.
+    /// </returns>
     public static bool StartsWithVT520Sequence(this string input, [NotNullWhen(true), MaybeNullWhen(false)] out string? sequence)
     {
         sequence = null;

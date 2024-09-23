@@ -8,9 +8,12 @@ using Unknown6656.Runtime;
 
 namespace Unknown6656.Console;
 
-
-// This file only forwards the members of the System.Console class to the Unknown6656.Console.Console class.
-// WITH C#14, THIS WILL HOPEFULLY BE REPLACED BY SHAPES/EXTENSIONS
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                                                                               *
+ *   This file only forwards the members of the System.Console class to the Unknown6656.Console.Console class.   *
+ *   WITH C#14, THIS WILL HOPEFULLY BE REPLACED BY SHAPES/EXTENSIONS                                             *
+ *                                                                                                               *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
 public static unsafe partial class Console

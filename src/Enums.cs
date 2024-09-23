@@ -97,8 +97,18 @@ public enum TextTransformationMode
 public enum TextBlinkMode
     : byte
 {
+    /// <summary>
+    /// Indicates that the text is not blinking.
+    /// </summary>
     NotBlinking = 25,
+    /// <summary>
+    /// Indicates that the text is blinking slowly (slower than 150 BPM).
+    /// </summary>
     Slow = 5,
+    /// <summary>
+    /// Indicates that the text is blinking rapidly (faster than 150 BPM).
+    /// Please note that this mode is not widely supported.
+    /// </summary>
     Rapid = 6,
 }
 
