@@ -165,7 +165,7 @@ public static unsafe partial class Console
 
             ConsoleFontInfo font = new()
             {
-                cbSize = Marshal.SizeOf<ConsoleFontInfo>()
+                cbSize = sizeof(ConsoleFontInfo),
             };
 
             return NativeInterop.GetCurrentConsoleFontEx(STDOUTHandle, false, ref font) ? font : throw NETRuntimeInterop.GetLastWin32Error();
@@ -201,7 +201,7 @@ public static unsafe partial class Console
         ConsoleFontInfo before = FontInfo;
         ConsoleFontInfo set = new()
         {
-            cbSize = Marshal.SizeOf<ConsoleFontInfo>(),
+            cbSize = sizeof(ConsoleFontInfo),
             FontIndex = 0,
             FontFamily = ConsoleFontInfo.FIXED_WIDTH_TRUETYPE,
             FontName = font.Name,

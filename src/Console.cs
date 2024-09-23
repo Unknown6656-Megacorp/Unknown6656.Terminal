@@ -212,7 +212,9 @@ public static unsafe partial class Console
 
     #endregion
 
-
+    /// <summary>
+    /// Sets whether the console should use the alternate screen buffer.
+    /// </summary>
     public static bool AlternateScreenEnabled
     {
         set => SetVT520Bit(1049, value);
@@ -259,7 +261,10 @@ public static unsafe partial class Console
     }
 
 
-
+    /// <summary>
+    /// Switches the console between light and dark mode.
+    /// Depending on the terminal configuration, the "dark mode" might be the terminal's default appearance, while the "light mode" might be an inverted color scheme.
+    /// </summary>
     public static bool DarkMode
     {
         set => SetVT520Bit(5, !value);
@@ -546,9 +551,21 @@ public static unsafe partial class Console
     #endregion
 
 #pragma warning disable CA1416 // Validate platform compatibility
+    /// <summary>
+    /// Sets the foreground color of the window frame.
+    /// </summary>
+    /// <param name="background">The terminal window frame background color. The color must be a system color (i.e., one of <see cref="ConsoleColor"/>'s static members, or an instance of <see cref="sysconsolecolor"/>).</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if a <paramref name="background"/> is not a system color.</exception>
     public static void SetWindowFrameColor(ConsoleColor background) => SetWindowFrameColor(ConsoleColor.Black, background);
 #pragma warning restore CA1416
 
+    /// <summary>
+    /// Sets the foreground and background colors of the window frame.
+    /// This method is currently only supported on Linux and macOS.
+    /// </summary>
+    /// <param name="foreground">The terminal window frame foreground color. The color must be a system color (i.e., one of <see cref="ConsoleColor"/>'s static members, or an instance of <see cref="sysconsolecolor"/>).</param>
+    /// <param name="background">The terminal window frame background color. The color must be a system color (i.e., one of <see cref="ConsoleColor"/>'s static members, or an instance of <see cref="sysconsolecolor"/>).</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if a <paramref name="foreground"/> and/or <paramref name="background"/> is not a system color.</exception>
     [SupportedOSPlatform(OS.LNX)]
     [SupportedOSPlatform(OS.MAC)]
     [SupportedOSPlatform(OS.MACC)]

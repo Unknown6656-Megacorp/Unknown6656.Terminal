@@ -666,7 +666,7 @@ public record ConsoleGraphicRendition(params string[] RawVT520SGRs)
         void add_mode<T>(T? value) where T : struct, Enum
         {
             if (value is { } mode)
-                modes.Add(((int)(object)mode).ToString(CultureInfo.InvariantCulture));
+                modes.Add(Convert.ToInt32(mode).ToString(CultureInfo.InvariantCulture));
         }
 
         void add_flag(bool? flag, string hi, string lo)
