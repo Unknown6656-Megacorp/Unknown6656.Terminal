@@ -42,9 +42,7 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <RepositoryType>Git</RepositoryType>
-        <!--<Version>$([System.IO.File]::ReadAllText("$(SolutionDir)version.txt").Split("`n")[0])</Version>
-        <PackageVersion>$([System.IO.File]::ReadAllText("$(SolutionDir)version.txt").Split("`n")[0])</PackageVersion>
-        <AssemblyVersion>$([System.IO.File]::ReadAllText("$(SolutionDir)version.txt").Split("`n")[0])</AssemblyVersion>-->
+        <PackageVersion>$([System.IO.File]::ReadAllText("$(SolutionDir)pkgversion.txt"))</PackageVersion>
     </PropertyGroup>
     <ItemGroup>
         <None Include="$(ProjectDir)unknown6656-logo-1024.png">

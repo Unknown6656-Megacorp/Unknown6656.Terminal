@@ -80,6 +80,7 @@ public static class Program
 
         string metapath = Path.Combine(dir_project.FullName, "AssemblyInfo.cs");
         string verspath = Path.Combine(dir_reporoot.FullName, "version.txt");
+        string pkgverspath = Path.Combine(dir_reporoot.FullName, "pkgversion.txt");
         string appveyorpath = Path.Combine(dir_reporoot.FullName, "appveyor.yml");
         string githash = "<unknown>";
         string vers = "0.0.0.0";
@@ -124,6 +125,7 @@ public static class Program
         string year = START_YEAR < now.Year ? $"{START_YEAR} - {now.Year}" : START_YEAR.ToString();
         string copyright = $"Copyright © {year}, {REPOSITORY_AUTHOR}";
 
+        File.WriteAllText(pkgverspath, version_next.ToString());
         File.WriteAllText(verspath, $"{version_next}\n{githash}");
         File.WriteAllText(metapath, $$"""
 
