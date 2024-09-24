@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Runtime.Versioning;
 using System.Drawing;
 using System.Text;
@@ -438,7 +438,7 @@ public static unsafe partial class Console
     /// <param name="area">The area of the console buffer to fill.</param>
     /// <param name="char">The character to fill the area with.</param>
     public static void FillBufferArea(ConsoleArea area, char @char) =>
-        Write($"\e[{(int)@char};{area.Top};{area.Left};{area.Bottom};{area.Right}$z");
+        Write($"\e[{(int)@char};{area.Top};{area.Left};{area.Bottom};{area.Right}$x");
 
     /// <summary>
     /// Duplicates the specified source area of the console buffer to the specified destination.
