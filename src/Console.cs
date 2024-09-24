@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.Versioning;
 using System.Drawing;
 using System.Text;
@@ -426,6 +426,9 @@ public static unsafe partial class Console
 
     /// <summary>
     /// Clears the specified <paramref name="area"/> of the console buffer.
+    /// <para/>
+    /// Note that this preserves all <b>original</b> colors and console rendition modes of the characters in the cleared area.
+    /// This behavior is different from the <see cref="FillBufferArea"/> method when used with the parameters <c>(<paramref name="area"/>, ' ')</c>.
     /// </summary>
     /// <param name="area">The area of the console buffer to clear.</param>
     /// <param name="selective">If set to <see langword="true"/>, only the characters in the specified area will be cleared, leaving the attributes unchanged.</param>
@@ -775,48 +778,48 @@ public static unsafe partial class Console
         return null;
     }
 
-    public static void GetCursorInformation()
-    {
-        if (GetRawVT520Report("[1$w", '\\') is ['\e', 'P', _, '$', 'u', .. string response, '\e', '\\'])
-        {
-            // TODO
-        }
-    }
+    //public static void GetCursorInformation()
+    //{
+    //    if (GetRawVT520Report("[1$w", '\\') is ['\e', 'P', _, '$', 'u', .. string response, '\e', '\\'])
+    //    {
+    //        // TODO
+    //    }
+    //}
 
-    public static void GetTabStopInformation()
-    {
-        if (GetRawVT520Report("[2$w", '\\') is ['\e', 'P', _, '$', 'u', .. string response, '\e', '\\'])
-        {
-            // TODO
-        }
-    }
+    //public static void GetTabStopInformation()
+    //{
+    //    if (GetRawVT520Report("[2$w", '\\') is ['\e', 'P', _, '$', 'u', .. string response, '\e', '\\'])
+    //    {
+    //        // TODO
+    //    }
+    //}
 
     // TODO : page 151 of https://web.mit.edu/dosathena/doc/www/ek-vt520-rm.pdf
 
-    public static void GetCursorType()
-    {
-        if (GetRawVT520SettingsReport(" q") is string response)
-        {
-            // TODO
-        }
-    }
+    //public static void GetCursorType()
+    //{
+    //    if (GetRawVT520SettingsReport(" q") is string response)
+    //    {
+    //        // TODO
+    //    }
+    //}
 
-    public static void GetMargins()
-    {
-        if (GetRawVT520SettingsReport("s") is string left_right &&
-            GetRawVT520SettingsReport("t") is string top_bottom)
-        {
-            // TODO
-        }
-    }
+    //public static void GetMargins()
+    //{
+    //    if (GetRawVT520SettingsReport("s") is string left_right &&
+    //        GetRawVT520SettingsReport("t") is string top_bottom)
+    //    {
+    //        // TODO
+    //    }
+    //}
 
-    public static void GetColor()
-    {
-        if (GetRawVT520SettingsReport(",|") is string response)
-        {
-            // TODO
-        }
-    }
+    //public static void GetColor()
+    //{
+    //    if (GetRawVT520SettingsReport(",|") is string response)
+    //    {
+    //        // TODO
+    //    }
+    //}
 
 
 
@@ -827,11 +830,26 @@ public static unsafe partial class Console
 
     public static void InsertLine(int count = 1) => Write($"\e[{count}L");
 
-    public static void DeleteLine(int count = 1) => Write($"\e[{count}M");
+    /// <summary>
+    /// Deletes the specified number of lines from the current cursor position.
+    /// This will cause the lines below the cursor to be shifted up.
+    /// </summary>
+    /// <param name="count">The number of lines to be deleted.</param>
+    public static void DeleteLines(int count = 1) => Write($"\e[{count}M");
 
+    /// <summary>
+    /// Inserts the specified number of space characters (<c>0x20</c>) at the current cursor position.
+    /// This will cause the characters to the right of the cursor to be shifted to the right.
+    /// </summary>
+    /// <param name="count">The number of spaces to be inserted.</param>
     public static void InsertSpaceCharacter(int count = 1) => Write($"\e[{count}@");
 
-    public static void DeleteCharacter(int count = 1) => Write($"\e[{count}P");
+    /// <summary>
+    /// Deletes the specified number of characters from the current cursor position.
+    /// This will cause the characters to the right of the cursor to be shifted to the left.
+    /// </summary>
+    /// <param name="count">The number of characters to be deleted.</param>
+    public static void DeleteCharacters(int count = 1) => Write($"\e[{count}P");
 
 
 }
