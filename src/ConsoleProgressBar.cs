@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System.Text;
 using System;
-using System.Transactions;
 
 namespace Unknown6656.Console;
 
@@ -58,6 +57,8 @@ public record ConsoleProgressBarStyle
     /// </summary>
     public ConsoleColor BarColor { get; init; } = ConsoleColor.Green;
 
+    public ConsoleColor TextColor { get; init; } = ConsoleColor.White;
+
     /// <summary>
     /// Gets the secondary color of the progress bar.
     /// </summary>
@@ -77,6 +78,11 @@ public record ConsoleProgressBarStyle
     /// Gets a value indicating whether to show the percentage on the progress bar.
     /// </summary>
     public bool ShowPercentage { get; init; } = true;
+
+    /// <summary>
+    /// Gets a value indicating whether to animate the progress bar when it is indeterminate.
+    /// </summary>
+    public bool AnimatedIndeterminate { get; init; } = true;
 }
 
 /// <summary>
@@ -86,13 +92,12 @@ public class ConsoleProgressBar
     : IAsyncDisposable
 {
     private static readonly object _mutex = new();
-    private const int _ADDITIONAL_WIDTH = 7;
+    private const int _ADDITIONAL_WIDTH = 8;
 
     private readonly Task<Task> _render_task;
     private volatile bool _invalidated;
     private ConsoleProgressBarStyle _style = new();
     private double? _value;
-    //private string? _text;
     private int _width;
     private int _x;
     private int _y;
@@ -216,19 +221,6 @@ public class ConsoleProgressBar
         }
     }
 
-    //public string? Text
-    //{
-    //    get => _text;
-    //    set
-    //    {
-    //        if (value != _text)
-    //        {
-    //            _text = value;
-    //            Invalidate();
-    //        }
-    //    }
-    //}
-
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConsoleProgressBar"/> class with the specified initial value.
@@ -287,27 +279,27 @@ public class ConsoleProgressBar
     /// </summary>
     public void Render()
     {
-        StringBuilder sb = new();
+        StringBuilder sb = new(Style.BackgroundColor.ToVT520(ColorMode.Background));
+        bool invalidated = false;
+        (char bar_fg_char, char bar_bg_char) = Style.BarType switch
+        {
+            ConsoleBarType.ThickLine => ('━', '─'),
+            ConsoleBarType.ThinLine => ('─', '╌'),
+            ConsoleBarType.SolidBlock => ('█', ' '),
+            ConsoleBarType.BrailleBlock => ('⣿', '⣿'),
+            ConsoleBarType.ASCII_ThickLine => ('=', '-'),
+            ConsoleBarType.ASCII_ThinLine => ('-', '-'),
+            ConsoleBarType.ASCII_SolidBlock => ('#', '-'),
+            _ => throw new ArgumentOutOfRangeException(nameof(Style.BarType)),
+        };
 
         if (Progress is double progress && double.IsFinite(progress))
         {
             int bar_width = (int)(Width * progress);
             double fractional = progress * Width - bar_width;
             int remaining_width = Width - bar_width - double.Sign(fractional);
-            (char bar_fg_char, char bar_bg_char) = Style.BarType switch
-            {
-                ConsoleBarType.ThickLine => ('━', '─'),
-                ConsoleBarType.ThinLine => ('─', '╌'),
-                ConsoleBarType.SolidBlock => ('█', ' '),
-                ConsoleBarType.BrailleBlock => ('⣿', '⣿'),
-                ConsoleBarType.ASCII_ThickLine => ('=', '-'),
-                ConsoleBarType.ASCII_ThinLine => ('-', '-'),
-                ConsoleBarType.ASCII_SolidBlock => ('#', '-'),
-                _ => throw new ArgumentOutOfRangeException(nameof(Style.BarType)),
-            };
 
-            sb.Append(Style.BackgroundColor.ToVT520(ColorMode.Background))
-              .Append(Style.BarColor.ToVT520(ColorMode.Foreground))
+            sb.Append(Style.BarColor.ToVT520(ColorMode.Foreground))
               .Append(new string(bar_fg_char, bar_width));
 
             if (fractional > 0)
@@ -329,7 +321,28 @@ public class ConsoleProgressBar
 
             sb.Append(Style.BarSecondaryColor.ToVT520(ColorMode.Foreground))
               .Append(new string(bar_bg_char, remaining_width))
+              .Append(Style.TextColor.ToVT520(ColorMode.Foreground))
               .Append($" {progress * 100,5:F1} %");
+        }
+        else
+        {
+            string block = new(bar_fg_char, Width / 4);
+            int offs = (Width - block.Length) / 2;
+
+            if (Style.AnimatedIndeterminate)
+            {
+                invalidated = true;
+                offs = (int)((Math.Sin(DateTime.UtcNow.Ticks * .00_000_01) + 1) * .5 * (Width - block.Length + 1));
+            }
+
+            sb.Append(Style.BarSecondaryColor.ToVT520(ColorMode.Foreground))
+              .Append(new string(bar_bg_char, offs))
+              .Append(Style.BarColor.ToVT520(ColorMode.Foreground))
+              .Append(block)
+              .Append(Style.BarSecondaryColor.ToVT520(ColorMode.Foreground))
+              .Append(new string(bar_bg_char, Width - offs - block.Length))
+              .Append(Style.TextColor.ToVT520(ColorMode.Foreground))
+              .Append(" ---.- %");
         }
 
         lock (_mutex)
@@ -337,7 +350,7 @@ public class ConsoleProgressBar
             Console.SetCursorPosition(XPosition, YPosition);
             Console.Write(sb);
 
-            _invalidated = false;
+            _invalidated = invalidated;
         }
     }
 
