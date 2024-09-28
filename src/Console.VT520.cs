@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System;
@@ -114,7 +113,7 @@ public static unsafe partial class Console
     /// </returns>
     public static string? GetRawVT520SettingsReport(string report_sequence, char? response_introducer = 'r')
     {
-        if (GetRawVT520Report($"\eP$q{report_sequence}\e\\", '\\') is ['\e', 'P', _, '$', char ri, .. string response, '\e', '\\'] &&
+        if (GetRawVT520Report($"\eP$q{report_sequence}\e\\", '\\') is ['\e', 'P', _, '$', char ri, .. string response, '\e'] &&
             (response_introducer is null || ri == response_introducer))
             return response.TrimEnd(report_sequence);
 
