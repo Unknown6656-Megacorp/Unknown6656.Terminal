@@ -363,7 +363,7 @@ public static unsafe partial class Console
     {
         if (OS.IsWindows)
 #pragma warning disable CA1416 // Validate platform compatibility
-            SetWindowSize(width, height);
+            sysconsole.SetWindowSize(width, height);
 #pragma warning restore CA1416
         else
             Write($"\e[8;{height};{width}t");
