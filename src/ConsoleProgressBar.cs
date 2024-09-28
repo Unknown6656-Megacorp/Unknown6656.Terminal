@@ -372,6 +372,5 @@ public class ConsoleProgressBar
 }
 
 // TODO : spinner (modal, non-modal)
-// TODO : progress bar (modal, non-modal)
-
+// TODO : progress bar (modal)
 

@@ -671,10 +671,6 @@ public static unsafe partial class Console
             }
     }
 
-    public static void WriteUnderlined(object? value) => Write($"\e[4m{value}\e[24m");
-
-    public static void WriteInverted(object? value) => Write($"\e[7m{value}\e[27m");
-
     public static void WriteFormatted(object? value, ConsoleGraphicRendition format)
     {
         ConsoleGraphicRendition? current = CurrentGraphicRendition;
@@ -686,18 +682,29 @@ public static unsafe partial class Console
         CurrentGraphicRendition = current;
     }
 
+    public static void WriteUnderlined(object? value) => WriteFormatted(value, new() { Underlined = TextUnderlinedMode.Single });
+
+    public static void WriteInverted(object? value) => WriteFormatted(value, new() { AreColorsInverted = true });
+
+    public static void WriteBold(object? value) => WriteFormatted(value, new() { Intensity = TextIntensityMode.Bold });
+
+    public static void WriteDim(object? value) => WriteFormatted(value, new() { Intensity = TextIntensityMode.Dim });
+
+    public static void WriteBlinking(object? value) => WriteFormatted(value, new() { Blink = TextBlinkMode.Slow });
+
+    public static void WriteItalic(object? value) => WriteFormatted(value, new() { IsItalic = true });
+
 
     // TODO : implement all other (temporary) formatting styles
 
 
 
 
-    // TODO : handle line wrapping/breaks for the following functions
-
     public static void WriteDoubleWidthLine(object? value) => WriteDoubleWidthLine(value, null);
 
     public static void WriteDoubleWidthLine(object? value, int left, int top) => WriteDoubleWidthLine(value, (left, top));
 
+    // TODO : handle line wrapping/breaks for the following functions
     public static void WriteDoubleWidthLine(object? value, (int left, int top)? starting_pos)
     {
         if (starting_pos is (int x, int y))
@@ -710,6 +717,7 @@ public static unsafe partial class Console
 
     public static void WriteDoubleSizeLine(object? value, int left, int top) => WriteDoubleSizeLine(value, (left, top));
 
+    // TODO : handle line wrapping/breaks for the following functions
     public static void WriteDoubleSizeLine(object? value, (int left, int top)? starting_pos)
     {
         int x = starting_pos?.left ?? CursorLeft;
@@ -753,6 +761,18 @@ public static unsafe partial class Console
     #endregion
 
 
+
+    public static bool TryReadInt(out int value) => int.TryParse(ReadLine(), out value);
+
+    public static bool TryReadDouble(out double value) => double.TryParse(ReadLine(), out value);
+
+    public static bool TryReadFloat(out float value) => float.TryParse(ReadLine(), out value);
+
+    public static bool TryReadLong(out long value) => long.TryParse(ReadLine(), out value);
+
+    public static bool TryReadDecimal(out decimal value) => decimal.TryParse(ReadLine(), out value);
+
+    public static bool TryReadBool(out bool value) => bool.TryParse(ReadLine(), out value) || (TryReadInt(out int i) && i != 0);
 
 
 
