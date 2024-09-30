@@ -39,6 +39,7 @@ public enum ColorMode
 /// Represents a console color that can be a system color (<see cref="sysconsolecolor"/>) or an RGB color (<see cref="Color"/>).
 /// </summary>
 public readonly record struct ConsoleColor
+    : IFormattable
 {
     private static readonly Dictionary<byte, ConsoleColor> _256colorLUT = new()
     {
@@ -499,6 +500,18 @@ public readonly record struct ConsoleColor
     /// </summary>
     /// <returns>A string that represents the current <see cref="ConsoleColor"/>.</returns>
     public override string ToString() => _color is null ? "(Default)" : _color.Match(c => c.ToString(), rgb => $"#{rgb.ToArgb():x8}: {rgb}");
+
+    /// <inheritdoc cref="ToString(string?, IFormatProvider?)"/>
+    public string ToString(string? format) => ToString(format, null);
+
+    /// <inheritdoc cref="IFormattable.ToString(string?, IFormatProvider?)"/>
+    public string ToString(string? format, IFormatProvider? provider) => new string([.. format?.ToLower()?.Where(char.IsAsciiLetter) ?? []]) switch
+    {
+        "f" or "fore" or "fg" or "foreground" => ToVT520(ColorMode.Foreground),
+        "b" or "back" or "bg" or "background" => ToVT520(ColorMode.Background),
+        "u" or "ud" or "ul" or "underline" => ToVT520(ColorMode.Underline),
+        _ => ToString(),
+    };
 
     /// <summary>
     /// Converts the current <see cref="ConsoleColor"/> to a <see cref="sysconsolecolor"/> if possible.
