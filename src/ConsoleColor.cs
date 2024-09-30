@@ -432,6 +432,54 @@ public readonly record struct ConsoleColor
     /// <param name="color">The <see cref="sysconsolecolor"/> to initialize the <see cref="ConsoleColor"/> with.</param>
     public ConsoleColor(sysconsolecolor? color) => _color = color is sysconsolecolor cc ? new Union<sysconsolecolor, Color>.Case0(cc) : null;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the specified gray value.
+    /// This value is clamped to the range of <c>[0..1]</c>.
+    /// </summary>
+    /// <param name="gray">The gray value in the range of <c>[0..1]</c> to initialize the <see cref="ConsoleColor"/> with.</param>
+    public ConsoleColor(double gray)
+        : this(gray, gray, gray)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the specified RGB values.
+    /// Each value is clamped to the range of <c>[0..1]</c>.
+    /// </summary>
+    /// <param name="R">The red component value in the range of <c>[0..1]</c>.</param>
+    /// <param name="G">The green component value in the range of <c>[0..1]</c>.</param>
+    /// <param name="B">The blue component value in the range of <c>[0..1]</c>.</param>
+    public ConsoleColor(double R, double G, double B)
+        : this(
+              (byte)Math.Round(double.Clamp(R, 0, 1) * 255),
+              (byte)Math.Round(double.Clamp(G, 0, 1) * 255),
+              (byte)Math.Round(double.Clamp(B, 0, 1) * 255)
+        )
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the specified gray value.
+    /// This value is expected to be inside the range of <c>[0..255]</c>.
+    /// </summary>
+    /// <param name="gray">The gray value to initialize the <see cref="ConsoleColor"/> with.</param>
+    public ConsoleColor(byte gray)
+        : this(gray, gray, gray)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the specified RGB values.
+    /// Each value is expected to be inside the range of <c>[0..255]</c>.
+    /// </summary>
+    /// <param name="R">The red component value.</param>
+    /// <param name="G">The green component value.</param>
+    /// <param name="B">The blue component value.</param>
+    public ConsoleColor(byte R, byte G, byte B)
+        : this(Color.FromArgb(R, G, B))
+    {
+    }
+
     /// <inheritdoc/>
     public override int GetHashCode()
     {
@@ -535,6 +583,28 @@ public readonly record struct ConsoleColor
             throw new InvalidOperationException($"Invalid color type '{_color}'.");
 #pragma warning restore CS8524
 #pragma warning restore CS8509
+    }
+
+    /// <summary>
+    /// Parses a VT100/VT500/VT520/ANSI escape sequence string to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="vt520_color">The VT100/VT500/VT520/ANSI escape sequence string to be parsed as a color.</param>
+    /// <param name="color">Returns the <see cref="ConsoleColor"/> instance that represents the specified given color string (or <see cref="Default"/> if the parsing was unsuccessful).</param>
+    /// <returns>Returns <see langword="true"/> if the parsing was successful; otherwise, <see langword="false"/>.</returns>
+    public static bool TryParse(string vt520_color, out ConsoleColor color)
+    {
+        try
+        {
+            color = FromVT520(vt520_color);
+
+            return true;
+        }
+        catch
+        {
+            color = Default;
+
+            return false;
+        }
     }
 
     /// <summary>
@@ -663,4 +733,48 @@ public readonly record struct ConsoleColor
     /// </summary>
     /// <param name="color">The <see cref="sysconsolecolor"/> to convert.</param>
     public static implicit operator ConsoleColor(sysconsolecolor? color) => FromConsoleColor(color);
+
+    /// <summary>
+    /// Converts a VT520 color string to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="vt520_color">The VT520 color string.</param>
+    public static explicit operator ConsoleColor(string vt520_color) => FromVT520(vt520_color);
+
+    /// <summary>
+    /// Converts an RGB tuple to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="rgb">The RGB tuple.</param>
+    public static explicit operator ConsoleColor((byte r, byte g, byte b) rgb) => new(rgb.r, rgb.g, rgb.b);
+
+    /// <summary>
+    /// Converts an RGB tuple to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="rgb">The RGB tuple.</param>
+    public static explicit operator ConsoleColor((int r, int g, int b) rgb) => new((byte)rgb.r, (byte)rgb.g, (byte)rgb.b);
+
+    /// <summary>
+    /// Converts an RGB tuple to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="rgb">The RGB tuple.</param>
+    public static explicit operator ConsoleColor((float r, float g, float b) rgb) => new(rgb.r, rgb.g, rgb.b);
+
+    /// <summary>
+    /// Converts an RGB tuple to a <see cref="ConsoleColor"/> instance.
+    /// </summary>
+    /// <param name="rgb">The RGB tuple.</param>
+    public static explicit operator ConsoleColor((double r, double g, double b) rgb) => new(rgb.r, rgb.g, rgb.b);
+
+    /// <summary>
+    /// Converts a <see cref="ConsoleColor"/> instance to a nullable <see cref="sysconsolecolor"/> instance.
+    /// </summary>
+    /// <param name="color">The <see cref="ConsoleColor"/> instance.</param>
+    public static explicit operator sysconsolecolor?(ConsoleColor color) => color.ToSystemColor();
+
+    /// <summary>
+    /// Converts a <see cref="ConsoleColor"/> instance to a <see cref="sysconsolecolor"/> instance.
+    /// </summary>
+    /// <param name="color">The <see cref="ConsoleColor"/> instance.</param>
+    /// <exception cref="ArgumentException">Thrown when the conversion is not possible.</exception>
+    public static explicit operator sysconsolecolor(ConsoleColor color) =>
+        color.ToSystemColor() ?? throw new ArgumentException($"Unable to convert '{color}' to a valid instance of {typeof(sysconsolecolor)}.", nameof(color));
 }
