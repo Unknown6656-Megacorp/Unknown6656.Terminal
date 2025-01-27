@@ -5,9 +5,9 @@ using System.Text;
 using System.Linq;
 using System;
 
+using Unknown6656.Generics.Text;
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
-using Unknown6656.Common;
 
 namespace Unknown6656.Console;
 
@@ -760,6 +760,11 @@ public static unsafe partial class Console
 
     #endregion
 
+    public static void DiscardAllPendingInput()
+    {
+        while (KeyAvailable)
+            ReadKey(true);
+    }
 
 
     public static bool TryReadInt(out int value) => int.TryParse(ReadLine(), out value);
