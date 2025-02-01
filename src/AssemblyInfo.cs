@@ -1,17 +1,17 @@
 
 //////////////////////////////////////////////////////////////////////////
-// Auto-generated 2024-10-03 23:11:54.204                               //
+// Auto-generated 2025-02-01 19:54:58.153                               //
 // ANY CHANGES TO THIS DOCUMENT WILL BE LOST UPON RE-GENERATION         //
 //////////////////////////////////////////////////////////////////////////
 
 using System.Reflection;
 using System;
 
-[assembly: AssemblyVersion("1.0.160.8821")]
-[assembly: AssemblyFileVersion("1.0.160.8821")]
-[assembly: AssemblyInformationalVersion("v.1.0.160.8821, commit: 5c2629e17a7b9ca4294ad5a12f036e5710b1b819")]
+[assembly: AssemblyVersion("1.1.174.8932")]
+[assembly: AssemblyFileVersion("1.1.174.8932")]
+[assembly: AssemblyInformationalVersion("v.1.1.174.8932, commit: 62a4ba819ddcf782d584a0bdd4a57daae93d19c9")]
 [assembly: AssemblyCompany("Unknown6656")]
-[assembly: AssemblyCopyright("Copyright © 2020 - 2024, Unknown6656")]
+[assembly: AssemblyCopyright("Copyright © 2020 - 2025, Unknown6656")]
 [assembly: AssemblyProduct("Unknown6656.Console by Unknown6656")]
 [assembly: AssemblyTitle("Unknown6656.Console")]
 
@@ -29,19 +29,19 @@ public static class __module__
     /// <summary>
     /// Development year(s).
     /// </summary>
-    public const string Year = "2020 - 2024";
+    public const string Year = "2020 - 2025";
     /// <summary>
     /// The library's copyright information.
     /// </summary>
-    public const string Copyright = "Copyright © 2020 - 2024, Unknown6656";
+    public const string Copyright = "Copyright © 2020 - 2025, Unknown6656";
     /// <summary>
     /// The library's current version.
     /// </summary>
-    public static Version? LibraryVersion { get; } = Version.Parse("1.0.160.8821");
+    public static Version? LibraryVersion { get; } = Version.Parse("1.1.174.8932");
     /// <summary>
     /// The Git hash associated with the current build.
     /// </summary>
-    public const string GitHash = "5c2629e17a7b9ca4294ad5a12f036e5710b1b819";
+    public const string GitHash = "62a4ba819ddcf782d584a0bdd4a57daae93d19c9";
     /// <summary>
     /// The name of the GitHub repository associated with <see cref="RepositoryURL"/>.
     /// </summary>
@@ -51,7 +51,7 @@ public static class __module__
     /// </summary>
     public const string RepositoryURL = "https://github.com/Unknown6656-Megacorp/Unknown6656.Console";
     /// <summary>
-    /// The date and time of the current build (2024-10-03 23:11:54.204).
+    /// The date and time of the current build (2025-02-01 19:54:58.153).
     /// </summary>
-    public static DateTime DateBuilt { get; } = DateTime.FromFileTimeUtc(0x01db15d8df5c4883L);
+    public static DateTime DateBuilt { get; } = DateTime.FromFileTimeUtc(0x01db74daca322985L);
 }

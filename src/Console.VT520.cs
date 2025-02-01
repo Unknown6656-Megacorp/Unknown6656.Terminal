@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System;
 
+using Unknown6656.Generics.Text;
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
 
