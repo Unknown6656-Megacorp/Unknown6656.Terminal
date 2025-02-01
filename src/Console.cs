@@ -17,7 +17,6 @@ namespace Unknown6656.Console;
 // TODO : progress bars
 // TODO : markdown rendering/formatting
 
-
 /// <summary>
 /// The <see cref="Console"/> class provides a set of static methods and properties for interacting with the console.
 /// This class is a wrapper around the <see cref="System.Console"/> class and provides additional functionality for controlling the console's appearance and behavior.
