@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.Versioning;
 using System.Drawing;
 using System.Text;
@@ -13,7 +13,6 @@ namespace Unknown6656.Console;
 
 
 // TODO : add support for XTWINOPS
-// TODO : add support for Sixel drawing https://en.wikipedia.org/wiki/Sixel
 // TODO : progress bars
 // TODO : markdown rendering/formatting
 
