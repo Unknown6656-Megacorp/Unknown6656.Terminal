@@ -40,34 +40,33 @@ public enum TerminalType
     GenericLinux,           // Linux
 }
 
-public record TerminalInfo(TerminalType Type, Version? Version, FileInfo? Path)
+public record TerminalEmulatorInfo(TerminalType Type, Version? Version, FileInfo? Path)
 {
     public bool HasSixelSupport => Type switch
     {
-        TerminalType.Alacritty => false,
-        TerminalType.Kitty => false,
-        TerminalType.URXVT => false,
-        TerminalType.GNOMETerminal => false,
-        TerminalType.GenericLinux => false,
+        TerminalType.Alacritty or TerminalType.Kitty or TerminalType.URXVT or TerminalType.GNOMETerminal or TerminalType.GenericLinux => false,
+        TerminalType.XTerm or TerminalType.Cygwin => true,
+        TerminalType.Zellij when Version >= new Version(0, 31) => true,
+        TerminalType.Konsole when Version >= new Version(22, 4) => true,
+        TerminalType.WindowsTerminal when Version >= new Version(1, 22) => true,
 
-        TerminalType.XTerm => true,
-        TerminalType.Zellij when Version >= new Version(0, 31, 0) => true,
-        TerminalType.WindowsTerminal when Version >= new Version(1, 22, 0) => true,
-
+        TerminalType.WindowsCMD when Version >= new Version(9999, 9999) => true, // TODO : check for actual version
 
 
         // https://www.arewesixelyet.com/
     };
+
+    public override string ToString() => $"{Type} v.{Version} ({Path})";
 }
 
 public static unsafe partial class Console
 {
-    private static TerminalInfo? _termnfo = null;
+    private static TerminalEmulatorInfo? _termnfo = null;
 
-    public static TerminalInfo CurrentTerminalInfo => _termnfo ??= GetCurrentTerminalInfo();
+    public static TerminalEmulatorInfo CurrentTerminalEmulatorInfo => _termnfo ??= GetCurrentTerminalEmulatorInfo();
 
 
-    private static TerminalInfo GetCurrentTerminalInfo()
+    private static TerminalEmulatorInfo GetCurrentTerminalEmulatorInfo()
     {
         TerminalType? type = null;
         Process? parent_proc = ProcessTree.GetParentProcess();
@@ -75,26 +74,47 @@ public static unsafe partial class Console
         string? term = Environment.GetEnvironmentVariable("TERM")?.ToLowerInvariant();
         string? uname_o = OS.GetUname('o');
 
-        if (Environment.GetEnvironmentVariable("CYGWIN") != null || Directory.Exists("/cygdrive"))
+
+        bool any(Func<bool> cond) => type is null && cond();
+        bool win(Func<bool> cond) => type is null && OS.IsWindows && cond();
+        bool nix(Func<bool> cond) => type is null && OS.IsUnix && cond();
+        bool mac(Func<bool> cond) => type is null && OS.IsOSX && cond();
+        bool lin(Func<bool> cond) => type is null && OS.IsLinux && cond();
+
+
+        // check for mintty before cygwin/msys2
+
+        if (any(() => Environment.GetEnvironmentVariable("CYGWIN") != null || Directory.Exists("/cygdrive")))
             type = TerminalType.Cygwin;
-        else if (Environment.GetEnvironmentVariable("MSYSTEM") != null || (uname_o?.Contains("MSYS") ?? false))
+
+        if (any(() => Environment.GetEnvironmentVariable("MSYSTEM") != null || (uname_o?.Contains("MSYS") ?? false)))
             type = TerminalType.MSYS2;
-        else if (Environment.GetEnvironmentVariable("WT_SESSION") != null || Environment.GetEnvironmentVariable("WT_PROFILE_ID") != null || parent_procname is "windowsterminal")
+
+        if (win(() => Environment.GetEnvironmentVariable("WT_SESSION") != null || Environment.GetEnvironmentVariable("WT_PROFILE_ID") != null || parent_procname is "windowsterminal" or "wt"))
             type = TerminalType.WindowsTerminal;
-        else if (parent_procname is { } && (parent_procname.Contains("powershell") || parent_procname.Contains("pwsh")))
+
+        if (win(() => parent_procname is { } && (parent_procname.Contains("powershell") || parent_procname.Contains("pwsh"))))
             type = TerminalType.PowerShell;
-        else if (term is "alacritty")
-            type = TerminalType.Alacritty;
-        else if (term is "xterm" or "xterm-256color" || Environment.GetEnvironmentVariable("XTERM_VERSION") != null)
+
+        if (mac(() => Environment.GetEnvironmentVariable("TERM_PROGRAM") is "Apple_Terminal"))
+            type = TerminalType.MacOSTerminalApp;
+
+        if (mac(() => Environment.GetEnvironmentVariable("TERM_PROGRAM") is "iTerm.app" || !string.IsNullOrWhiteSpace(GetRawVT520Report($"{_DCS}+q6E616D65;544E{_ST}", '\0'))))
+            type = TerminalType.iTerm2;
+
+        if (nix(() => term is "xterm" or "xterm-256color" || Environment.GetEnvironmentVariable("XTERM_VERSION") != null))
             type = TerminalType.XTerm;
+
+
+
+        if (term is "alacritty")
+            type = TerminalType.Alacritty;
         else if (Environment.GetEnvironmentVariable("TERM_PROGRAM")?.Equals("WezTerm", StringComparison.OrdinalIgnoreCase) ?? false)
             type = TerminalType.WezTerm;
         else if (Environment.GetEnvironmentVariable("KITTY_WINDOW_ID") != null)
             type = TerminalType.Kitty;
-        else if (Environment.GetEnvironmentVariable("TERM_PROGRAM") == "Apple_Terminal")
-            type = TerminalType.MacOSTerminalApp;
-        else if (Environment.GetEnvironmentVariable("TERM_PROGRAM") == "iTerm.app" || !string.IsNullOrWhiteSpace(GetRawVT520Report("\eP+q6E616D65;544E\e\\", '\0')))
-            type = TerminalType.iTerm2;
+        else if (Environment.GetEnvironmentVariable("COLORTERM") is "gnome-terminal")
+            type = TerminalType.GNOMETerminal;
         else if (File.Exists("/proc/sys/fs/binfmt_misc/WSLInterop") || (OS.GetUname('r')?.Contains("microsoft") ?? false) || Environment.GetEnvironmentVariable("WSL_DISTRO_NAME") != null)
         {
             // running inside WSL. check for parent process to determine terminal type.
@@ -148,7 +168,6 @@ public static unsafe partial class Console
         // URXVT
         // SimpleTerminal
         // Terminator
-        // GNOMETerminal
         // Konsole
         // XFCETerminal
         // Tilix
