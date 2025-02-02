@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Runtime.Versioning;
 using System.Drawing;
 using System.Text;
@@ -24,6 +24,19 @@ namespace Unknown6656.Console;
 /// <inheritdoc cref="sysconsole"/>
 public static unsafe partial class Console
 {
+    internal const string _ESC = "\e";
+    internal const string _CSI = "\e[";
+    internal const string _OSC = "\e]";
+    internal const string _ST = "\e\\";
+    internal const string _DCS = "\eP";
+    internal const string _APC = "\e_";
+    internal const string _IND = "\eD";
+    internal const string _NEL = "\eE";
+    internal const string _HTS = "\eH";
+    internal const string _RI = "\eM";
+    internal const string _PM = "\e^";
+
+
     /// <summary>
     /// Sets or gets the console's current <see cref="ConsoleState"/>.
     /// This can be used to restore the console to an earlier state.
@@ -104,7 +117,7 @@ public static unsafe partial class Console
 
     public static ConsoleCursorShape CursorShape
     {
-        set => Write($"\e[{(int)value} q");
+        set => Write($"{_CSI}{(int)value} q");
     }
 
     #endregion
@@ -119,7 +132,7 @@ public static unsafe partial class Console
         set
         {
             if (value?.FullVT520SGR() is { } sgr)
-                Write($"\e[{string.Join(';', sgr)}m");
+                Write($"{_CSI}{string.Join(';', sgr)}m");
         }
     }
 
@@ -128,9 +141,9 @@ public static unsafe partial class Console
         get => CurrentGraphicRendition?.Intensity ?? TextIntensityMode.Regular;
         set => Write(value switch
         {
-            TextIntensityMode.Bold => "\e[1m",
-            TextIntensityMode.Dim => "\e[2m",
-            _ => "\e[22m"
+            TextIntensityMode.Bold => $"{_CSI}1m",
+            TextIntensityMode.Dim => $"{_CSI}2m",
+            _ => $"{_CSI}22m"
         });
     }
 
@@ -139,64 +152,64 @@ public static unsafe partial class Console
         get => CurrentGraphicRendition?.Blink ?? TextBlinkMode.NotBlinking;
         set => Write(value switch
         {
-            TextBlinkMode.Slow => "\e[5m",
-            TextBlinkMode.Rapid => "\e[6m",
-            _ => "\e[25m"
+            TextBlinkMode.Slow => $"{_CSI}5m",
+            TextBlinkMode.Rapid => $"{_CSI}6m",
+            _ => $"{_CSI}25m"
         });
     }
 
     public static bool InvertedColors
     {
         get => CurrentGraphicRendition?.AreColorsInverted ?? false;
-        set => Write(value ? "\e[7m" : "\e[27m");
+        set => Write(value ? $"{_CSI}7m" : $"{_CSI}27m");
     }
 
     public static TextUnderlinedMode TextUnderline
     {
         get => CurrentGraphicRendition?.Underlined ?? TextUnderlinedMode.NotUnderlined;
-        set => Write($"\e[{(int)value}m");
+        set => Write($"{_CSI}{(int)value}m");
     }
 
     public static bool OverlinedText
     {
         get => CurrentGraphicRendition?.IsOverlined ?? false;
-        set => Write(value ? "\e[53m" : "\e[55m");
+        set => Write(value ? $"{_CSI}53m" : $"{_CSI}55m");
     }
 
     public static bool CrossedOutText
     {
         get => CurrentGraphicRendition?.IsCrossedOut ?? false;
-        set => Write(value ? "\e[9m" : "\e[29m");
+        set => Write(value ? $"{_CSI}9m" : $"{_CSI}29m");
     }
 
     public static TextFrameMode TextFrame
     {
         get => CurrentGraphicRendition?.TextFrame ?? TextFrameMode.NotFramed;
-        set => Write($"\e[{(int)value}m");
+        set => Write($"{_CSI}{(int)value}m");
     }
 
     public static bool ConcealedText
     {
         get => CurrentGraphicRendition?.IsTextConcealed ?? false;
-        set => Write(value ? "\e[8m" : "\e[28m");
+        set => Write(value ? $"{_CSI}8m" : $"{_CSI}28m");
     }
 
     public static bool ItalicText
     {
         get => CurrentGraphicRendition?.IsItalic ?? false;
-        set => Write(value ? "\e[3m" : "\e[23m");
+        set => Write(value ? $"{_CSI}3m" : $"{_CSI}23m");
     }
 
     public static bool GothicText
     {
         get => CurrentGraphicRendition?.IsGothic ?? false;
-        set => Write(value ? "\e[20m" : "\e[23m");
+        set => Write(value ? $"{_CSI}20m" : $"{_CSI}23m");
     }
 
     public static TextTransformationMode TextTransformation
     {
         get => CurrentGraphicRendition?.TextTransformation ?? TextTransformationMode.Regular;
-        set => Write($"\e[{(int)value}m");
+        set => Write($"{_CSI}{(int)value}m");
     }
 
     public static bool RightToLeft
@@ -222,6 +235,11 @@ public static unsafe partial class Console
     public static bool BracketedPasteModeEnabled
     {
         set => SetVT520Bit(2004, value);
+    }
+
+    public static bool SixelScrollingEnabled
+    {
+        set => SetVT520Bit(80, value);
     }
 
 
@@ -383,7 +401,7 @@ public static unsafe partial class Console
     ///     <item>Cursor direction.</item>
     /// </list>
     /// </summary>
-    public static void SoftReset() => Write("\e[!p");
+    public static void SoftReset() => Write($"{_CSI}!p");
 
     /// <summary>
     /// Clears the entire console screen and resets the cursor position to the top-left corner.
@@ -392,18 +410,18 @@ public static unsafe partial class Console
     public static void FullClear()
     {
         Clear();
-        Write("\e[3J");
+        Write($"{_CSI}3J");
     }
 
     /// <summary>
     /// Clears the entire console screen and performs a hard reset of the console, as well as all cursor and graphic renditions and attributes.
     /// </summary>
-    public static void HardResetAndFullClear() => Write("\e[m\e[3J\e[!p\ec");
+    public static void HardResetAndFullClear() => Write($"{_CSI}m{_CSI}3J{_CSI}!p\ec");
 
     /// <summary>
     /// Resets all graphic renditions to their default values.
     /// </summary>
-    public static void ResetGraphicRenditions() => Write("\e[m");
+    public static void ResetGraphicRenditions() => Write($"{_CSI}m");
 
     /// <summary>
     /// Resets the text's foreground color to its default value.
@@ -421,7 +439,7 @@ public static unsafe partial class Console
     /// <summary>
     /// Clears the current line.
     /// </summary>
-    public static void ClearLine() => Write("\e[K");
+    public static void ClearLine() => Write($"{_CSI}K");
 
     /// <summary>
     /// Clears the specified <paramref name="area"/> of the console buffer.
@@ -432,7 +450,7 @@ public static unsafe partial class Console
     /// <param name="area">The area of the console buffer to clear.</param>
     /// <param name="selective">If set to <see langword="true"/>, only the characters in the specified area will be cleared, leaving the attributes unchanged.</param>
     public static void ClearBufferArea(ConsoleArea area, bool selective = false) =>
-        Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right}${(selective ? 'z' : '{')}");
+        Write($"{_CSI}{area.Top};{area.Left};{area.Bottom};{area.Right}${(selective ? 'z' : '{')}");
 
     /// <summary>
     /// Fills the specified <paramref name="area"/> of the console buffer with the given character.
@@ -440,7 +458,7 @@ public static unsafe partial class Console
     /// <param name="area">The area of the console buffer to fill.</param>
     /// <param name="char">The character to fill the area with.</param>
     public static void FillBufferArea(ConsoleArea area, char @char) =>
-        Write($"\e[{(int)@char};{area.Top};{area.Left};{area.Bottom};{area.Right}$x");
+        Write($"{_CSI}{(int)@char};{area.Top};{area.Left};{area.Bottom};{area.Right}$x");
 
     /// <summary>
     /// Duplicates the specified source area of the console buffer to the specified destination.
@@ -478,7 +496,7 @@ public static unsafe partial class Console
 
 
 #warning TODO : check for off-by-one errors
-        Write($"\e[{source.Top};{source.Left};{source.Bottom};{source.Right};{source_page};{destination.X};{destination.Y};{destination.Page}$v");
+        Write($"{_CSI}{source.Top};{source.Left};{source.Bottom};{source.Right};{source_page};{destination.X};{destination.Y};{destination.Page}$v");
     }
 
     /// <summary>
@@ -511,7 +529,7 @@ public static unsafe partial class Console
         if (lines < 0)
             MoveBufferDown(-lines);
         else if (lines > 0)
-            Write($"\e[{lines}S");
+            Write($"{_CSI}{lines}S");
     }
 
     /// <summary>
@@ -524,7 +542,7 @@ public static unsafe partial class Console
         if (lines < 0)
             MoveBufferUp(-lines);
         else if (lines > 0)
-            Write($"\e[{lines}T");
+            Write($"{_CSI}{lines}T");
     }
 
     #endregion
@@ -578,7 +596,7 @@ public static unsafe partial class Console
         else if (foreground.ToSystemColor() is not sysconsolecolor fg)
             throw new ArgumentOutOfRangeException(nameof(foreground), $"The specified foreground color '{foreground}' is not supported.");
         else
-            Write($"\e[2;{(int)fg};{(int)bg},|");
+            Write($"{_CSI}2;{(int)fg};{(int)bg},|");
     }
 
 
@@ -790,7 +808,7 @@ public static unsafe partial class Console
         if (GetRawVT520Report("[c", 'c') is string response)
             try
             {
-                response = response.TrimStart("\e[?");
+                response = response.TrimStart($"{_CSI}?");
 
                 if (response.Split(';').ToArray(int.Parse) is [int mode, .. [] attributes])
                     return (mode, attributes);
@@ -852,28 +870,28 @@ public static unsafe partial class Console
 
     public static void WriteReverseIndex() => Write("\eM");
 
-    public static void InsertLine(int count = 1) => Write($"\e[{count}L");
+    public static void InsertLine(int count = 1) => Write($"{_CSI}{count}L");
 
     /// <summary>
     /// Deletes the specified number of lines from the current cursor position.
     /// This will cause the lines below the cursor to be shifted up.
     /// </summary>
     /// <param name="count">The number of lines to be deleted.</param>
-    public static void DeleteLines(int count = 1) => Write($"\e[{count}M");
+    public static void DeleteLines(int count = 1) => Write($"{_CSI}{count}M");
 
     /// <summary>
     /// Inserts the specified number of space characters (<c>0x20</c>) at the current cursor position.
     /// This will cause the characters to the right of the cursor to be shifted to the right.
     /// </summary>
     /// <param name="count">The number of spaces to be inserted.</param>
-    public static void InsertSpaceCharacter(int count = 1) => Write($"\e[{count}@");
+    public static void InsertSpaceCharacter(int count = 1) => Write($"{_CSI}{count}@");
 
     /// <summary>
     /// Deletes the specified number of characters from the current cursor position.
     /// This will cause the characters to the right of the cursor to be shifted to the left.
     /// </summary>
     /// <param name="count">The number of characters to be deleted.</param>
-    public static void DeleteCharacters(int count = 1) => Write($"\e[{count}P");
+    public static void DeleteCharacters(int count = 1) => Write($"{_CSI}{count}P");
 
 
 }

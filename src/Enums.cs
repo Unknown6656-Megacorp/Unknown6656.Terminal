@@ -653,7 +653,7 @@ public record ConsoleGraphicRendition(params string[] RawVT520SGRs)
     /// Returns this console graphic rendition as a VT520 SGR (Select Graphic Rendition) escape sequence.
     /// </summary>
     /// <returns>The VT520 SGR escape sequence.</returns>
-    public override string ToString() => $"\e[{FullVT520SGR().StringJoin(";")}m";
+    public override string ToString() => $"{Console._CSI}{FullVT520SGR().StringJoin(";")}m";
 
     /// <summary>
     /// Returns the full VT520 SGR (Select Graphic Rendition) sequences for this console graphic rendition.

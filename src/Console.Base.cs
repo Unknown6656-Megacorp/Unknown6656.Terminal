@@ -214,7 +214,7 @@ public static unsafe partial class Console
     public static int CursorLeft
     {
         get => OS.IsUnix || OS.IsWindows ? sysconsole.CursorLeft : GetCursorPosition().Left;
-        set => sysconsole.Write($"\e[{value + 1}G");
+        set => sysconsole.Write($"{_CSI}{value + 1}G");
     }
 
     /// <inheritdoc cref="sysconsole.CursorTop"/>
@@ -340,7 +340,7 @@ public static unsafe partial class Console
 
     // That is actually over 3x faster than the original implementation in System.Console AND works on all platforms!
     /// <inheritdoc cref="sysconsole.SetCursorPosition"/>
-    public static void SetCursorPosition(int left, int top) => sysconsole.Write($"\e[{top + 1};{left + 1}H");
+    public static void SetCursorPosition(int left, int top) => sysconsole.Write($"{_CSI}{top + 1};{left + 1}H");
 
     /// <inheritdoc cref="sysconsole.SetWindowPosition"/>
     public static void SetWindowPosition(int left, int top)
@@ -350,11 +350,11 @@ public static unsafe partial class Console
             sysconsole.SetWindowPosition(left, top);
 #pragma warning restore CA1416
         else
-            sysconsole.Write($"\e[3;{left};{top}t");
+            sysconsole.Write($"{_CSI}3;{left};{top}t");
     }
 
     /// <inheritdoc cref="sysconsole.SetWindowSize(int, int)"/>
-    public static void SetWindowSize(int width, int height) => sysconsole.Write($"\e[8;{height};{width}t");
+    public static void SetWindowSize(int width, int height) => sysconsole.Write($"{_CSI}8;{height};{width}t");
 
     /// <inheritdoc cref="sysconsole.SetBufferSize(int, int)"/>
     [SupportedOSPlatform(OS.WIN)]
@@ -556,7 +556,7 @@ public static unsafe partial class Console
     public static void Clear()
     {
         if (OS.CurrentOS is KnownOS.Android or KnownOS.iOS or KnownOS.TvOS)
-            Write("\e[H\e[2J");
+            Write($"{_CSI}H{_CSI}2J");
         else
             sysconsole.Clear();
     }
@@ -620,7 +620,7 @@ public static unsafe partial class Console
             }, duration);
 #pragma warning restore CA1416
         else
-            Write($"\e[{(int)Math.Round(volume * 7)};{(int)tone};{(int)Math.Round(duration * .032)}\a");
+            Write($"{_CSI}{(int)Math.Round(volume * 7)};{(int)tone};{(int)Math.Round(duration * .032)}\a");
     }
 
 

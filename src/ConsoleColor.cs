@@ -531,7 +531,7 @@ public readonly record struct ConsoleColor
     /// </summary>
     /// <param name="mode">The <see cref="ColorMode"/> to use for the conversion.</param>
     /// <returns>A VT520 escape sequence string that represents the current <see cref="ConsoleColor"/>.</returns>
-    public string ToVT520(ColorMode mode) => GetVT520SGRCode(mode) is { Length: > 0 } sgr ? $"\e[{sgr}m" : "";
+    public string ToVT520(ColorMode mode) => GetVT520SGRCode(mode) is { Length: > 0 } sgr ? $"{Console._CSI}{sgr}m" : "";
 
     /// <summary>
     /// Generates a VT100/VT520/ANSI color string for the current <see cref="ConsoleColor"/> instance and given color mode flag (foreground, background, underline).

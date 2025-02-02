@@ -44,7 +44,7 @@ public static unsafe partial class Console
     /// </summary>
     /// <param name="mode">The mode to set.</param>
     /// <param name="bit">The bit value to set (<see langword="true"/> to enable, <see langword="false"/> to disable).</param>
-    public static void SetVT520Bit(int mode, bool bit) => Write($"\e[?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
+    public static void SetVT520Bit(int mode, bool bit) => Write($"{_CSI}?{mode.ToString(CultureInfo.InvariantCulture)}{(bit ? 'h' : 'l')}");
 
     /// <summary>
     /// Gets the VT520 private DEC mode.
@@ -134,7 +134,7 @@ public static unsafe partial class Console
     /// <param name="area">The console area to change the SGR modes for.</param>
     /// <param name="modes">The SGR modes to set, represented as a semicolon-separated string.</param>
     public static void ChangeVT520ForBufferArea(ConsoleArea area, string modes) =>
-        Write($"\e[{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
+        Write($"{_CSI}{area.Top};{area.Left};{area.Bottom};{area.Right};{modes.Trim(';')}$r");
 
     /// <summary>
     /// Gets the raw VT520 graphic renditions (SGRs).
