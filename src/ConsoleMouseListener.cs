@@ -60,7 +60,6 @@ public static class ConsoleMouseListener
 
     // TODO : key events
 
-
     /// <summary>
     /// Starts the mouse event listening service.
     /// The following events will be raised when the corresponding action is performed:
@@ -95,7 +94,7 @@ public static class ConsoleMouseListener
                     if (NativeInterop.GetNumberOfConsoleInputEvents(handle, out int count))
                         try
                         {
-                            List<INPUT_RECORD> records = Enumerable.Repeat(new INPUT_RECORD(), count).ToList();
+                            List<INPUT_RECORD> records = [.. Enumerable.Repeat(new INPUT_RECORD(), count)];
                             NativeInterop.ReadConsoleInput(handle, records.GetInternalArray(), count, out int read);
 
                             if (read < records.Count)
@@ -121,7 +120,11 @@ public static class ConsoleMouseListener
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e);
+                            Console.WriteFormatted(e, new()
+                            {
+                                ForegroundColor = ConsoleColor.Red,
+                                Intensity = TextIntensityMode.Bold,
+                            });
                         }
                     else
                         await Task.Delay(10);
