@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Runtime.Versioning;
-using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Drawing.Imaging;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.IO;
+using System;
 
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
@@ -27,43 +28,187 @@ public record SixelRenderSettings
     public SixelPixelAspectRatio PixelAspectRatio { get; init; } = SixelPixelAspectRatio._1_to_1;
 }
 
-public struct SixelPixel
+public struct SixelColor
 {
-    public readonly byte R, G, B;
-    internal byte _palette_index;
-    internal Flags _flags;
+    // BIT LAYOUT:
+    //
+    //      fffi'iiii'iiir'rrrr'rrgg'gggg'gbbb'bbbb
+    //      fff iiii'iiii -rrr'rrrr -ggg'gggg -bbb'bbbb
+    //
+    //      f = flags
+    //      i = palette index (0-255)
+    //      r = red (0-100)
+    //      g = green (0-100)
+    //      b = blue (0-100)
+
+    private const uint _MASK_B = 0b_0000_0000_0000_0000_0000_0000_0111_1111u;
+    private const uint _MASK_G = 0b_0000_0000_0000_0000_0011_1111_1000_0000u;
+    private const uint _MASK_R = 0b_0000_0000_0001_1111_1100_0000_0000_0000u;
+    private const uint _MASK_I = 0b_0001_1111_1110_0000_0000_0000_0000_0000u;
+    private const uint _MASK_F = 0b_1110_0000_0000_0000_0000_0000_0000_0000u;
+
+    private static readonly Dictionary<int, (float L, float a, float b)> _lab_cache = [];
+
+    private uint _value;
 
 
-    public SixelPixel(byte r, byte g, byte b)
+    public float R
     {
-        _flags = Flags.UndefinedIndex;
-        _palette_index = 0xff;
+        get => ((_value & _MASK_R) >> 14) * .01f;
+        set => _value = (_value & ~_MASK_R) | ((uint)float.Round(float.Clamp(value, 0, 1) * 100f) << 14);
+    }
+
+    public float G
+    {
+        get => ((_value & _MASK_G) >> 7) * .01f;
+        set => _value = (_value & ~_MASK_G) | ((uint)float.Round(float.Clamp(value, 0, 1) * 100f) << 7);
+    }
+
+    public float B
+    {
+        get => (_value & _MASK_B) * .01f;
+        set => _value = (_value & ~_MASK_B) | (uint)float.Round(float.Clamp(value, 0, 1) * 100f);
+    }
+
+    public (float L, float a, float b) LAB
+    {
+        get
+        {
+            int hc = GetHashCode();
+
+            if (!_lab_cache.TryGetValue(hc, out (float L, float a, float b) lab))
+            {
+                float r = R;
+                float g = G;
+                float b = B;
+
+                if (r > .04045f)
+                    r = float.Pow((r + .055f) / 1.055f, 2.4f);
+                else
+                    r /= 12.92f;
+
+                if (g > .04045f)
+                    g = float.Pow((g + .055f) / 1.055f, 2.4f);
+                else
+                    g /= 12.92f;
+
+                if (b > .04045f)
+                    b = float.Pow((b + .055f) / 1.055f, 2.4f);
+                else
+                    b /= 12.92f;
+
+                r *= 100f;
+                g *= 100f;
+                b *= 100f;
+
+                float x = ((r * .412453f) + (g * .357580f) + (b * .180423f)) / 95.047f;
+                float y = ((r * .212671f) + (g * .715160f) + (b * .072169f)) / 100f;
+                float z = ((r * .019334f) + (g * .119193f) + (b * .950227f)) / 108.883f;
+
+                if (x > .008856f)
+                    x = float.Pow(x, .333333333333333f);
+                else
+                    x = (x * 7.787f) + .13793103448275862f;
+
+                if (y > .008856f)
+                    y = float.Pow(y, .333333333333333f);
+                else
+                    y = (y * 7.787f) + .13793103448275862f;
+
+                if (z > .008856f)
+                    z = float.Pow(z, .333333333333333f);
+                else
+                    z = (z * 7.787f) + .13793103448275862f;
+
+                _lab_cache[hc] = lab = (
+                    (116f * y) - 16f,
+                    500f * (x - y),
+                    200f * (y - z)
+                );
+            }
+
+            return lab;
+        }
+    }
+
+    internal byte PaletteIndex
+    {
+        get => (byte)((_value & _MASK_I) >> 21);
+        set => _value = (_value & ~_MASK_I) | ((uint)value << 21);
+    }
+
+    internal Flags ColorFlags
+    {
+        get => (Flags)((_value & _MASK_F) >> 29);
+        set => _value = (_value & ~_MASK_F) | ((uint)value << 29);
+    }
+
+
+    public SixelColor(float r, float g, float b)
+        : this(0xff, r, g, b, Flags.UndefinedIndex)
+    {
+    }
+
+    public SixelColor(byte palette, float r, float g, float b)
+        : this(palette, r, g, b, Flags.NONE)
+    {
+    }
+
+    public SixelColor(byte palette)
+        : this(palette, 0, 0, 0, Flags.UsePalette)
+    {
+    }
+
+    private SixelColor(byte palette, float r, float g, float b, Flags flags)
+    {
+        ColorFlags = flags;
+        PaletteIndex = palette;
         R = r;
         G = g;
         B = b;
     }
 
-    public SixelPixel(byte palette, byte r, byte g, byte b)
+    public override string ToString() => $"{GetHashCode():x8}h: {R:P0}, {G:P0}, {B:P0}, 0x{PaletteIndex:x2} ({PaletteIndex}), {ColorFlags}";
+
+    public override int GetHashCode() => (int)(_value & (_MASK_R | _MASK_G | _MASK_B));
+
+    public override bool Equals(object? obj) => obj is SixelColor pixel && pixel.GetHashCode() == GetHashCode();
+
+    public float LABDistanceTo(SixelColor other)
     {
-        _flags = Flags.NONE;
-        _palette_index = palette;
-        R = r;
-        G = g;
-        B = b;
+        (float L1, float a1, float b1) = LAB;
+        (float L2, float a2, float b2) = other.LAB;
+
+        float deltaL = L1 - L2;
+        float deltaA = a1 - a2;
+        float deltaB = b1 - b2;
+        float c1 = float.Sqrt(a1 * a1 + b1 * b1);
+        float c2 = float.Sqrt(a2 * a2 + b2 * b2);
+        float deltaC = c1 - c2;
+        float deltaH = float.Sqrt(float.Max(0, deltaA * deltaA + deltaB * deltaB - deltaC * deltaC));
+
+        deltaC /= 1 + c1 * .045f;
+        deltaH /= 1 + c1 * .015f;
+
+        return float.Sqrt(float.Max(0, deltaL * deltaL + deltaC * deltaC + deltaH * deltaH));
     }
 
-    public SixelPixel(byte palette)
+    public SixelColor FindClosest(SixelColor[] palette)
     {
-        _flags = Flags.UsePalette;
-        _palette_index = palette;
-        R = G = B = 0;
+        float minDist = float.MaxValue;
+        int index = 0;
+
+        for (int i = 0; i < palette.Length; ++i)
+        {
+            float dist = LABDistanceTo(palette[i]);
+
+            if (dist < minDist)
+                (index, minDist) = (i, dist);
+        }
+
+        return palette[index];
     }
 
-    public override string ToString() => $"#{GetHashCode():x6} ({R}, {G}, {B}), 0x{_palette_index:x2} ({_palette_index}), {_flags}";
-
-    public override int GetHashCode() => (R << 16) | (G << 8) | B;
-
-    public override bool Equals(object? obj) => obj is SixelPixel pixel && pixel.GetHashCode() == GetHashCode();
 
     [Flags]
     internal enum Flags
@@ -83,7 +228,7 @@ public class SixelImage
     private const char _SIXEL_RASTER = '"';
     private const char _SIXEL_EMPTY = '?';
 
-    private readonly SixelPixel[] _pixels;
+    private readonly SixelColor[] _pixels;
     private readonly object _mutex = new();
     private volatile bool _optimized_palette = false;
 
@@ -92,7 +237,7 @@ public class SixelImage
     public int PixelCount => _pixels.Length;
 
 
-    public SixelPixel this[int x, int y]
+    public SixelColor this[int x, int y]
     {
         get => _pixels[y * Width + x];
         set
@@ -103,11 +248,11 @@ public class SixelImage
     }
 
     public SixelImage(int width, int height)
-        : this(width, height, new SixelPixel[width * height])
+        : this(width, height, new SixelColor[width * height])
     {
     }
 
-    public SixelImage(int width, int height, SixelPixel[] pixels)
+    public SixelImage(int width, int height, SixelColor[] pixels)
     {
         if (pixels.Length != width * height)
             throw new ArgumentException("The number of pixels does not match the specified width and height.");
@@ -195,39 +340,11 @@ public class SixelImage
         return result;
     }
 
-    private static string Raster(int pan, int pad, int width, int height)
-    {
-        return $"{_SIXEL_RASTER}{pan};{pad};{height};{width}";
-    }
+    private static string Raster(int pan, int pad, int width, int height) => $"{_SIXEL_RASTER}{pan};{pad};{height};{width}";
 
-    private static string ColorLUT(byte color_index) => $"{_SIXEL_COLOR}{color_index}";
+    private static string ColorLUT(SixelColor color) => $"{_SIXEL_COLOR}{color.PaletteIndex}";
 
-    private static string ColorHLS(byte color_index, int hue, byte lightness, byte saturation) => ColorHLS(
-        color_index,
-        hue,
-        Math.Min((int)lightness, 100) * .01,
-        Math.Min((int)saturation, 100) * .01
-    );
-
-    private static string ColorHLS(byte color_index, double hue, double lightness, double saturation)
-    {
-        hue = Math.Round(hue % 360);
-        lightness = Math.Round(100 * Math.Clamp(lightness, 0, 1));
-        saturation = Math.Round(100 * Math.Clamp(saturation, 0, 1));
-
-        return $"{_SIXEL_COLOR}{color_index};{1};{hue};{lightness};{saturation}";
-    }
-
-    private static string ColorRGB(byte color_index, byte red, byte green, byte blue) => ColorRGB(color_index, red / 255.0, green / 255.0, blue / 255.0);
-
-    private static string ColorRGB(byte color_index, double r, double g, double b)
-    {
-        r = Math.Round(Math.Clamp(r, 0, 1) * 100);
-        g = Math.Round(Math.Clamp(g, 0, 1) * 100);
-        b = Math.Round(Math.Clamp(b, 0, 1) * 100);
-
-        return $"{_SIXEL_COLOR}{color_index};2;{r};{g};{b}";
-    }
+    private static string ColorSet(SixelColor color) => $"{_SIXEL_COLOR}{color.PaletteIndex};2;{(int)float.Round(color.R * 100f)};{(int)float.Round(color.G * 100f)};{(int)float.Round(color.B * 100f)}";
 
     private static char SixelValue(bool y0, bool y1, bool y2, bool y3, bool y4, bool y5) => SixelValue((byte)((y0 ? 1 : 0)
                                                                                                             | (y1 ? 2 : 0)
@@ -240,7 +357,57 @@ public class SixelImage
 
 
 
+    private void FloydSteinbergDithering(SixelColor[] palette)
+    {
+#pragma warning disable IDE0305 // Simplify collection initialization
+        SixelColor[] buffer = _pixels.ToArray();
+#pragma warning restore IDE0305
 
+        for (int i = 0; i < buffer.Length; ++i)
+        {
+            int x = i % Width;
+            int y = i / Width;
+
+            SixelColor prev = buffer[i];
+            SixelColor curr = buffer[i] = prev.FindClosest(palette);
+            float r_err = (prev.R - curr.R) / 16f;
+            float g_err = (prev.G - curr.G) / 16f;
+            float b_err = (prev.B - curr.B) / 16f;
+
+            if (x + 1 < Width)
+            {
+                buffer[i + 1].R += r_err * 7;
+                buffer[i + 1].G += g_err * 7;
+                buffer[i + 1].B += b_err * 7;
+            }
+
+            if (y + 1 < Height)
+            {
+                buffer[i + Width].R += r_err * 5;
+                buffer[i + Width].G += g_err * 5;
+                buffer[i + Width].B += b_err * 5;
+
+                if (x - 1 >= 0)
+                {
+                    buffer[i + Width - 1].R += r_err * 3;
+                    buffer[i + Width - 1].G += g_err * 3;
+                    buffer[i + Width - 1].B += b_err * 3;
+                }
+
+                if (x + 1 < Width)
+                {
+                    buffer[i + Width + 1].R += r_err;
+                    buffer[i + Width + 1].G += g_err;
+                    buffer[i + Width + 1].B += b_err;
+                }
+            }
+        }
+
+        Array.Copy(buffer, _pixels, buffer.Length);
+    }
+
+
+    // TODO : optimize this code's performance. this shit is way too slow
     public void OptimizeColorPalette()
     {
         lock (_mutex)
@@ -248,44 +415,48 @@ public class SixelImage
             if (_optimized_palette)
                 return;
 
-            int i = 0;
-            Dictionary<SixelPixel, (int index, int count, bool used)> unique_colors = (from p in _pixels
-                                                                                       group p by p.GetHashCode() into g
-                                                                                       let count = g.Count()
-                                                                                       orderby count descending
-                                                                                       let index = i++
-                                                                                       select (g.First(), (index, count, false))).ToDictionary();
+            Stopwatch sw = Stopwatch.StartNew();
 
-            if (unique_colors.Count <= 255)
-            {
-                for (i = 0; i < _pixels.Length; ++i)
-                {
-                    ref SixelPixel pixel = ref _pixels[i];
-                    (int index, int count, bool used) = unique_colors[pixel];
+            OptimizeColorPalette([.. _pixels.Distinct()]);
 
-                    pixel._palette_index = (byte)index;
-                    pixel._flags = used ? SixelPixel.Flags.UsePalette : SixelPixel.Flags.NONE;
-                    unique_colors[pixel] = (index, count, true);
-                }
-            }
-            else
-            {
-                // optimize based on dithering etc.
-
-                throw new NotImplementedException();
-            }
+            sw.Stop();
+            Console.WriteLine($"Optimized color palette in {sw.ElapsedMilliseconds}ms.");
 
             _optimized_palette = true;
         }
     }
 
-    public string GenerateVT340Sequence(SixelRenderSettings render_settings)
+    private void OptimizeColorPalette(SixelColor[] palette)
+    {
+        if (palette.Length <= 256)
+        {
+            int i = 0;
+            Dictionary<SixelColor, (int index, bool used)> palette_dict = palette.ToDictionary(LINQ.id, _ => (i++, false));
+
+            for (i = 0; i < _pixels.Length; ++i)
+            {
+                ref SixelColor pixel = ref _pixels[i];
+                (int index, bool used) = palette_dict[pixel];
+
+                pixel.PaletteIndex = (byte)index;
+                pixel.ColorFlags = used ? SixelColor.Flags.UsePalette : SixelColor.Flags.NONE;
+                palette_dict[pixel] = (index, true);
+            }
+        }
+        else
+        {
+            palette = new SixelColor[256]; // determine palette based on k-means clustering
+
+            FloydSteinbergDithering(palette);
+            OptimizeColorPalette(palette);
+        }
+    }
+
+    public unsafe string GenerateVT340Sequence(SixelRenderSettings render_settings)
     {
         StringBuilder sb = new();
 
-
-        sb.Append($"{Console._DCS}{(int)render_settings.PixelAspectRatio};1;;q"); // TODO : implement P2 and P3
-
+        sb.Append($"{Console._DCS}{(int)render_settings.PixelAspectRatio};1;;q"); // TODO : implement P3
 
         for (int y = 0; y < Height; ++y)
         {
@@ -293,13 +464,12 @@ public class SixelImage
 
             for (int x = 0; x < Width; )
             {
-                SixelPixel pixel = this[x, y];
-                int count = 1;
+                SixelColor pixel = this[x, y];
+                delegate*<SixelColor, string> func = pixel.ColorFlags.HasFlag(SixelColor.Flags.UsePalette) ? &ColorLUT : &ColorSet;
 
-                if (pixel._flags.HasFlag(SixelPixel.Flags.UsePalette))
-                    sb.Append(ColorLUT(pixel._palette_index));
-                else
-                    sb.Append(ColorRGB(pixel._palette_index, pixel.R, pixel.G, pixel.B));
+                sb.Append(func(pixel));
+
+                int count = 1;
 
                 while (x + count < Width && this[x + count, y].Equals(pixel))
                     ++count;
@@ -316,8 +486,6 @@ public class SixelImage
         }
 
         sb.Append(Console._ST);
-
-        // TODO : fix the bg color bug
 
         return sb.ToString();
     }
@@ -372,9 +540,16 @@ public class SixelImage
 
     private readonly record struct _BGR(byte B, byte G, byte R)
     {
-        public static implicit operator _BGR(SixelPixel pixel) => new(pixel.B, pixel.G, pixel.R);
+#if DEBUG
+        public override string ToString() => $"#{R:x2}{G:x2}{B:x2} ({R}, {G}, {B})";
+#endif
+        public static implicit operator _BGR(SixelColor pixel) => new(
+            (byte)Math.Round(pixel.B * 255),
+            (byte)Math.Round(pixel.G * 255),
+            (byte)Math.Round(pixel.R * 255)
+        );
 
-        public static implicit operator SixelPixel(_BGR color) => new(color.R, color.G, color.B);
+        public static implicit operator SixelColor(_BGR color) => new(color.R / 255f, color.G / 255f, color.B / 255f);
     }
 }
 
