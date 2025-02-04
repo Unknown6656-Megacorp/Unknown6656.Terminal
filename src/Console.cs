@@ -288,11 +288,11 @@ public static unsafe partial class Console
 
 
 
-    // TODO : ^[[5n     ???
+    // TODO : -> ^[[5n
+    //        <- ^[[0n
     // TODO : -> ^[[c
     //        <- ^[[?61;6;7;21;22;23;24;28;32;42c
-
-
+    //        <- ^[[?61;4;6;7;14;21;22;23;24;28;32;42c
 
 
     static Console()
@@ -566,6 +566,15 @@ public static unsafe partial class Console
             return null;
     }
 
+    public static void SetRelativeCursorPosition(int left, int top)
+    {
+        (int x, int y) = GetCursorPosition();
+
+        x += left;
+        y += top;
+
+        SetCursorPosition(x, y);
+    }
 
     #endregion
 
