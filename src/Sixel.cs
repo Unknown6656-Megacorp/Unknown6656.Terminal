@@ -1,4 +1,4 @@
-﻿// #define ALLOW_VARIOUS_PIXEL_RATIOS
+﻿//#define ALLOW_VARIOUS_PIXEL_RATIOS
 
 using System.Collections.Generic;
 using System.Runtime.Versioning;
@@ -30,12 +30,24 @@ public enum SixelPixelAspectRatio
 public record SixelRenderSettings
 {
 #if ALLOW_VARIOUS_PIXEL_RATIOS
-    public SixelPixelAspectRatio PixelAspectRatio { get; init; } = SixelPixelAspectRatio._1_to_1;
+    public required SixelPixelAspectRatio PixelAspectRatio { get; init; }
 #endif
-    public bool RestoreConsoleRenditions { get; set; } = false;
-    public bool RelativePosition { get; init; } = true;
-    public int XPosition { get; init; } = 0;
-    public int YPosition { get; init; } = 0;
+    public required bool RestoreConsoleRenditions { get; set; }
+    public required bool RelativePosition { get; init; }
+    public required int XPosition { get; init; }
+    public required int YPosition { get; init; }
+
+
+    public static SixelRenderSettings Default { get; } = new()
+    {
+        XPosition = 0,
+        YPosition = 0,
+        RelativePosition = true,
+        RestoreConsoleRenditions = false,
+#if ALLOW_VARIOUS_PIXEL_RATIOS
+        PixelAspectRatio = SixelPixelAspectRatio._1_to_1,
+#endif
+    };
 }
 
 public struct SixelColor
@@ -612,12 +624,12 @@ public class SixelImage
 
     public void SaveAs(StreamWriter stream)
     {
-        stream.Write(GenerateVT340Sequence(new()));
+        stream.Write(GenerateVT340Sequence(SixelRenderSettings.Default));
 
         throw new NotImplementedException();
     }
 
-    public void Print() => Print(new());
+    public void Print() => Print(SixelRenderSettings.Default);
 
     public void Print(SixelRenderSettings render_settings)
     {
@@ -636,6 +648,35 @@ public class SixelImage
             Console.CurrentGraphicRendition = rendition;
     }
 
+    public Rectangle Measure() => Measure(SixelRenderSettings.Default);
+
+    public Rectangle Measure(SixelRenderSettings render_settings) => Measure(render_settings, (10, 20));
+
+    public Rectangle Measure(SixelRenderSettings render_settings, (int width, int height) terminal_character_size)
+    {
+        int x = 0, y = 0;
+
+        if (render_settings.RelativePosition)
+            (x, y) = Console.GetCursorPosition();
+
+        x += render_settings.XPosition;
+        y += render_settings.YPosition;
+
+        int w = (int)float.Ceiling(Width / (float)terminal_character_size.width);
+        int h = (int)float.Ceiling(Height / (float)terminal_character_size.height
+#if ALLOW_VARIOUS_PIXEL_RATIOS
+            * (render_settings.PixelAspectRatio switch
+            {
+                SixelPixelAspectRatio._2_to_1 => 2,
+                SixelPixelAspectRatio._3_to_1 => 3,
+                SixelPixelAspectRatio._5_to_1 => 5,
+                _ => 1,
+            })
+#endif
+        );
+
+        return new(x, y, w, h);
+    }
 
     public override string ToString() => throw new InvalidOperationException($"It looks like you want to write the Sixel image to the console using the '{typeof(SixelImage)}.{nameof(ToString)}()' method. Please use either the method '{typeof(SixelImage)}.{nameof(Print)}(*)' or '{typeof(Console)}.{nameof(Console.Write)}({typeof(SixelImage)}, *)'.");
 
@@ -752,7 +793,7 @@ public class SixelImage
         }
     }
 
-    private unsafe string GenerateVT340Sequence(SixelRenderSettings render_settings)
+    public unsafe string GenerateVT340Sequence(SixelRenderSettings render_settings)
     {
         StringBuilder sb = new();
         int pixel_ratio = 7;
@@ -792,6 +833,7 @@ public class SixelImage
 
         return sb.ToString();
     }
+
 
 
     public static SixelImage Parse(string vt340_sequence)
@@ -838,8 +880,10 @@ public class SixelImage
     }
 
     [SupportedOSPlatform(OS.WIN)]
-    public static unsafe SixelImage FromBitmap(Bitmap bitmap)
+    public static unsafe SixelImage FromBitmap(Image image)
     {
+        Bitmap bitmap = image as Bitmap ?? new(image);
+
         if (bitmap.PixelFormat != PixelFormat.Format24bppRgb)
         {
             Bitmap tmp = new(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
@@ -861,6 +905,12 @@ public class SixelImage
 
         return img;
     }
+
+    [SupportedOSPlatform(OS.WIN)]
+    public static implicit operator SixelImage(Image image) => FromBitmap(image);
+
+    [SupportedOSPlatform(OS.WIN)]
+    public static implicit operator Bitmap(SixelImage image) => image.ToBitmap();
 
 
     private readonly record struct _BGR(byte B, byte G, byte R)
