@@ -65,7 +65,7 @@ public struct SixelColor
     {
         get => field;
         set => field = float.Clamp(value, 0, 1);
-    } = .5f;
+    } = .6f;
 
     public static SixelColor Transparent => new SixelColor() with
     {
@@ -777,6 +777,7 @@ public class SixelImage
     }
 
     // TODO : optimize this code's performance. this shit is way too slow
+    // TODO : instead of using the universal palette, do either some clustering or 16x16 downscale & color sampling.
     public void OptimizeColorPalette()
     {
         lock (_mutex)
@@ -870,7 +871,6 @@ public class SixelImage
 
         return sb.ToString();
     }
-
 
 
     public static SixelImage Parse(string vt340_sequence)
