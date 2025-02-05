@@ -60,6 +60,20 @@ public struct SixelColor
 
     private static readonly Dictionary<int, (float L, float a, float b)> _lab_cache = [];
 
+
+    public static float AlphaThreshold
+    {
+        get => field;
+        set => field = float.Clamp(value, 0, 1);
+    } = .5f;
+
+    public static SixelColor Transparent => new SixelColor() with
+    {
+        _value = default,
+        ColorFlags = Flags.Transparent
+    };
+
+
     // BIT LAYOUT:
     //  (sorry for the shitty struct layout, I'm just trying to fit everying into 32 bits)
     //
@@ -152,6 +166,8 @@ public struct SixelColor
         }
     }
 
+    public readonly bool IsTransparent => ColorFlags == Flags.Transparent;
+
     internal byte PaletteIndex
     {
         readonly get => (byte)((_value & _MASK_I) >> 21);
@@ -197,12 +213,15 @@ public struct SixelColor
 
     public override readonly string ToString() => $"0x{GetHashCode():x6}: {R:P0}, {G:P0}, {B:P0}, 0x{PaletteIndex:x2} ({PaletteIndex}), {ColorFlags}";
 
-    public override readonly int GetHashCode() => (int)(_value & (_MASK_R | _MASK_G | _MASK_B));
+    public override readonly int GetHashCode() => IsTransparent ? -1 : (int)(_value & (_MASK_R | _MASK_G | _MASK_B));
 
     public override readonly bool Equals(object? obj) => obj is SixelColor pixel && pixel.GetHashCode() == GetHashCode();
 
     public readonly float LABDistanceTo(SixelColor other)
     {
+        if (Equals(other))
+            return 0;
+
         (float L1, float a1, float b1) = LAB;
         (float L2, float a2, float b2) = other.LAB;
 
@@ -222,6 +241,9 @@ public struct SixelColor
 
     public readonly SixelColor FindClosest(SixelColor[] palette)
     {
+        if (IsTransparent)
+            return Transparent;
+
         float minDist = float.MaxValue;
         int index = 0;
 
@@ -236,22 +258,28 @@ public struct SixelColor
         return palette[index];
     }
 
-    public static implicit operator Color(SixelColor color) => Color.FromArgb(
-        (int)float.Round(color.R * 255),
-        (int)float.Round(color.G * 255),
-        (int)float.Round(color.B * 255)
-    );
+    //public static implicit operator Color(SixelColor color) => Color.FromArgb(
+    //    (int)float.Round(color.R * 255),
+    //    (int)float.Round(color.G * 255),
+    //    (int)float.Round(color.B * 255)
+    //);
 
-    public static implicit operator SixelColor(Color color) => new(color.R / 255f, color.G / 255f, color.B / 255f);
+    //public static implicit operator SixelColor(Color color) => new(color.R / 255f, color.G / 255f, color.B / 255f);
 
 
-    [Flags]
     internal enum Flags
         : byte
     {
         NONE =              0b_0000_0000,
         UsePalette =        0b_0000_0001,
         UndefinedIndex =    0b_0000_0010,
+        Transparent =       0b_0000_0011,
+
+        // reserved for future use.
+        [Obsolete(null, true)] __RESERVED_1__ = 0b_0000_0100,
+        [Obsolete(null, true)] __RESERVED_2__ = 0b_0000_0101,
+        [Obsolete(null, true)] __RESERVED_3__ = 0b_0000_0110,
+        [Obsolete(null, true)] __RESERVED_4__ = 0b_0000_0111,
     }
 }
 
@@ -575,9 +603,9 @@ public class SixelImage
     [SupportedOSPlatform(OS.WIN)]
     public unsafe Bitmap ToBitmap()
     {
-        Bitmap bmp = new(Width, Height, PixelFormat.Format24bppRgb);
+        Bitmap bmp = new(Width, Height, PixelFormat.Format32bppArgb);
         BitmapData dat = bmp.LockBits(new(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, bmp.PixelFormat);
-        _BGR* ptr = (_BGR*)dat.Scan0;
+        _BGRA* ptr = (_BGRA*)dat.Scan0;
 
         Parallel.For(0, PixelCount, i => ptr[i] = _pixels[i]);
 
@@ -758,7 +786,7 @@ public class SixelImage
 
             Stopwatch sw = Stopwatch.StartNew();
 
-            OptimizeColorPalette([.. _pixels.Distinct()]);
+            OptimizeColorPalette([.. _pixels.WhereNot(p => p.IsTransparent).Distinct()]);
 
             sw.Stop();
             Console.WriteLine($"Optimized color palette in {sw.ElapsedMilliseconds}ms.");
@@ -777,6 +805,10 @@ public class SixelImage
             for (i = 0; i < _pixels.Length; ++i)
             {
                 ref SixelColor pixel = ref _pixels[i];
+
+                if (pixel.IsTransparent)
+                    continue;
+
                 (int index, bool used) = palette_dict[pixel];
 
                 pixel.PaletteIndex = (byte)index;
@@ -788,7 +820,7 @@ public class SixelImage
         {
             palette = UniversalColorPalette;
 
-            FloydSteinbergDithering(palette);
+            FloydSteinbergDithering([.. palette, SixelColor.Transparent]);
             OptimizeColorPalette(palette);
         }
     }
@@ -809,16 +841,21 @@ public class SixelImage
             for (int x = 0; x < Width; )
             {
                 SixelColor pixel = this[x, y];
-                delegate*<SixelColor, string> func = pixel.ColorFlags.HasFlag(SixelColor.Flags.UsePalette) ? &ColorLUT : &ColorSet;
+                string repr = "";
 
-                sb.Append(func(pixel));
+                if (pixel.ColorFlags is SixelColor.Flags.UsePalette)
+                    repr = ColorLUT(pixel);
+                else if (!pixel.IsTransparent)
+                    repr = ColorSet(pixel);
+
+                sb.Append(repr);
 
                 int count = 1;
 
                 while (x + count < Width && this[x + count, y].Equals(pixel))
                     ++count;
 
-                sb.Append(Repeat(SixelValue(y_index), count));
+                sb.Append(Repeat(pixel.IsTransparent ? '?' : SixelValue(y_index), count));
 
                 x += count;
             }
@@ -884,7 +921,7 @@ public class SixelImage
     {
         Bitmap bitmap = image as Bitmap ?? new(image);
 
-        if (bitmap.PixelFormat != PixelFormat.Format24bppRgb)
+        if (bitmap.PixelFormat != PixelFormat.Format32bppArgb)
         {
             Bitmap tmp = new(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
 
@@ -896,7 +933,7 @@ public class SixelImage
 
         SixelImage img = new(bitmap.Width, bitmap.Height);
         BitmapData dat = bitmap.LockBits(new(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
-        _BGR* ptr = (_BGR*)dat.Scan0;
+        _BGRA* ptr = (_BGRA*)dat.Scan0;
 
         Parallel.For(0, img.PixelCount, i => img._pixels[i] = ptr[i]);
 
@@ -913,18 +950,19 @@ public class SixelImage
     public static implicit operator Bitmap(SixelImage image) => image.ToBitmap();
 
 
-    private readonly record struct _BGR(byte B, byte G, byte R)
+    private readonly record struct _BGRA(byte B, byte G, byte R, byte A)
     {
 #if DEBUG
-        public override string ToString() => $"#{R:x2}{G:x2}{B:x2} ({R}, {G}, {B})";
+        public override string ToString() => $"#{A:x2}{R:x2}{G:x2}{B:x2} ({R}, {G}, {B} | {A})";
 #endif
-        public static implicit operator _BGR(SixelColor pixel) => new(
+        public static implicit operator _BGRA(SixelColor pixel) => pixel.IsTransparent ? new(0, 0, 0, 0) : new(
             (byte)Math.Round(pixel.B * 255),
             (byte)Math.Round(pixel.G * 255),
-            (byte)Math.Round(pixel.R * 255)
+            (byte)Math.Round(pixel.R * 255),
+            255
         );
 
-        public static implicit operator SixelColor(_BGR color) => new(color.R / 255f, color.G / 255f, color.B / 255f);
+        public static implicit operator SixelColor(_BGRA color) => color.A / 255f <= SixelColor.AlphaThreshold ? SixelColor.Transparent : new(color.R / 255f, color.G / 255f, color.B / 255f);
     }
 }
 
