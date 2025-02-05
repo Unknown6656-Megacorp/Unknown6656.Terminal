@@ -8,6 +8,7 @@ using System;
 using Unknown6656.Generics.Text;
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
+using System.Threading.Tasks;
 
 namespace Unknown6656.Console;
 
@@ -792,6 +793,15 @@ public static unsafe partial class Console
     }
 
 
+    public static Task<int> ReadAsync() => Task.Factory.StartNew(sysconsole.Read);
+
+    public static Task<ConsoleKeyInfo> ReadKeyAsync() => Task.Factory.StartNew(sysconsole.ReadKey);
+
+    public static Task<ConsoleKeyInfo> ReadKeyAsync(bool intercept) => Task.Factory.StartNew(() => sysconsole.ReadKey(intercept));
+
+    public static Task<string> ReadLineAsync() => Task.Factory.StartNew(sysconsole.ReadLine);
+
+
     public static bool TryReadInt(out int value) => int.TryParse(ReadLine(), out value);
 
     public static bool TryReadDouble(out double value) => double.TryParse(ReadLine(), out value);
@@ -803,12 +813,6 @@ public static unsafe partial class Console
     public static bool TryReadDecimal(out decimal value) => decimal.TryParse(ReadLine(), out value);
 
     public static bool TryReadBool(out bool value) => bool.TryParse(ReadLine(), out value) || (TryReadInt(out int i) && i != 0);
-
-
-
-
-
-
 
 
     public static (int Mode, int[] Attributes)? GetDeviceAttributes()
