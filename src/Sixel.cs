@@ -1,7 +1,6 @@
-//#define ALLOW_VARIOUS_PIXEL_RATIOS
+﻿#define ALLOW_VARIOUS_PIXEL_RATIOS
 
 using System.Collections.Generic;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Drawing.Imaging;
@@ -12,7 +11,6 @@ using System.IO;
 using System;
 
 using Unknown6656.Generics;
-using Unknown6656.Runtime;
 
 namespace Unknown6656.Console;
 
@@ -600,7 +598,6 @@ public class SixelImage
         ];
     }
 
-    [SupportedOSPlatform(OS.WIN)]
     public unsafe Bitmap ToBitmap()
     {
         Bitmap bmp = new(Width, Height, PixelFormat.Format32bppArgb);
@@ -614,7 +611,6 @@ public class SixelImage
         return bmp;
     }
 
-    [SupportedOSPlatform(OS.WIN)]
     public void SaveAsBitmap(FileInfo path)
     {
         if (path.Extension.ToLower() is "six" or "sixel")
@@ -624,7 +620,6 @@ public class SixelImage
                 bmp.Save(path.FullName);
     }
 
-    [SupportedOSPlatform(OS.WIN)]
     public void SaveAsBitmap(FileInfo path, ImageFormat format)
     {
         using Bitmap bmp = ToBitmap();
@@ -632,7 +627,6 @@ public class SixelImage
         bmp.Save(path.FullName, format);
     }
 
-    [SupportedOSPlatform(OS.WIN)]
     public void SaveAsBitmap(Stream stream, ImageFormat format)
     {
         using Bitmap bmp = ToBitmap();
@@ -953,8 +947,8 @@ public class SixelImage
 
     public static unsafe SixelImage FromFile(FileInfo path)
     {
-        if (OS.IsWindows && path.Extension.ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".gif" or ".emf" or ".tif" or ".tiff"
-                                                              or ".webp" or ".wmf" or ".bmp" or ".heif" or ".exif" or ".exf" or ".ico")
+        if (path.Extension.ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".gif" or ".emf" or ".tif" or ".tiff"
+                                              or ".webp" or ".wmf" or ".bmp" or ".heif" or ".exif" or ".exf" or ".ico")
             return FromBitmap(path);
         else
             using (FileStream fs = path.OpenRead())
@@ -962,7 +956,6 @@ public class SixelImage
                 return Parse(rd);
     }
 
-    [SupportedOSPlatform(OS.WIN)]
     public static unsafe SixelImage FromBitmap(FileInfo path)
     {
         using Bitmap bmp = new(path.FullName);
@@ -970,7 +963,6 @@ public class SixelImage
         return FromBitmap(bmp);
     }
 
-    [SupportedOSPlatform(OS.WIN)]
     public static unsafe SixelImage FromBitmap(Stream stream)
     {
         using Image img = Image.FromStream(stream);
@@ -979,7 +971,6 @@ public class SixelImage
         return FromBitmap(bmp);
     }
 
-    [SupportedOSPlatform(OS.WIN)]
     public static unsafe SixelImage FromBitmap(Image image)
     {
         Bitmap bitmap = image as Bitmap ?? new(image);
@@ -1006,10 +997,8 @@ public class SixelImage
         return img;
     }
 
-    [SupportedOSPlatform(OS.WIN)]
     public static implicit operator SixelImage(Image image) => FromBitmap(image);
 
-    [SupportedOSPlatform(OS.WIN)]
     public static implicit operator Bitmap(SixelImage image) => image.ToBitmap();
 
 
