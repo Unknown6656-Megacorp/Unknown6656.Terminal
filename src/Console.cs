@@ -131,8 +131,8 @@ public static unsafe partial class Console
         get => GetRawVT520GraphicRenditions() is { } sgr ? new(sgr) : null;
         set
         {
-            if (value?.FullVT520SGR() is { } sgr)
-                Write($"{_CSI}{string.Join(';', sgr)}m");
+            if (value?.ToString() is { } sgr)
+                Write(sgr);
         }
     }
 
@@ -696,6 +696,14 @@ public static unsafe partial class Console
                 Write(s[i]);
             }
     }
+
+    public static string GeneratedFormatted(object? value, ConsoleGraphicRendition format) => GeneratedFormatted(value, format, CurrentGraphicRendition!);
+
+    public static string GeneratedFormatted(object? value, ConsoleGraphicRendition format, ConsoleGraphicRendition? previous_format) => string.Concat(
+        format,
+        value,
+        previous_format ?? format.NegateSetValues()
+    );
 
     public static void WriteFormatted(object? value, ConsoleGraphicRendition format)
     {

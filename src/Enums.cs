@@ -649,6 +649,46 @@ public record ConsoleGraphicRendition(params string[] RawVT520SGRs)
     public bool ResetsAllPreviousSGRs => RawVT520SGRs.Contains("0");
 
 
+    public ConsoleGraphicRendition NegateSetValues() => new()
+    {
+        Intensity = Intensity is { } ? TextIntensityMode.Regular : null,
+        Blink = Blink is { } ? TextBlinkMode.NotBlinking : null,
+        Underlined = Underlined is { } ? TextUnderlinedMode.NotUnderlined : null,
+        AreColorsInverted = AreColorsInverted is { } ? false : null,
+        IsItalic = IsItalic is { } ? false : null,
+        IsTextConcealed = IsTextConcealed is { } ? false : null,
+        IsCrossedOut = IsCrossedOut is { } ? false : null,
+        IsOverlined = IsOverlined is { } ? false : null,
+        FontIndex = FontIndex is { } ? 0 : null,
+        IsMonospace = IsMonospace is { } ? true : null,
+        IsGothic = IsGothic is { } ? false : null,
+        TextFrame = TextFrame is { } ? TextFrameMode.NotFramed : null,
+        TextTransformation = TextTransformation is { } ? TextTransformationMode.Regular : null,
+        ForegroundColor = ForegroundColor is { } ? ConsoleColor.Default : null,
+        BackgroundColor = BackgroundColor is { } ? ConsoleColor.Default : null,
+        UnderlineColor = UnderlineColor is { } ? ConsoleColor.Default : null,
+    };
+
+    public ConsoleGraphicRendition Merge(ConsoleGraphicRendition other) => new()
+    {
+        Intensity = Intensity ?? other.Intensity,
+        Blink = Blink ?? other.Blink,
+        Underlined = Underlined ?? other.Underlined,
+        AreColorsInverted = AreColorsInverted ?? other.AreColorsInverted,
+        IsItalic = IsItalic ?? other.IsItalic,
+        IsTextConcealed = IsTextConcealed ?? other.IsTextConcealed,
+        IsCrossedOut = IsCrossedOut ?? other.IsCrossedOut,
+        IsOverlined = IsOverlined ?? other.IsOverlined,
+        FontIndex = FontIndex ?? other.FontIndex,
+        IsMonospace = IsMonospace ?? other.IsMonospace,
+        IsGothic = IsGothic ?? other.IsGothic,
+        TextFrame = TextFrame ?? other.TextFrame,
+        TextTransformation = TextTransformation ?? other.TextTransformation,
+        ForegroundColor = ForegroundColor ?? other.ForegroundColor,
+        BackgroundColor = BackgroundColor ?? other.BackgroundColor,
+        UnderlineColor = UnderlineColor ?? other.UnderlineColor,
+    };
+
     /// <summary>
     /// Returns this console graphic rendition as a VT520 SGR (Select Graphic Rendition) escape sequence.
     /// </summary>
@@ -794,6 +834,13 @@ public record ConsoleGraphicRendition(params string[] RawVT520SGRs)
 
         return rendition;
     }
+
+
+    public static ConsoleGraphicRendition operator !(ConsoleGraphicRendition a) => a.NegateSetValues();
+
+    public static ConsoleGraphicRendition operator |(ConsoleGraphicRendition a, ConsoleGraphicRendition b) => a.Merge(b);
+
+    //public static ConsoleGraphicRendition operator &(ConsoleGraphicRendition a, ConsoleGraphicRendition b) => a.NegateSetValues().Merge(b);
 }
 
 /// <summary>
