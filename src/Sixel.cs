@@ -16,26 +16,65 @@ namespace Unknown6656.Console;
 
 
 #if ALLOW_VARIOUS_PIXEL_RATIOS
+
+/// <summary>
+/// Represents the aspect ratio of Sixel pixels.
+/// </summary>
 public enum SixelPixelAspectRatio
 {
+    /// <summary>
+    /// Indicates a 1:1 pixel aspect ratio, i.e. square pixels.
+    /// </summary>
     _1_to_1 = 7,
+    /// <summary>
+    /// Indicates a 2:1 pixel aspect ratio, i.e. pixels are twice as high as they are wide.
+    /// </summary>
     _2_to_1 = 5,
+    /// <summary>
+    /// Indicates a 3:1 pixel aspect ratio, i.e. pixels are three times as high as they are wide.
+    /// </summary>
     _3_to_1 = 2,
+    /// <summary>
+    /// Indicates a 5:1 pixel aspect ratio, i.e. pixels are five times as high as they are wide.
+    /// </summary>
     _5_to_1 = 0,
 }
 #endif
 
+/// <summary>
+/// Represents the settings for rendering Sixel images.
+/// </summary>
 public record SixelRenderSettings
 {
 #if ALLOW_VARIOUS_PIXEL_RATIOS
+    /// <summary>
+    /// Gets or sets the pixel aspect ratio.
+    /// </summary>
     public required SixelPixelAspectRatio PixelAspectRatio { get; init; }
 #endif
+    /// <summary>
+    /// Gets or sets a value indicating whether to restore console renditions to their previous state after rendering.
+    /// </summary>
     public required bool RestoreConsoleRenditions { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="XPosition"/> and <see cref="YPosition"/> are relative to the cursor location.
+    /// </summary>
     public required bool RelativePosition { get; init; }
+
+    /// <summary>
+    /// Gets or sets the X position for rendering.
+    /// </summary>
     public required int XPosition { get; init; }
+
+    /// <summary>
+    /// Gets or sets the Y position for rendering.
+    /// </summary>
     public required int YPosition { get; init; }
 
-
+    /// <summary>
+    /// Gets the default render settings.
+    /// </summary>
     public static SixelRenderSettings Default { get; } = new()
     {
         XPosition = 0,
@@ -48,6 +87,9 @@ public record SixelRenderSettings
     };
 }
 
+/// <summary>
+/// Represents a color in the Sixel format.
+/// </summary>
 public struct SixelColor
 {
     private const uint _MASK_B = 0b_0000_0000_0000_0000_0000_0000_0111_1111u;
@@ -58,13 +100,18 @@ public struct SixelColor
 
     private static readonly Dictionary<int, (float L, float a, float b)> _lab_cache = [];
 
-
+    /// <summary>
+    /// Gets or sets the alpha threshold for transparency. The value is clamped to the range [0..1].
+    /// </summary>
     public static float AlphaThreshold
     {
         get => field;
         set => field = float.Clamp(value, 0, 1);
     } = .6f;
 
+    /// <summary>
+    /// Gets a transparent Sixel color.
+    /// </summary>
     public static SixelColor Transparent => new SixelColor() with
     {
         _value = default,
@@ -85,24 +132,36 @@ public struct SixelColor
     private uint _value;
 
 
+    /// <summary>
+    /// Gets or sets the red component of the color. The value is clamped to the range [0..1].
+    /// </summary>
     public float R
     {
         readonly get => ((_value & _MASK_R) >> 14) * .01f;
         set => _value = (_value & ~_MASK_R) | ((uint)float.Round(float.Clamp(value, 0, 1) * 100f) << 14);
     }
 
+    /// <summary>
+    /// Gets or sets the green component of the color. The value is clamped to the range [0..1].
+    /// </summary>
     public float G
     {
         readonly get => ((_value & _MASK_G) >> 7) * .01f;
         set => _value = (_value & ~_MASK_G) | ((uint)float.Round(float.Clamp(value, 0, 1) * 100f) << 7);
     }
 
+    /// <summary>
+    /// Gets or sets the blue component of the color. The value is clamped to the range [0..1].
+    /// </summary>
     public float B
     {
         readonly get => (_value & _MASK_B) * .01f;
         set => _value = (_value & ~_MASK_B) | (uint)float.Round(float.Clamp(value, 0, 1) * 100f);
     }
 
+    /// <summary>
+    /// Gets the LAB color representation.
+    /// </summary>
     public (float L, float a, float b) LAB
     {
         get
@@ -164,6 +223,9 @@ public struct SixelColor
         }
     }
 
+    /// <summary>
+    /// Indicates whether the color is transparent.
+    /// </summary>
     public readonly bool IsTransparent => ColorFlags == Flags.Transparent;
 
     internal byte PaletteIndex
@@ -179,21 +241,43 @@ public struct SixelColor
     }
 
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SixelColor"/> struct with the specified red, green, and blue components.
+    /// </summary>
+    /// <param name="r">The red component.</param>
+    /// <param name="g">The green component.</param>
+    /// <param name="b">The blue component.</param>
     public SixelColor(float r, float g, float b)
         : this(0xff, r, g, b, Flags.UndefinedIndex)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SixelColor"/> struct with the specified palette index, red, green, and blue components.
+    /// </summary>
+    /// <param name="palette">The palette index.</param>
+    /// <param name="r">The red component.</param>
+    /// <param name="g">The green component.</param>
+    /// <param name="b">The blue component.</param>
     public SixelColor(byte palette, float r, float g, float b)
         : this(palette, r, g, b, Flags.NONE)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SixelColor"/> struct with the specified palette index.
+    /// </summary>
+    /// <param name="palette">The palette index.</param>
     public SixelColor(byte palette)
         : this(palette, 0, 0, 0, Flags.UsePalette)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SixelColor"/> struct with the specified palette index and color.
+    /// </summary>
+    /// <param name="palette">The palette index.</param>
+    /// <param name="color">The color.</param>
     public SixelColor(byte palette, SixelColor color)
     {
         _value = color._value;
@@ -209,12 +293,30 @@ public struct SixelColor
         B = b;
     }
 
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
+    /// <returns>A string that represents the current object.</returns>
     public override readonly string ToString() => $"0x{GetHashCode():x6}: {R:P0}, {G:P0}, {B:P0}, 0x{PaletteIndex:x2} ({PaletteIndex}), {ColorFlags}";
 
+    /// <summary>
+    /// Returns the hash code for this instance.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
     public override readonly int GetHashCode() => IsTransparent ? -1 : (int)(_value & (_MASK_R | _MASK_G | _MASK_B));
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current object.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current object; otherwise, <c>false</c>.</returns>
     public override readonly bool Equals(object? obj) => obj is SixelColor pixel && pixel.GetHashCode() == GetHashCode();
 
+    /// <summary>
+    /// Calculates the LAB color distance to another Sixel color.
+    /// </summary>
+    /// <param name="other">The other Sixel color.</param>
+    /// <returns>The LAB color distance.</returns>
     public readonly float LABDistanceTo(SixelColor other)
     {
         if (Equals(other))
@@ -237,6 +339,11 @@ public struct SixelColor
         return float.Sqrt(float.Max(0, deltaL * deltaL + deltaC * deltaC + deltaH * deltaH));
     }
 
+    /// <summary>
+    /// Finds the closest color in the given palette.
+    /// </summary>
+    /// <param name="palette">The color palette.</param>
+    /// <returns>The closest Sixel color.</returns>
     public readonly SixelColor FindClosest(SixelColor[] palette)
     {
         if (IsTransparent)
@@ -268,10 +375,10 @@ public struct SixelColor
     internal enum Flags
         : byte
     {
-        NONE =              0b_0000_0000,
-        UsePalette =        0b_0000_0001,
-        UndefinedIndex =    0b_0000_0010,
-        Transparent =       0b_0000_0011,
+        NONE =           0b_0000_0000,
+        UsePalette =     0b_0000_0001,
+        UndefinedIndex = 0b_0000_0010,
+        Transparent =    0b_0000_0011,
 
         // reserved for future use.
         [Obsolete(null, true)] __RESERVED_1__ = 0b_0000_0100,
