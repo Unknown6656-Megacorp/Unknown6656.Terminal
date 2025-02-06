@@ -1,4 +1,4 @@
-﻿//#define ALLOW_VARIOUS_PIXEL_RATIOS
+//#define ALLOW_VARIOUS_PIXEL_RATIOS
 
 using System.Collections.Generic;
 using System.Runtime.Versioning;
@@ -872,6 +872,69 @@ public class SixelImage
         return sb.ToString();
     }
 
+
+    /// <summary>
+    /// Computes the minimum and maximum dimensions for a Sixel image (in pixels) based on the given vertical and horizontal terminal character count.
+    /// </summary>
+    /// <param name="width">The width of the Sixel image <b>(in terminal character columns)</b>.</param>
+    /// <param name="height">The height of the Sixel image <b>(in terminal character rows)</b>.</param>
+    /// <returns>A tuple containing the minimum and maximum width and height of the Sixel image (in pixel).</returns>
+    public static (int MinimumWidth, int MinimumHeight, int MaximumWidth, int MaximumHeight) ComputeSixelDimensions(int width, int height) => ComputeSixelDimensions(width, height, (10, 20));
+
+    /// <summary>
+    /// Computes the minimum and maximum dimensions for a Sixel image (in pixels) based on the given vertical and horizontal terminal
+    /// character count, and render settings.
+    /// </summary>
+    /// <param name="width">The width of the Sixel image <b>(in terminal character columns)</b>.</param>
+    /// <param name="height">The height of the Sixel image <b>(in terminal character rows)</b>.</param>
+    /// <param name="render_settings">The render settings for the Sixel image.</param>
+    /// <returns>A tuple containing the minimum and maximum width and height of the Sixel image (in pixel).</returns>
+    public static (int MinimumWidth, int MinimumHeight, int MaximumWidth, int MaximumHeight) ComputeSixelDimensions(int width, int height, SixelRenderSettings render_settings) =>
+        ComputeSixelDimensions(width, height, (10, 20), render_settings);
+
+    /// <summary>
+    /// Computes the minimum and maximum dimensions for a Sixel image (in pixels) based on the given vertical and horizontal terminal
+    /// character count, and the terminal character size.
+    /// </summary>
+    /// <param name="width">The width of the Sixel image <b>(in terminal character columns)</b>.</param>
+    /// <param name="height">The height of the Sixel image <b>(in terminal character rows)</b>.</param>
+    /// <param name="terminal_character_size">
+    /// The size of the terminal characters in width and height (in pixel).
+    /// The default value is <c>(10, 20)</c>.
+    /// </param>
+    /// <returns>A tuple containing the minimum and maximum width and height of the Sixel image (in pixel).</returns>
+    public static (int MinimumWidth, int MinimumHeight, int MaximumWidth, int MaximumHeight) ComputeSixelDimensions(int width, int height, (int width, int height) terminal_character_size) =>
+        ComputeSixelDimensions(width, height, terminal_character_size, SixelRenderSettings.Default);
+
+    /// <summary>
+    /// Computes the minimum and maximum dimensions for a Sixel image (in pixels) based on the given vertical and horizontal terminal
+    /// character count, the terminal character size, and render settings.
+    /// </summary>
+    /// <param name="width">The width of the Sixel image <b>(in terminal character columns)</b>.</param>
+    /// <param name="height">The height of the Sixel image <b>(in terminal character rows)</b>.</param>
+    /// <param name="terminal_character_size">
+    /// The size of the terminal characters in width and height (in pixel).
+    /// The default value is <c>(10, 20)</c>.
+    /// </param>
+    /// <param name="render_settings">The render settings for the Sixel image.</param>
+    /// <returns>A tuple containing the minimum and maximum width and height of the Sixel image (in pixel).</returns>
+    public static (int MinimumWidth, int MinimumHeight, int MaximumWidth, int MaximumHeight) ComputeSixelDimensions(int width, int height, (int width, int height) terminal_character_size, SixelRenderSettings render_settings)
+    {
+        int w = width * terminal_character_size.width;
+        int h = (int)float.Ceiling(height * terminal_character_size.height
+#if ALLOW_VARIOUS_PIXEL_RATIOS
+            / (render_settings.PixelAspectRatio switch
+            {
+                SixelPixelAspectRatio._2_to_1 => 2f,
+                SixelPixelAspectRatio._3_to_1 => 3f,
+                SixelPixelAspectRatio._5_to_1 => 5f,
+                _ => 1f,
+            })
+#endif
+        );
+
+        return (w, h, w + terminal_character_size.width - 1, h + terminal_character_size.height - 1);
+    }
 
     public static SixelImage Parse(string vt340_sequence)
     {
