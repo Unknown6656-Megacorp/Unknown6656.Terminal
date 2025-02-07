@@ -1,4 +1,4 @@
-﻿#define ALLOW_VARIOUS_PIXEL_RATIOS
+#define ALLOW_VARIOUS_PIXEL_RATIOS
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -402,10 +402,25 @@ public class SixelImage
     private volatile bool _optimized_palette = false;
 
 
+    /// <summary>
+    /// Gets the width of the Sixel image (in pixels).
+    /// </summary>
     public int Width { get; }
+
+    /// <summary>
+    /// Gets the height of the Sixel image (in pixels).
+    /// </summary>
     public int Height { get; }
+
+    /// <summary>
+    /// Gets the total number of pixels in the Sixel image. This value is equals to <c><see cref="Width"/> * <see cref="Height"/></c>.
+    /// </summary>
     public int PixelCount => _pixels.Length;
 
+    /// <summary>
+    /// Gets or sets the universal color palette.
+    /// </summary>
+    /// <exception cref="ArgumentException">Thrown when the given color palette does not have exactly 256 entries.</exception>
     public SixelColor[] UniversalColorPalette
     {
         get => field;
@@ -420,6 +435,12 @@ public class SixelImage
         }
     }
 
+    /// <summary>
+    /// Gets or sets the pixel color at the specified coordinates.
+    /// </summary>
+    /// <param name="x">The x-coordinate of the pixel.</param>
+    /// <param name="y">The y-coordinate of the pixel.</param>
+    /// <returns>The color of the pixel at the specified coordinates.</returns>
     public SixelColor this[int x, int y]
     {
         get => _pixels[y * Width + x];
@@ -431,11 +452,23 @@ public class SixelImage
     }
 
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SixelImage"/> class with the specified width and height.
+    /// </summary>
+    /// <param name="width">The width of the image (in pixels).</param>
+    /// <param name="height">The height of the image (in pixels).</param>
     public SixelImage(int width, int height)
         : this(width, height, new SixelColor[width * height])
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SixelImage"/> class with the specified width, height, and pixel data.
+    /// </summary>
+    /// <param name="width">The width of the image (in pixels).</param>
+    /// <param name="height">The height of the image (in pixels).</param>
+    /// <param name="pixels">The pixel data of the image.</param>
+    /// <exception cref="ArgumentException">Thrown when the number of pixels does not match the specified width and height.</exception>
     public SixelImage(int width, int height, SixelColor[] pixels)
     {
         if (pixels.Length != width * height)
@@ -705,6 +738,13 @@ public class SixelImage
         ];
     }
 
+    /// <summary>
+    /// Converts the Sixel image to a <see cref="Bitmap"/> object.
+    /// </summary>
+    /// <returns>A <see cref="Bitmap"/> representation of the Sixel image.</returns>
+    /// <remarks>
+    /// The returned <see cref="Bitmap"/> object has a pixel format of <see cref="PixelFormat.Format32bppArgb"/>.
+    /// </remarks>
     public unsafe Bitmap ToBitmap()
     {
         Bitmap bmp = new(Width, Height, PixelFormat.Format32bppArgb);
@@ -718,6 +758,11 @@ public class SixelImage
         return bmp;
     }
 
+    /// <summary>
+    /// Saves the Sixel image as a bitmap file.
+    /// </summary>
+    /// <param name="path">The file path to save the bitmap.</param>
+    /// <exception cref="ArgumentException">Thrown when the file extension is not recognized.</exception>
     public void SaveAsBitmap(FileInfo path)
     {
         if (path.Extension.ToLower() is "six" or "sixel")
@@ -727,6 +772,11 @@ public class SixelImage
                 bmp.Save(path.FullName);
     }
 
+    /// <summary>
+    /// Saves the Sixel image as a bitmap file with the specified image format.
+    /// </summary>
+    /// <param name="path">The file path to save the bitmap.</param>
+    /// <param name="format">The image format to use for saving the bitmap.</param>
     public void SaveAsBitmap(FileInfo path, ImageFormat format)
     {
         using Bitmap bmp = ToBitmap();
@@ -734,6 +784,11 @@ public class SixelImage
         bmp.Save(path.FullName, format);
     }
 
+    /// <summary>
+    /// Saves the Sixel image as a bitmap to the specified stream with the specified image format.
+    /// </summary>
+    /// <param name="stream">The stream to save the bitmap.</param>
+    /// <param name="format">The image format to use for saving the bitmap.</param>
     public void SaveAsBitmap(Stream stream, ImageFormat format)
     {
         using Bitmap bmp = ToBitmap();
@@ -741,8 +796,17 @@ public class SixelImage
         bmp.Save(stream, format);
     }
 
+    /// <summary>
+    /// Saves the Sixel image to a file using the default encoding (UTF-8).
+    /// </summary>
+    /// <param name="path">The file path to save the Sixel image.</param>
     public void SaveAs(FileInfo path) => SaveAs(path, Encoding.UTF8);
 
+    /// <summary>
+    /// Saves the Sixel image to a file using the specified encoding.
+    /// </summary>
+    /// <param name="path">The file path to save the Sixel image.</param>
+    /// <param name="encoding">The encoding to use for saving the Sixel image.</param>
     public void SaveAs(FileInfo path, Encoding encoding)
     {
         using FileStream fs = path.OpenWrite();
@@ -751,15 +815,21 @@ public class SixelImage
         SaveAs(sw);
     }
 
-    public void SaveAs(StreamWriter stream)
-    {
-        stream.Write(GenerateVT340Sequence(SixelRenderSettings.Default));
+    /// <summary>
+    /// Saves the Sixel image to a stream.
+    /// </summary>
+    /// <param name="stream">The stream to save the Sixel image.</param>
+    public void SaveAs(StreamWriter stream) => stream.Write(GenerateVT340Sequence(SixelRenderSettings.Default));
 
-        throw new NotImplementedException();
-    }
-
+    /// <summary>
+    /// Prints the Sixel image to the console using the default render settings.
+    /// </summary>
     public void Print() => Print(SixelRenderSettings.Default);
 
+    /// <summary>
+    /// Prints the Sixel image to the console using the specified render settings.
+    /// </summary>
+    /// <param name="render_settings">The render settings to use for printing the Sixel image.</param>
     public void Print(SixelRenderSettings render_settings)
     {
         ConsoleGraphicRendition? rendition = render_settings.RestoreConsoleRenditions ? Console.CurrentGraphicRendition : null;
@@ -777,10 +847,25 @@ public class SixelImage
             Console.CurrentGraphicRendition = rendition;
     }
 
+    /// <summary>
+    /// Measures the dimensions of the Sixel image (in terminal characters) using the default render settings.
+    /// </summary>
+    /// <returns>A <see cref="Rectangle"/> representing the dimensions of the Sixel image (in terminal characters).</returns>
     public Rectangle Measure() => Measure(SixelRenderSettings.Default);
 
+    /// <summary>
+    /// Measures the dimensions of the Sixel image (in terminal characters) using the specified render settings.
+    /// </summary>
+    /// <param name="render_settings">The render settings to use for measuring the Sixel image.</param>
+    /// <returns>A <see cref="Rectangle"/> representing the dimensions of the Sixel image (in terminal characters).</returns>
     public Rectangle Measure(SixelRenderSettings render_settings) => Measure(render_settings, (10, 20));
 
+    /// <summary>
+    /// Measures the dimensions of the Sixel image (in terminal characters) using the specified render settings and terminal character size.
+    /// </summary>
+    /// <param name="render_settings">The render settings to use for measuring the Sixel image.</param>
+    /// <param name="terminal_character_size">The size of the terminal characters in width and height (in pixels).</param>
+    /// <returns>A <see cref="Rectangle"/> representing the dimensions of the Sixel image (in terminal characters).</returns>
     public Rectangle Measure(SixelRenderSettings render_settings, (int width, int height) terminal_character_size)
     {
         int x = 0, y = 0;
@@ -927,6 +1012,11 @@ public class SixelImage
         }
     }
 
+    /// <summary>
+    /// Generates a VT340 Sixel sequence for the current Sixel image using the given render settings.
+    /// </summary>
+    /// <param name="render_settings">The render settings to use for generating the Sixel sequence.</param>
+    /// <returns>A VT340 Sixel sequence for the current Sixel image.</returns>
     public unsafe string GenerateVT340Sequence(SixelRenderSettings render_settings)
     {
         StringBuilder sb = new();
