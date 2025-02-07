@@ -253,7 +253,7 @@ public static unsafe partial class Console
             else
                 return sysconsole.ForegroundColor;
         }
-        set => Write(value.ToVT520(ColorMode.Foreground)); // That is actually faster than the original implementation in System.Console
+        set => Write(value.ToVT520(ConsoleColorMode.Foreground)); // That is actually faster than the original implementation in System.Console
     }
 
     /// <inheritdoc cref="sysconsole.BackgroundColor"/>
@@ -271,7 +271,7 @@ public static unsafe partial class Console
             else
                 return sysconsole.BackgroundColor;
         }
-        set => Write(value.ToVT520(ColorMode.Background)); // That is actually faster than the original implementation in System.Console
+        set => Write(value.ToVT520(ConsoleColorMode.Background)); // That is actually faster than the original implementation in System.Console
     }
 
     #endregion

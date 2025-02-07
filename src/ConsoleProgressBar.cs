@@ -279,7 +279,7 @@ public class ConsoleProgressBar
     /// </summary>
     public void Render()
     {
-        StringBuilder sb = new(Style.BackgroundColor.ToVT520(ColorMode.Background));
+        StringBuilder sb = new(Style.BackgroundColor.ToVT520(ConsoleColorMode.Background));
         bool invalidated = false;
         (char bar_fg_char, char bar_bg_char) = Style.BarType switch
         {
@@ -299,7 +299,7 @@ public class ConsoleProgressBar
             double fractional = progress * Width - bar_width;
             int remaining_width = Width - bar_width - double.Sign(fractional);
 
-            sb.Append(Style.BarColor.ToVT520(ColorMode.Foreground))
+            sb.Append(Style.BarColor.ToVT520(ConsoleColorMode.Foreground))
               .Append(new string(bar_fg_char, bar_width));
 
             if (fractional > 0)
@@ -319,9 +319,9 @@ public class ConsoleProgressBar
                 sb.Append(bar_mid[(int)Math.Round(fractional * (bar_mid.Length - 1))]);
             }
 
-            sb.Append(Style.BarSecondaryColor.ToVT520(ColorMode.Foreground))
+            sb.Append(Style.BarSecondaryColor.ToVT520(ConsoleColorMode.Foreground))
               .Append(new string(bar_bg_char, remaining_width))
-              .Append(Style.TextColor.ToVT520(ColorMode.Foreground))
+              .Append(Style.TextColor.ToVT520(ConsoleColorMode.Foreground))
               .Append($" {progress * 100,5:F1} %");
         }
         else
@@ -335,13 +335,13 @@ public class ConsoleProgressBar
                 offs = (int)((Math.Sin(DateTime.UtcNow.Ticks * .00_000_01) + 1) * .5 * (Width - block.Length + 1));
             }
 
-            sb.Append(Style.BarSecondaryColor.ToVT520(ColorMode.Foreground))
+            sb.Append(Style.BarSecondaryColor.ToVT520(ConsoleColorMode.Foreground))
               .Append(new string(bar_bg_char, offs))
-              .Append(Style.BarColor.ToVT520(ColorMode.Foreground))
+              .Append(Style.BarColor.ToVT520(ConsoleColorMode.Foreground))
               .Append(block)
-              .Append(Style.BarSecondaryColor.ToVT520(ColorMode.Foreground))
+              .Append(Style.BarSecondaryColor.ToVT520(ConsoleColorMode.Foreground))
               .Append(new string(bar_bg_char, Width - offs - block.Length))
-              .Append(Style.TextColor.ToVT520(ColorMode.Foreground))
+              .Append(Style.TextColor.ToVT520(ConsoleColorMode.Foreground))
               .Append(" ---.- %");
         }
 

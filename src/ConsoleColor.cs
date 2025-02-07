@@ -12,7 +12,7 @@ namespace Unknown6656.Console;
 /// Specifies the color mode for the rendering of <see cref="ConsoleColor"/>.
 /// </summary>
 [Flags]
-public enum ColorMode
+public enum ConsoleColorMode
     : byte
 {
     // None = 0,
@@ -304,7 +304,7 @@ public readonly record struct ConsoleColor
 
 
     /// <summary>
-    /// Represents the color that is used by default. This may vary between different console implementations, as well as <see cref="ColorMode"/>s.
+    /// Represents the color that is used by default. This may vary between different console implementations, as well as <see cref="ConsoleColorMode"/>s.
     /// </summary>
     public static ConsoleColor Default { get; } = new();
 
@@ -496,7 +496,7 @@ public readonly record struct ConsoleColor
 
     /// <summary>
     /// Returns a string that represents the current <see cref="ConsoleColor"/>.
-    /// Please note that this is <b>NOT</b> a VT520 escape sequence. Use the function <see cref="ToVT520(ColorMode)"/> for generating VT520 escape sequences.
+    /// Please note that this is <b>NOT</b> a VT520 escape sequence. Use the function <see cref="ToVT520(ConsoleColorMode)"/> for generating VT520 escape sequences.
     /// </summary>
     /// <returns>A string that represents the current <see cref="ConsoleColor"/>.</returns>
     public override string ToString() => _color is null ? "(Default)" : _color.Match(c => c.ToString(), rgb => $"#{rgb.ToArgb():x8}: {rgb}");
@@ -507,9 +507,9 @@ public readonly record struct ConsoleColor
     /// <inheritdoc cref="IFormattable.ToString(string?, IFormatProvider?)"/>
     public string ToString(string? format, IFormatProvider? provider) => new string([.. format?.ToLower()?.Where(char.IsAsciiLetter) ?? []]) switch
     {
-        "f" or "fore" or "fg" or "foreground" => ToVT520(ColorMode.Foreground),
-        "b" or "back" or "bg" or "background" => ToVT520(ColorMode.Background),
-        "u" or "ud" or "ul" or "underline" => ToVT520(ColorMode.Underline),
+        "f" or "fore" or "fg" or "foreground" => ToVT520(ConsoleColorMode.Foreground),
+        "b" or "back" or "bg" or "background" => ToVT520(ConsoleColorMode.Background),
+        "u" or "ud" or "ul" or "underline" => ToVT520(ConsoleColorMode.Underline),
         _ => ToString(),
     };
 
@@ -526,12 +526,12 @@ public readonly record struct ConsoleColor
     }
 
     /// <summary>
-    /// Converts the current <see cref="ConsoleColor"/> to a VT520 escape sequence string for the specified <see cref="ColorMode"/>.
+    /// Converts the current <see cref="ConsoleColor"/> to a VT520 escape sequence string for the specified <see cref="ConsoleColorMode"/>.
     /// The generated VT520 escape sequence contains the SGR code for the current <see cref="ConsoleColor"/> and starts with <c>\e[</c> and ends with <c>m</c>.
     /// </summary>
-    /// <param name="mode">The <see cref="ColorMode"/> to use for the conversion.</param>
+    /// <param name="mode">The <see cref="ConsoleColorMode"/> to use for the conversion.</param>
     /// <returns>A VT520 escape sequence string that represents the current <see cref="ConsoleColor"/>.</returns>
-    public string ToVT520(ColorMode mode) => GetVT520SGRCode(mode) is { Length: > 0 } sgr ? $"{Console._CSI}{sgr}m" : "";
+    public string ToVT520(ConsoleColorMode mode) => GetVT520SGRCode(mode) is { Length: > 0 } sgr ? $"{Console._CSI}{sgr}m" : "";
 
     /// <summary>
     /// Generates a VT100/VT520/ANSI color string for the current <see cref="ConsoleColor"/> instance and given color mode flag (foreground, background, underline).
@@ -541,10 +541,10 @@ public readonly record struct ConsoleColor
     /// </summary>
     /// <param name="mode">The color mode to use (foreground, background, underline).</param>
     /// <returns>The VT100/VT520/ANSI color string for the current color.</returns>
-    public string GetVT520SGRCode(ColorMode mode)
+    public string GetVT520SGRCode(ConsoleColorMode mode)
     {
-        if (mode is not (ColorMode.Foreground or ColorMode.Background or ColorMode.Underline))
-            return Enumerable.Where([ColorMode.Foreground, ColorMode.Background, ColorMode.Underline], m => mode.HasFlag(m))
+        if (mode is not (ConsoleColorMode.Foreground or ConsoleColorMode.Background or ConsoleColorMode.Underline))
+            return Enumerable.Where([ConsoleColorMode.Foreground, ConsoleColorMode.Background, ConsoleColorMode.Underline], m => mode.HasFlag(m))
                              .Select(GetVT520SGRCode)
                              .StringJoin(";");
 
@@ -553,9 +553,9 @@ public readonly record struct ConsoleColor
         if (_color is null)
             return mode switch
             {
-                ColorMode.Foreground => "39",
-                ColorMode.Background => "49",
-                ColorMode.Underline => "59",
+                ConsoleColorMode.Foreground => "39",
+                ConsoleColorMode.Background => "49",
+                ConsoleColorMode.Underline => "59",
             };
         else if (_color.Is(out sysconsolecolor color))
         {
@@ -581,16 +581,16 @@ public readonly record struct ConsoleColor
 
             return mode switch
             {
-                ColorMode.Foreground => fg,
-                ColorMode.Background => bg,
+                ConsoleColorMode.Foreground => fg,
+                ConsoleColorMode.Background => bg,
             };
         }
         else if (_color.Is(out Color rgb))
             return $"{mode switch
             {
-                ColorMode.Foreground => "38",
-                ColorMode.Background => "48",
-                ColorMode.Underline => "58",
+                ConsoleColorMode.Foreground => "38",
+                ConsoleColorMode.Background => "48",
+                ConsoleColorMode.Underline => "58",
             }};2;{rgb.R};{rgb.G};{rgb.B}";
         else
             throw new InvalidOperationException($"Invalid color type '{_color}'.");
@@ -631,63 +631,63 @@ public readonly record struct ConsoleColor
     public static ConsoleColor FromVT520(string vt520_color) => FromVT520(vt520_color, out _);
 
     /// <summary>
-    /// Converts a VT100/VT500/VT520/ANSI escape sequence string to a <see cref="ConsoleColor"/> instance and outputs the <see cref="ColorMode"/>.
+    /// Converts a VT100/VT500/VT520/ANSI escape sequence string to a <see cref="ConsoleColor"/> instance and outputs the <see cref="ConsoleColorMode"/>.
     /// <para/>
     /// Note that the given escape sequence string is not required to start with <c>\e[</c> and end with <c>m</c>.
     /// </summary>
     /// <param name="vt520_color">The VT100/VT500/VT520/ANSI escape sequence string.</param>
-    /// <param name="mode">The <see cref="ColorMode"/> that represents the color mode of the parsed color.</param>
+    /// <param name="mode">The <see cref="ConsoleColorMode"/> that represents the color mode of the parsed color.</param>
     /// <returns>A <see cref="ConsoleColor"/> instance that represents the specified given color string.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the VT520 color code is invalid.</exception>
-    public static ConsoleColor FromVT520(string vt520_color, out ColorMode mode)
+    public static ConsoleColor FromVT520(string vt520_color, out ConsoleColorMode mode)
     {
         if (vt520_color is ['\e', '[', .., 'm'])
             vt520_color = vt520_color[3..^1];
 
         (mode, ConsoleColor color) = vt520_color switch
         {
-            "0" => (ColorMode.Any, Default),
-            "30" => (ColorMode.Foreground, Black),
-            "31" => (ColorMode.Foreground, DarkRed),
-            "32" => (ColorMode.Foreground, DarkGreen),
-            "33" => (ColorMode.Foreground, DarkYellow),
-            "34" => (ColorMode.Foreground, DarkBlue),
-            "35" => (ColorMode.Foreground, DarkMagenta),
-            "36" => (ColorMode.Foreground, DarkCyan),
-            "37" => (ColorMode.Foreground, Gray),
-            ['3', '8', ':' or ';', '5', ':' or ';', .. string num] => (ColorMode.Foreground, From256ColorCode(byte.Parse(num))),
-            ['3', '8', ':' or ';', '2', ':' or ';', .. string rgb] => (ColorMode.Foreground, parse_rgb(rgb)),
-            "39" => (ColorMode.Foreground, Default),
-            "40" => (ColorMode.Background, Black),
-            "41" => (ColorMode.Background, DarkRed),
-            "42" => (ColorMode.Background, DarkGreen),
-            "43" => (ColorMode.Background, DarkYellow),
-            "44" => (ColorMode.Background, DarkBlue),
-            "45" => (ColorMode.Background, DarkMagenta),
-            "46" => (ColorMode.Background, DarkCyan),
-            "47" => (ColorMode.Background, Gray),
-            ['4', '8', ':' or ';', '5', .. string num] => (ColorMode.Foreground, From256ColorCode(byte.Parse(num))),
-            ['4', '8', ':' or ';', '2', ':' or ';', .. string rgb] => (ColorMode.Foreground, parse_rgb(rgb)),
-            "49" => (ColorMode.Background, Default),
-            ['5', '8', ':' or ';', '5', .. string num] => (ColorMode.Underline, From256ColorCode(byte.Parse(num))),
-            ['5', '8', ':' or ';', '2', ':' or ';', .. string rgb] => (ColorMode.Underline, parse_rgb(rgb)),
-            "59" => (ColorMode.Underline, Default),
-            "90" => (ColorMode.Foreground, DarkGray),
-            "91" => (ColorMode.Foreground, Red),
-            "92" => (ColorMode.Foreground, Green),
-            "93" => (ColorMode.Foreground, Yellow),
-            "94" => (ColorMode.Foreground, Blue),
-            "95" => (ColorMode.Foreground, Magenta),
-            "96" => (ColorMode.Foreground, Cyan),
-            "97" => (ColorMode.Foreground, White),
-            "100" => (ColorMode.Background, DarkGray),
-            "101" => (ColorMode.Background, Red),
-            "102" => (ColorMode.Background, Green),
-            "103" => (ColorMode.Background, Yellow),
-            "104" => (ColorMode.Background, Blue),
-            "105" => (ColorMode.Background, Magenta),
-            "106" => (ColorMode.Background, Cyan),
-            "107" => (ColorMode.Background, White),
+            "0" => (ConsoleColorMode.Any, Default),
+            "30" => (ConsoleColorMode.Foreground, Black),
+            "31" => (ConsoleColorMode.Foreground, DarkRed),
+            "32" => (ConsoleColorMode.Foreground, DarkGreen),
+            "33" => (ConsoleColorMode.Foreground, DarkYellow),
+            "34" => (ConsoleColorMode.Foreground, DarkBlue),
+            "35" => (ConsoleColorMode.Foreground, DarkMagenta),
+            "36" => (ConsoleColorMode.Foreground, DarkCyan),
+            "37" => (ConsoleColorMode.Foreground, Gray),
+            ['3', '8', ':' or ';', '5', ':' or ';', .. string num] => (ConsoleColorMode.Foreground, From256ColorCode(byte.Parse(num))),
+            ['3', '8', ':' or ';', '2', ':' or ';', .. string rgb] => (ConsoleColorMode.Foreground, parse_rgb(rgb)),
+            "39" => (ConsoleColorMode.Foreground, Default),
+            "40" => (ConsoleColorMode.Background, Black),
+            "41" => (ConsoleColorMode.Background, DarkRed),
+            "42" => (ConsoleColorMode.Background, DarkGreen),
+            "43" => (ConsoleColorMode.Background, DarkYellow),
+            "44" => (ConsoleColorMode.Background, DarkBlue),
+            "45" => (ConsoleColorMode.Background, DarkMagenta),
+            "46" => (ConsoleColorMode.Background, DarkCyan),
+            "47" => (ConsoleColorMode.Background, Gray),
+            ['4', '8', ':' or ';', '5', .. string num] => (ConsoleColorMode.Foreground, From256ColorCode(byte.Parse(num))),
+            ['4', '8', ':' or ';', '2', ':' or ';', .. string rgb] => (ConsoleColorMode.Foreground, parse_rgb(rgb)),
+            "49" => (ConsoleColorMode.Background, Default),
+            ['5', '8', ':' or ';', '5', .. string num] => (ConsoleColorMode.Underline, From256ColorCode(byte.Parse(num))),
+            ['5', '8', ':' or ';', '2', ':' or ';', .. string rgb] => (ConsoleColorMode.Underline, parse_rgb(rgb)),
+            "59" => (ConsoleColorMode.Underline, Default),
+            "90" => (ConsoleColorMode.Foreground, DarkGray),
+            "91" => (ConsoleColorMode.Foreground, Red),
+            "92" => (ConsoleColorMode.Foreground, Green),
+            "93" => (ConsoleColorMode.Foreground, Yellow),
+            "94" => (ConsoleColorMode.Foreground, Blue),
+            "95" => (ConsoleColorMode.Foreground, Magenta),
+            "96" => (ConsoleColorMode.Foreground, Cyan),
+            "97" => (ConsoleColorMode.Foreground, White),
+            "100" => (ConsoleColorMode.Background, DarkGray),
+            "101" => (ConsoleColorMode.Background, Red),
+            "102" => (ConsoleColorMode.Background, Green),
+            "103" => (ConsoleColorMode.Background, Yellow),
+            "104" => (ConsoleColorMode.Background, Blue),
+            "105" => (ConsoleColorMode.Background, Magenta),
+            "106" => (ConsoleColorMode.Background, Cyan),
+            "107" => (ConsoleColorMode.Background, White),
             _ => throw new ArgumentOutOfRangeException(nameof(vt520_color), vt520_color, "Invalid VT520 color code."),
         };
 

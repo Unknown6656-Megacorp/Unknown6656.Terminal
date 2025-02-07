@@ -737,13 +737,13 @@ public record ConsoleGraphicRendition(params string[] RawVT520SGRs)
         add_mode(TextTransformation);
 
         if (ForegroundColor is { } fg)
-            modes.Add(fg.GetVT520SGRCode(ColorMode.Foreground));
+            modes.Add(fg.GetVT520SGRCode(ConsoleColorMode.Foreground));
 
         if (BackgroundColor is { } bg)
-            modes.Add(bg.GetVT520SGRCode(ColorMode.Background));
+            modes.Add(bg.GetVT520SGRCode(ConsoleColorMode.Background));
 
         if (UnderlineColor is { } ul)
-            modes.Add(ul.GetVT520SGRCode(ColorMode.Underline));
+            modes.Add(ul.GetVT520SGRCode(ConsoleColorMode.Underline));
 
         return modes.Distinct().ToArray();
     }
@@ -802,15 +802,15 @@ public record ConsoleGraphicRendition(params string[] RawVT520SGRs)
                 rendition = rendition with { IsCrossedOut = false };
             else if (sgr is ['3' or '4' or '9', _] or ['1', '0', _] or "59" or ['5', '8', _, ..])
             {
-                ConsoleColor color = ConsoleColor.FromVT520(sgr, out ColorMode mode);
+                ConsoleColor color = ConsoleColor.FromVT520(sgr, out ConsoleColorMode mode);
 
-                if (mode.HasFlag(ColorMode.Foreground))
+                if (mode.HasFlag(ConsoleColorMode.Foreground))
                     rendition = rendition with { ForegroundColor = color };
 
-                if (mode.HasFlag(ColorMode.Background))
+                if (mode.HasFlag(ConsoleColorMode.Background))
                     rendition = rendition with { BackgroundColor = color };
 
-                if (mode.HasFlag(ColorMode.Underline))
+                if (mode.HasFlag(ConsoleColorMode.Underline))
                     rendition = rendition with { UnderlineColor = color };
             }
             else if (sgr is "50")
