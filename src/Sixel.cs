@@ -1,4 +1,4 @@
-﻿#define ALLOW_VARIOUS_PIXEL_RATIOS
+#define ALLOW_VARIOUS_PIXEL_RATIOS
 #define USE_LAB_CACHE
 
 using System.Diagnostics.CodeAnalysis;
@@ -86,6 +86,12 @@ public record SixelRenderSettings
         PixelAspectRatio = SixelPixelAspectRatio._1_to_1,
 #endif
     };
+}
+
+public enum SixelColorSpace
+{
+    RGB,
+    LAB
 }
 
 /// <summary>
@@ -347,12 +353,24 @@ public struct SixelColor
         return float.Sqrt(float.Max(0, deltaL * deltaL + deltaC * deltaC + deltaH * deltaH));
     }
 
+    public readonly float RGBDistanceTo(SixelColor other)
+    {
+        if (Equals(other))
+            return 0;
+
+        float deltaR = R - other.R;
+        float deltaG = G - other.G;
+        float deltaB = B - other.B;
+
+        return float.Sqrt(deltaR * deltaR + deltaG * deltaG + deltaB * deltaB);
+    }
+
     /// <summary>
     /// Finds the closest color in the given palette.
     /// </summary>
     /// <param name="palette">The color palette.</param>
     /// <returns>The closest Sixel color.</returns>
-    public readonly SixelColor FindClosest(SixelColor[] palette)
+    public readonly SixelColor FindClosest(SixelColor[] palette, SixelColorSpace space)
     {
         if (IsTransparent)
             return Transparent;
@@ -362,7 +380,10 @@ public struct SixelColor
 
         for (int i = 0; i < palette.Length; ++i)
         {
-            float dist = LABDistanceTo(palette[i]);
+            float dist = space switch {
+                SixelColorSpace.LAB => LABDistanceTo(palette[i]),
+                SixelColorSpace.RGB => RGBDistanceTo(palette[i]),
+            };
 
             if (dist < minDist)
                 (index, minDist) = (i, dist);
