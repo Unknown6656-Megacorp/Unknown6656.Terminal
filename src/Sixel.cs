@@ -984,12 +984,7 @@ public class SixelImage
             if (_optimized_palette)
                 return;
 
-            Stopwatch sw = Stopwatch.StartNew();
-
             OptimizeColorPalette([.. _pixels.WhereNot(p => p.IsTransparent).Distinct()]);
-
-            sw.Stop();
-            Console.WriteLine($"Optimized color palette in {sw.ElapsedMilliseconds}ms.");
 
             _optimized_palette = true;
         }
