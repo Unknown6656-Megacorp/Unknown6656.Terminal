@@ -1,5 +1,6 @@
-#define ALLOW_VARIOUS_PIXEL_RATIOS
+﻿#define ALLOW_VARIOUS_PIXEL_RATIOS
 
+using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -892,7 +893,12 @@ public class SixelImage
         return new(x, y, w, h);
     }
 
+    /// <inheritdoc/>
+    [DoesNotReturn]
+    [Obsolete($"Use '{nameof(GenerateVT340Sequence)}()' instead.", true)]
+#pragma warning disable CS0809 // Obsolete member overrides non-obsolete member
     public override string ToString() => throw new InvalidOperationException($"It looks like you want to write the Sixel image to the console using the '{typeof(SixelImage)}.{nameof(ToString)}()' method. Please use either the method '{typeof(SixelImage)}.{nameof(Print)}(*)' or '{typeof(Console)}.{nameof(Console.Write)}({typeof(SixelImage)}, *)'.");
+#pragma warning restore CS0809
 
     private static string Repeat(char sixel, int count)
     {
@@ -964,7 +970,7 @@ public class SixelImage
 
     // TODO : optimize this code's performance. this shit is way too slow
     // TODO : instead of using the universal palette, do either some clustering or 16x16 downscale & color sampling.
-    public void OptimizeColorPalette()
+    private void OptimizeColorPalette()
     {
         lock (_mutex)
         {
@@ -1127,22 +1133,35 @@ public class SixelImage
         return (w, h, w + terminal_character_size.width - 1, h + terminal_character_size.height - 1);
     }
 
-    public static SixelImage Parse(string vt340_sequence)
+
+    private enum SixelParsingState
     {
-        for (int index = 0; index < vt340_sequence.Length; ++index)
+        OutsideSixel,
+    }
+
+    public static SixelImage? TryParse(string vt340_sequence)
+    {
+        SixelParsingState state = SixelParsingState.OutsideSixel;
+        int index = vt340_sequence.IndexOf(Console._DCS);
+
+        if (index < 0)
+            return null;
+
+        for (index += Console._DCS.Length; index < vt340_sequence.Length; ++index)
         {
             char curr = vt340_sequence[index];
 
 
+            // TODO
 
         }
 
         throw new NotImplementedException();
     }
 
-    public static SixelImage Parse(StreamReader stream) => Parse(stream.ReadToEnd());
+    public static SixelImage TryParse(StreamReader stream) => TryParse(stream.ReadToEnd());
 
-    public static unsafe SixelImage FromFile(FileInfo path)
+    public static unsafe SixelImage? FromFile(FileInfo path)
     {
         if (path.Extension.ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".gif" or ".emf" or ".tif" or ".tiff"
                                               or ".webp" or ".wmf" or ".bmp" or ".heif" or ".exif" or ".exf" or ".ico")
@@ -1150,7 +1169,7 @@ public class SixelImage
         else
             using (FileStream fs = path.OpenRead())
             using (StreamReader rd = new(fs, Encoding.UTF8))
-                return Parse(rd);
+                return TryParse(rd);
     }
 
     public static unsafe SixelImage FromBitmap(FileInfo path)
