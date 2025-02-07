@@ -1,4 +1,5 @@
-#define ALLOW_VARIOUS_PIXEL_RATIOS
+﻿#define ALLOW_VARIOUS_PIXEL_RATIOS
+#define USE_CLOSENESS_CACHE
 #define USE_LAB_CACHE
 
 using System.Diagnostics.CodeAnalysis;
@@ -429,7 +430,9 @@ public class SixelImage
     private readonly SixelColor[] _pixels;
     private readonly object _mutex = new();
     private volatile bool _optimized_palette = false;
-
+#if USE_CLOSENESS_CACHE
+    private readonly Dictionary<SixelColor, SixelColor> _closeness_cache = new(256);
+#endif
 
     /// <summary>
     /// Gets the width of the Sixel image (in pixels).
@@ -956,6 +959,9 @@ public class SixelImage
 
     private void FloydSteinbergDithering(SixelColor[] palette)
     {
+#if USE_CLOSENESS_CACHE
+        _closeness_cache.Clear();
+#endif
 #pragma warning disable IDE0305 // Simplify collection initialization
         SixelColor[] buffer = _pixels.ToArray();
 #pragma warning restore IDE0305
@@ -964,33 +970,36 @@ public class SixelImage
         {
             int x = i % Width;
             int y = i / Width;
+            SixelColor curr, prev = buffer[i];
 
-            SixelColor prev = buffer[i];
-            SixelColor curr = buffer[i] = prev.FindClosest(palette);
+#if USE_CLOSENESS_CACHE
+            if (!_closeness_cache.TryGetValue(prev, out curr))
+                _closeness_cache[prev] = curr = prev.FindClosest(palette, SixelColorSpace.RGB);
+#endif
+            buffer[i] = curr;
+
             float r_err = (prev.R - curr.R) / 16f;
             float g_err = (prev.G - curr.G) / 16f;
             float b_err = (prev.B - curr.B) / 16f;
 
-            ref SixelColor c1 = ref buffer[(i + 1) % buffer.Length];
-            ref SixelColor c2 = ref buffer[(i + Width) % buffer.Length];
-            ref SixelColor c3 = ref buffer[(i + Width - 1) % buffer.Length];
-            ref SixelColor c4 = ref buffer[(i + Width + 1) % buffer.Length];
+            void add_error(int offs, float factor)
+            {
+                offs += i;
 
-            c1.R += r_err * 7;
-            c1.G += g_err * 7;
-            c1.B += b_err * 7;
+                if (offs > 0 && offs < buffer.Length)
+                {
+                    ref SixelColor c1 = ref buffer[offs];
 
-            c2.R += r_err * 5;
-            c2.G += g_err * 5;
-            c2.B += b_err * 5;
+                    c1.R += r_err * factor;
+                    c1.G += g_err * factor;
+                    c1.B += b_err * factor;
+                }
+            }
 
-            c3.R += r_err * 3;
-            c3.G += g_err * 3;
-            c3.B += b_err * 3;
-
-            c4.R += r_err;
-            c4.G += g_err;
-            c4.B += b_err;
+            add_error(1, 7);
+            add_error(Width, 5);
+            add_error(Width - 1, 3);
+            add_error(Width + 1, 1);
         }
 
         Array.Copy(buffer, _pixels, buffer.Length);
@@ -1036,7 +1045,7 @@ public class SixelImage
         {
             palette = UniversalColorPalette;
 
-            FloydSteinbergDithering([.. palette, SixelColor.Transparent]);
+            FloydSteinbergDithering(palette);
             OptimizeColorPalette(palette);
         }
     }
@@ -1218,8 +1227,11 @@ public class SixelImage
     public static unsafe SixelImage FromBitmap(Image image)
     {
         Bitmap bitmap = image as Bitmap ?? new(image);
+        ColorPalette? palette = null;
 
-        if (bitmap.PixelFormat != PixelFormat.Format32bppArgb)
+        if (bitmap.PixelFormat is PixelFormat.Indexed or PixelFormat.Format1bppIndexed or PixelFormat.Format4bppIndexed or PixelFormat.Format8bppIndexed)
+            palette = bitmap.Palette;
+        else if (bitmap.PixelFormat != PixelFormat.Format32bppArgb)
         {
             Bitmap tmp = new(bitmap.Width, bitmap.Height, PixelFormat.Format32bppArgb);
 
@@ -1231,9 +1243,21 @@ public class SixelImage
 
         SixelImage img = new(bitmap.Width, bitmap.Height);
         BitmapData dat = bitmap.LockBits(new(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
-        _BGRA* ptr = (_BGRA*)dat.Scan0;
 
-        Parallel.For(0, img.PixelCount, i => img._pixels[i] = ptr[i]);
+        if (palette is null)
+        {
+            _BGRA* ptr = (_BGRA*)dat.Scan0;
+
+            Parallel.For(0, img.PixelCount, i => img._pixels[i] = ptr[i]);
+        }
+        else
+        {
+            byte* ptr = (byte*)dat.Scan0;
+
+            //Parallel.For(0, img.PixelCount, i => img._pixels[i] = ptr[i]);
+
+            throw new NotImplementedException();
+        }
 
         bitmap.UnlockBits(dat);
         img.OptimizeColorPalette();
