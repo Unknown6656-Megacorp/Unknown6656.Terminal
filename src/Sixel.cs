@@ -1,4 +1,4 @@
-#define ALLOW_VARIOUS_PIXEL_RATIOS
+﻿#define ALLOW_VARIOUS_PIXEL_RATIOS
 #define USE_LAB_CACHE
 
 using System.Diagnostics.CodeAnalysis;
@@ -1165,8 +1165,10 @@ public class SixelImage
 
     public static unsafe SixelImage? FromFile(FileInfo path)
     {
-        if (path.Extension.ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".gif" or ".emf" or ".tif" or ".tiff"
-                                              or ".webp" or ".wmf" or ".bmp" or ".heif" or ".exif" or ".exf" or ".ico")
+        if (!path.Exists)
+            return null;
+        else if (path.Extension.ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".gif" or ".emf" or ".tif" or ".tiff"
+                                                   or ".webp" or ".wmf" or ".bmp" or ".heif" or ".exif" or ".exf" or ".ico")
             return FromBitmap(path);
         else
             using (FileStream fs = path.OpenRead())
@@ -1174,8 +1176,11 @@ public class SixelImage
                 return TryParse(rd);
     }
 
-    public static unsafe SixelImage FromBitmap(FileInfo path)
+    public static unsafe SixelImage? FromBitmap(FileInfo path)
     {
+        if (!path.Exists)
+            return null;
+
         using Bitmap bmp = new(path.FullName);
 
         return FromBitmap(bmp);
@@ -1195,7 +1200,7 @@ public class SixelImage
 
         if (bitmap.PixelFormat != PixelFormat.Format32bppArgb)
         {
-            Bitmap tmp = new(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
+            Bitmap tmp = new(bitmap.Width, bitmap.Height, PixelFormat.Format32bppArgb);
 
             using Graphics g = Graphics.FromImage(tmp);
 
