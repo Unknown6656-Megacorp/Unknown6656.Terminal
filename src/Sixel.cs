@@ -1,9 +1,9 @@
-﻿#define ALLOW_VARIOUS_PIXEL_RATIOS
+#define ALLOW_VARIOUS_PIXEL_RATIOS
+#define USE_LAB_CACHE
 
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Drawing;
 using System.Linq;
@@ -98,8 +98,10 @@ public struct SixelColor
     private const uint _MASK_R = 0b_0000_0000_0001_1111_1100_0000_0000_0000u;
     private const uint _MASK_I = 0b_0001_1111_1110_0000_0000_0000_0000_0000u;
     private const uint _MASK_F = 0b_1110_0000_0000_0000_0000_0000_0000_0000u;
-
+#if USE_LAB_CACHE
     private static readonly Dictionary<int, (float L, float a, float b)> _lab_cache = [];
+#endif
+
 
     /// <summary>
     /// Gets or sets the alpha threshold for transparency. The value is clamped to the range [0..1].
@@ -168,8 +170,11 @@ public struct SixelColor
         get
         {
             int hc = GetHashCode();
+            (float L, float a, float b) lab;
 
-            if (!_lab_cache.TryGetValue(hc, out (float L, float a, float b) lab))
+#if USE_LAB_CACHE
+            if (!_lab_cache.TryGetValue(hc, out lab))
+#endif
             {
                 float r = R;
                 float g = G;
@@ -212,8 +217,10 @@ public struct SixelColor
                     z = float.Pow(z, .333333333333333f);
                 else
                     z = (z * 7.787f) + .13793103448275862f;
-
-                _lab_cache[hc] = lab = (
+#if USE_LAB_CACHE
+                _lab_cache[hc] =
+#endif
+                lab = (
                     (116f * y) - 16f,
                     500f * (x - y),
                     200f * (y - z)
