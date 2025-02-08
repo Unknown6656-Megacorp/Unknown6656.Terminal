@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 using System.Drawing;
 using System.Text;
 using System.Linq;
 using System;
 
+using Unknown6656.Console.Markdown;
 using Unknown6656.Generics.Text;
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
-using System.Threading.Tasks;
 
 namespace Unknown6656.Console;
 
@@ -738,30 +739,60 @@ public static unsafe partial class Console
 
     public static void WriteDoubleWidthLine(object? value, int left, int top) => WriteDoubleWidthLine(value, (left, top));
 
-    // TODO : handle line wrapping/breaks for the following functions
+    // TODO : handle line wrapping and vt520 escape sequences for the following function
     public static void WriteDoubleWidthLine(object? value, (int left, int top)? starting_pos)
     {
-        if (starting_pos is (int x, int y))
-            SetCursorPosition(x, y);
+        (int x, int y) = starting_pos ?? GetCursorPosition();
+        string text = value?.ToString() ?? "";
 
-        WriteLine($"\e#5{value}");
+        SetCursorPosition(x, y);
+
+        text = text.TrimEnd();
+
+        if (text.Length > 0)
+            if (text.IndexOf('\n') is int i and >= 0)
+            {
+                WriteLine($"\e#5{text[..i]}");
+                WriteDoubleWidthLine(text[(i + 1)..], (x, y + 1));
+            }
+            else
+            {
+                WriteLine($"\e#5{text}");
+                SetCursorPosition(x, y + 1);
+            }
     }
 
     public static void WriteDoubleSizeLine(object? value) => WriteDoubleSizeLine(value, null);
 
     public static void WriteDoubleSizeLine(object? value, int left, int top) => WriteDoubleSizeLine(value, (left, top));
 
-    // TODO : handle line wrapping/breaks for the following functions
+    // TODO : handle line wrapping and vt520 escape sequences for the following function
     public static void WriteDoubleSizeLine(object? value, (int left, int top)? starting_pos)
     {
         int x = starting_pos?.left ?? CursorLeft;
         int y = starting_pos?.top ?? CursorTop;
         string text = value?.ToString() ?? "";
+        string after_nl = "";
+
+        text = text.TrimEnd();
+
+        if (text.Length == 0)
+            return;
+
+        if (text.IndexOf('\n') is int i and >= 0)
+        {
+            after_nl = text[(i + 1)..];
+            text = text[..i];
+        }
 
         SetCursorPosition(x, y);
         Write($"\e#3{text}");
         SetCursorPosition(x, y + 1);
         WriteLine($"\e#4{text}");
+        SetCursorPosition(x, y + 2);
+
+        if (after_nl.Length > 0)
+            WriteDoubleSizeLine(after_nl, (x, y + 2));
     }
 
     /// <summary>
@@ -791,6 +822,16 @@ public static unsafe partial class Console
             }}");
         }
     }
+
+    /// <inheritdoc cref="WriteMarkdown(string, MarkdownRenderOptions)"/>
+    public static void WriteMarkdown(string markdown_source) => WriteMarkdown(markdown_source, MarkdownRenderOptions.Default);
+
+    public static void WriteMarkdown(string markdown_source, MarkdownRenderOptions render_options) => WriteMarkdown(MarkdownDocument.Parse(markdown_source), render_options);
+
+    /// <inheritdoc cref="WriteMarkdown(MarkdownDocument, MarkdownRenderOptions)"/>
+    public static void WriteMarkdown(MarkdownDocument document) => WriteMarkdown(document, MarkdownRenderOptions.Default);
+
+    public static void WriteMarkdown(MarkdownDocument document, MarkdownRenderOptions render_options) => document.Print(render_options);
 
     #endregion
 
