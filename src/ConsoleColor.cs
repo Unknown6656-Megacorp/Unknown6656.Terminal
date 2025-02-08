@@ -412,6 +412,20 @@ public readonly record struct ConsoleColor
     {
     }
 
+    public ConsoleColor(int rgb)
+        : this((uint)rgb)
+    {
+    }
+
+    public ConsoleColor(uint rgb)
+        : this(rgb <= 0xfff ?  Color.FromArgb(
+            (byte)((rgb >> 8) & 0xF) * 0x11,
+            (byte)((rgb >> 4) & 0xF) * 0x11,
+            (byte)(rgb & 0xF) * 0x11
+        ) : Color.FromArgb((int)(rgb | 0xFF000000u)))
+    {
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ConsoleColor"/> struct with the specified <see cref="Color"/>.
     /// </summary>
@@ -728,6 +742,13 @@ public readonly record struct ConsoleColor
     /// <param name="color">The <see cref="sysconsolecolor"/> to convert.</param>
     /// <returns>A <see cref="ConsoleColor"/> instance that represents the specified console color.</returns>
     public static ConsoleColor FromConsoleColor(sysconsolecolor? color) => new(color);
+
+
+    public static ConsoleColor operator |(ConsoleColor left, ConsoleColor right) => left.IsDefault ? right : left;
+
+    public static implicit operator ConsoleColor(int rgb) => new(rgb);
+
+    public static implicit operator ConsoleColor(uint rgb) => new(rgb);
 
     /// <summary>
     /// Implicitly converts a <see cref="Color"/> to a <see cref="ConsoleColor"/> instance.
