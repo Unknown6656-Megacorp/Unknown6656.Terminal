@@ -3,6 +3,7 @@
 #define USE_LAB_CACHE
 
 using System.Diagnostics.CodeAnalysis;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Drawing.Imaging;
@@ -431,7 +432,7 @@ public class SixelImage
     private readonly object _mutex = new();
     private volatile bool _optimized_palette = false;
 #if USE_CLOSENESS_CACHE
-    private readonly Dictionary<SixelColor, SixelColor> _closeness_cache = new(256);
+    private readonly ConcurrentDictionary<SixelColor, SixelColor> _closeness_cache = new(-1, _MAX_PALETTE_SIZE);
 #endif
 
     /// <summary>
@@ -962,9 +963,9 @@ public class SixelImage
 #if USE_CLOSENESS_CACHE
         _closeness_cache.Clear();
 #endif
-#pragma warning disable IDE0305 // Simplify collection initialization
-        SixelColor[] buffer = _pixels.ToArray();
-#pragma warning restore IDE0305
+        SixelColor[] buffer = new SixelColor[_pixels.Length];
+
+        Array.Copy(_pixels, buffer, _pixels.Length);
 
         for (int i = 0; i < buffer.Length; ++i)
         {
