@@ -388,6 +388,7 @@ public readonly record struct ConsoleColor
     /// </summary>
     public static ConsoleColor Yellow { get; } = new(sysconsolecolor.Yellow);
 
+
     /// <summary>
     /// Indicates whether the current <see cref="ConsoleColor"/> is the default color, i.e., whether it is equal to <see cref="Default"/> or <see langword="null"/>.
     /// </summary>
@@ -526,6 +527,35 @@ public readonly record struct ConsoleColor
         "u" or "ud" or "ul" or "underline" => ToVT520(ConsoleColorMode.Underline),
         _ => ToString(),
     };
+
+    public Color? ToColor()
+    {
+        if (_color?.Is(out Color rgb) ?? false)
+            return rgb;
+        else if (_color?.Is(out sysconsolecolor syscolor) ?? false)
+            return syscolor switch
+            {
+                sysconsolecolor.Black => Color.Black,
+                sysconsolecolor.DarkBlue => Color.DarkBlue,
+                sysconsolecolor.DarkGreen => Color.DarkGreen,
+                sysconsolecolor.DarkCyan => Color.DarkCyan,
+                sysconsolecolor.DarkRed => Color.DarkRed,
+                sysconsolecolor.DarkMagenta => Color.DarkMagenta,
+                sysconsolecolor.DarkYellow => Color.FromArgb(0x8B, 0x8B, 0x00),
+                sysconsolecolor.Gray => Color.Gray,
+                sysconsolecolor.DarkGray => Color.DarkGray,
+                sysconsolecolor.Blue => Color.Blue,
+                sysconsolecolor.Green => Color.Green,
+                sysconsolecolor.Cyan => Color.Cyan,
+                sysconsolecolor.Red => Color.Red,
+                sysconsolecolor.Magenta => Color.Magenta,
+                sysconsolecolor.Yellow => Color.Yellow,
+                sysconsolecolor.White => Color.White,
+                _ => null,
+            };
+
+        return null;
+    }
 
     /// <summary>
     /// Converts the current <see cref="ConsoleColor"/> to a <see cref="sysconsolecolor"/> if possible.
