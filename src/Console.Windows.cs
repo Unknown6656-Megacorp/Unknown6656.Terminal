@@ -5,7 +5,7 @@ using System;
 
 using Unknown6656.Runtime;
 
-namespace Unknown6656.Console;
+namespace Unknown6656.Terminal;
 
 
 public static unsafe partial class Console

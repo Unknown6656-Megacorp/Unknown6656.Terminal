@@ -15,7 +15,7 @@ using System;
 
 using Unknown6656.Generics;
 
-namespace Unknown6656.Console;
+namespace Unknown6656.Terminal;
 
 
 #if ALLOW_VARIOUS_PIXEL_RATIOS

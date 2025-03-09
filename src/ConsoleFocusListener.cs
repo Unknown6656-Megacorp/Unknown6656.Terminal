@@ -1,4 +1,4 @@
-﻿namespace Unknown6656.Console;
+﻿namespace Unknown6656.Terminal;
 
 
 // TODO : implement

@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		version.txt = version.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unknown6656.Console", "src\Unknown6656.Console.csproj", "{F9F0A0C9-B599-40C7-BDEA-A5ACE680BDB3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unknown6656.Terminal", "src\Unknown6656.Terminal.csproj", "{F9F0A0C9-B599-40C7-BDEA-A5ACE680BDB3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C2517A40-97B9-40E2-BC43-C1C303A32FDA} = {C2517A40-97B9-40E2-BC43-C1C303A32FDA}
 	EndProjectSection

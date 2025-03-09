@@ -9,7 +9,7 @@ using Microsoft.Win32;
 using Unknown6656.Runtime;
 using System.CodeDom;
 
-namespace Unknown6656.Console;
+namespace Unknown6656.Terminal;
 
 
 public enum TerminalType

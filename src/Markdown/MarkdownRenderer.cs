@@ -8,7 +8,7 @@ using System;
 using Unknown6656.Generics;
 using System.Drawing;
 
-namespace Unknown6656.Console.Markdown;
+namespace Unknown6656.Terminal.Markdown;
 
 
 // https://spec.commonmark.org/0.31.2/

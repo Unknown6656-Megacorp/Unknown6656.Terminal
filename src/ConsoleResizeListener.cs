@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System;
 
-namespace Unknown6656.Console;
+namespace Unknown6656.Terminal;
 
 
 public delegate void ConsoleSizeChangedEventHandler(int oldWidth, int oldHeight, int newWidth, int newHeight);

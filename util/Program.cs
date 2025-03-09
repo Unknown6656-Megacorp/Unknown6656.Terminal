@@ -16,7 +16,7 @@ public static class Program
     public const string GITHUB_APPVEYOR_AUTH_TOKEN = ""; // <-- insert your GitHub AppVeyor auth token here
     public const string REPOSITORY_AUTHOR = "Unknown6656";
     public const string REPOSITORY_ORG = "Unknown6656-Megacorp";
-    public const string REPOSITORY_NAME = "Unknown6656.Console";
+    public const string REPOSITORY_NAME = "Unknown6656.Terminal";
     public const string REPOSITORY_URL = $"https://github.com/{REPOSITORY_ORG}/{REPOSITORY_NAME}";
     private const string APPVEYOR_PR_TEMPLATE = @"{{#passed}}:white_check_mark:{{/passed}}{{#failed}}:x:{{/failed}} [Build {{&projectName}} {{buildVersion}} {{status}}]({{buildUrl}}) (commit {{commitUrl}} by @{{&commitAuthorUsername}})";
     public const int START_YEAR = 2020;
@@ -145,7 +145,7 @@ public static class Program
         [assembly: AssemblyProduct("{{REPOSITORY_NAME}} by {{REPOSITORY_AUTHOR}}")]
         [assembly: AssemblyTitle("{{REPOSITORY_NAME}}")]
         
-        namespace Unknown6656.Console;
+        namespace Unknown6656.Terminal;
         
         /// <summary>
         /// A global module containing some meta-data.

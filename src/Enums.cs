@@ -11,7 +11,7 @@ using System;
 using Unknown6656.Generics;
 using Unknown6656.Runtime;
 
-namespace Unknown6656.Console;
+namespace Unknown6656.Terminal;
 
 
 /// <summary>
